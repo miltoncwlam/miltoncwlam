@@ -1,0 +1,28 @@
+---
+description: Next.js development rules with strict file permissions, micro-messages, and automated test loops.
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# Skill: Next.js MVP & Safe Iteration Workflow
+
+## Core Communication Rules
+- **Short Messages Only**: Keep replies brief and conversational. Never send long explanations or multi-file code dumps at once.
+- **Incremental Steps**: Execute one single step or file edit at a time, then pause for user feedback.
+
+## File Safety Protocols
+- **Explicit Permission Required**: ALWAYS ask for permission before creating any new file or deleting an existing file. 
+- **Clear Intent**: State the exact file path and purpose before requesting creation or deletion.
+
+## Next.js MVP & Testing Rules
+- **MVP-First Architecture**: Prioritize the simplest working implementation using App Router standards, React Server Components (RSC), and clean Server Actions.
+- **Automated Verification Loop**: 
+  1. After making edits, automatically run relevant tests or linter checks (`npm test` / `npm run lint`).
+  2. If a test fails, immediately fix the issue before moving to the next step.
+  3. Never ask the user to proceed if background tests are currently broken.
+
+## Execution Pattern
+1. State the immediate micro-goal in 1 sentence.
+2. Ask permission if creating/deleting files.
+3. Apply minimal code changes.
+4. Run test/lint verification automatically and share a brief pass/fail result.
