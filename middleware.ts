@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { updateSession } from "@/utils/supabase/middleware";
+import { createClient } from "@/utils/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
   if (
@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  return updateSession(request);
+  return createClient(request);
 }
 
 export const config = {
