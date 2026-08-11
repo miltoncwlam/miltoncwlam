@@ -3,24 +3,56 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "env WATCHPACK_POLLING=true NODE_OPTIONS=--dns-result-order=ipv4first next dev --hostname localhost --port 3000",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:migrate": "node --env-file=.env.local node_modules/.bin/tsx scripts/migrate-app.ts && node --env-file=.env.local node_modules/.bin/tsx scripts/bootstrap-admin.ts",
+    "db:bootstrap-admin": "node --env-file=.env.local node_modules/.bin/tsx scripts/bootstrap-admin.ts",
+    "db:seed-community": "node --env-file=.env.local node_modules/.bin/tsx scripts/seed-community.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.36",
+    "@ai-sdk/google": "^4.0.39",
+    "@ai-sdk/openai": "^4.0.36",
+    "@better-auth/passkey": "^1.6.26",
+    "@clerk/nextjs": "^6.39.6",
+    "@napi-rs/canvas": "^1.0.5",
+    "@simplewebauthn/browser": "^13.3.0",
+    "@simplewebauthn/server": "^13.3.2",
+    "@supabase/ssr": "^0.12.4",
+    "@supabase/supabase-js": "^2.112.2",
+    "ai": "^7.0.58",
+    "better-auth": "^1.6.26",
+    "kysely": "^0.29.5",
     "next": "16.3.0",
+    "next-intl": "^4.13.6",
+    "pdfjs-dist": "^4.10.38",
+    "pg": "^8.23.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "server-only": "^0.0.1",
+    "unpdf": "^1.8.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.21.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^4.7.0",
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
+    "jsdom": "^27.0.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "tsx": "^4.23.12",
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   }
 }
