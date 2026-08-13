@@ -32,19 +32,14 @@ import {
   DEFAULT_OPENROUTER_MODEL,
   PAID_OPENROUTER_MODELS,
 } from "@/lib/llm/models";
-import type { LLMProvider, OllamaModelId } from "@/lib/types/flashcard";
-import { OLLAMA_MODELS } from "@/lib/types/flashcard";
+import type { LLMProvider } from "@/lib/types/flashcard";
 
 type SourceMode = "topic" | "text" | "url" | "file";
 type CreateMode = "flashcards" | "quiz";
 
 type FreeModel = { id: string; name: string };
 
-function friendlyError(
-  message: string,
-  usingOllama: boolean,
-  code?: string,
-) {
+function friendlyError(message: string, code?: string) {
   if (code === "UNRELATED_SOURCE") {
     return (
       message ||
@@ -61,20 +56,9 @@ function friendlyError(
     return message || "Too many generates this hour. Wait a bit, then try again.";
   }
   if (/failed to fetch|networkerror|load failed/i.test(message)) {
-    return usingOllama
-      ? "The connection dropped. Try gemma4:e2b, 6–10 cards, and paste text instead of a long PDF."
-      : "The connection dropped. Try again with fewer cards or a shorter source.";
-  }
-  if (/returned \d+ cards but \d+ were requested/i.test(message)) {
-    return usingOllama
-      ? `${message} Tip: try fewer cards or the lighter gemma4:e2b model.`
-      : message;
+    return "The connection dropped. Try again with fewer cards or a shorter source.";
   }
   return message;
-}
-
-function providerLabel(provider: LLMProvider) {
-  return provider === "ollama" ? "Ollama" : "OpenRouter";
 }
 
 function catalogLabel(name: string) {
@@ -109,11 +93,9 @@ export function CreateDeckForm({
   const [pending, setPending] = useState(false);
   const [phase, setPhase] = useState<GenerationPhase>("prepare");
   const [label, setLabel] = useState(tg("preparing"));
-  const [providerChoice, setProviderChoice] = useState<LLMProvider | null>(null);
-  const [ollamaModel, setOllamaModel] = useState<OllamaModelId>("gemma4:e2b");
   const [openrouterModel, setOpenrouterModel] = useState(DEFAULT_OPENROUTER_MODEL);
   const [createMode, setCreateMode] = useState<CreateMode>("flashcards");
-  const [cardCountPreview, setCardCountPreview] = useState(8);
+  const [cardCountPreview, setCardCountPreview] = useState(10);
   const [topicChars, setTopicChars] = useState(0);
   const [textChars, setTextChars] = useState(0);
   const [fileMeta, setFileMeta] = useState<{ bytes: number; mimeType: string } | null>(
@@ -123,16 +105,12 @@ export function CreateDeckForm({
     mode === "text" || mode === "url" || mode === "topic" || canUpload
       ? mode
       : "topic";
-  const provider =
-    providerChoice && providers.includes(providerChoice)
-      ? providerChoice
-      : providers[0];
-  const usingOllama = provider === "ollama";
+  const provider: LLMProvider = "openrouter";
   const estimate = useMemo(
     () =>
       estimateGenerationCredits({
-        provider: usingOllama ? "ollama" : "openrouter",
-        modelId: usingOllama ? ollamaModel : openrouterModel,
+        provider: "openrouter",
+        modelId: openrouterModel,
         sourceMode: activeMode,
         sourceSize:
           activeMode === "topic"
@@ -147,16 +125,7 @@ export function CreateDeckForm({
                 : {},
         cardCount: cardCountPreview,
       }),
-    [
-      usingOllama,
-      ollamaModel,
-      openrouterModel,
-      activeMode,
-      topicChars,
-      textChars,
-      fileMeta,
-      cardCountPreview,
-    ],
+    [openrouterModel, activeMode, topicChars, textChars, fileMeta, cardCountPreview],
   );
   const textShort = !energyUnlimited && estimate.textCredits > energyBalance;
   const overBalance = textShort;
@@ -190,11 +159,10 @@ export function CreateDeckForm({
     try {
       const formData = new FormData(form);
       const file = formData.get("sourceFile");
-      const selectedProvider = (formData.get("provider") as LLMProvider) || provider;
       const payload: Record<string, unknown> = {
         sourceType: activeMode,
         title: formData.get("title") || undefined,
-        provider: selectedProvider,
+        provider: "openrouter",
         cardCount: Number(formData.get("cardCount")),
         difficulty: formData.get("difficulty"),
         language: formData.get("language"),
@@ -206,19 +174,13 @@ export function CreateDeckForm({
         sourceRetention: formData.get("sourceRetention") || "24h",
       };
 
-      if (selectedProvider === "ollama") {
-        payload.model = (formData.get("ollamaModel") as string) || ollamaModel;
-      } else {
-        payload.model =
-          (formData.get("openrouterModel") as string) || openrouterModel;
-      }
+      payload.model =
+        (formData.get("openrouterModel") as string) || openrouterModel;
 
       if (activeMode === "topic") {
         payload.topic = formData.get("topic");
         setPhase("generate");
-        setLabel(
-          selectedProvider === "ollama" ? tg("gemmaWriting") : tg("aiWriting"),
-        );
+        setLabel(tg("aiWriting"));
       } else if (activeMode === "text") {
         payload.content = formData.get("content");
         setPhase("read");
@@ -245,9 +207,7 @@ export function CreateDeckForm({
 
       if (activeMode !== "topic") {
         setPhase("generate");
-        setLabel(
-          selectedProvider === "ollama" ? tg("gemmaWriting") : tg("aiWriting"),
-        );
+        setLabel(tg("aiWriting"));
       }
 
       let result: {
@@ -266,7 +226,6 @@ export function CreateDeckForm({
         if (!response.ok) {
           const base = friendlyError(
             result.error || "Generation failed",
-            selectedProvider === "ollama",
             result.code,
           );
           throw new Error(
@@ -281,7 +240,7 @@ export function CreateDeckForm({
             message,
           )
             ? message
-            : friendlyError(message, selectedProvider === "ollama"),
+            : friendlyError(message),
         );
       }
 
@@ -296,7 +255,7 @@ export function CreateDeckForm({
     } catch (caught) {
       setError(
         caught instanceof Error
-          ? friendlyError(caught.message, usingOllama)
+          ? friendlyError(caught.message)
           : "Generation failed",
       );
     }
@@ -347,7 +306,6 @@ export function CreateDeckForm({
             if (formRef.current) void runGeneration(formRef.current);
           }}
           phase={phase}
-          usingOllama={usingOllama}
         />
       ) : null}
 
@@ -375,12 +333,6 @@ export function CreateDeckForm({
         {!canUpload ? (
           <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
             {t("uploadNeedsSecret")}
-          </p>
-        ) : null}
-
-        {usingOllama && activeMode === "file" ? (
-          <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700">
-            {t("ollamaPdfNote")}
           </p>
         ) : null}
 
@@ -510,100 +462,54 @@ export function CreateDeckForm({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label>{t("provider")}</Label>
+            <Label>{t("model")}</Label>
             <Select
               disabled={pending}
-              onValueChange={(value) =>
-                setProviderChoice(value as LLMProvider)
-              }
-              value={provider}
+              onValueChange={setOpenrouterModel}
+              value={openrouterModel}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {providers.map((entry) => (
-                  <SelectItem key={entry} value={entry}>
-                    {providerLabel(entry)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <input name="provider" type="hidden" value={provider} />
-          </div>
-          {usingOllama ? (
-            <div className="space-y-2">
-              <Label>{t("ollamaModel")}</Label>
-              <Select
-                disabled={pending}
-                onValueChange={(value) =>
-                  setOllamaModel(value as OllamaModelId)
-                }
-                value={ollamaModel}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {OLLAMA_MODELS.map((entry) => (
+                {freeModels.length ? (
+                  <SelectGroup>
+                    <SelectLabel>{t("modelFree")}</SelectLabel>
+                    {freeModels.map((entry) => (
+                      <SelectItem key={entry.id} value={entry.id}>
+                        {catalogLabel(entry.name)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                ) : null}
+                <SelectGroup>
+                  <SelectLabel>{t("modelBudget")}</SelectLabel>
+                  {budgetModels.map((entry) => (
                     <SelectItem key={entry.id} value={entry.id}>
                       {entry.label}
                     </SelectItem>
                   ))}
-                </SelectContent>
-              </Select>
-              <input name="ollamaModel" type="hidden" value={ollamaModel} />
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Label>{t("model")}</Label>
-              <Select
-                disabled={pending}
-                onValueChange={setOpenrouterModel}
-                value={openrouterModel}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {freeModels.length ? (
-                    <SelectGroup>
-                      <SelectLabel>{t("modelFree")}</SelectLabel>
-                      {freeModels.map((entry) => (
-                        <SelectItem key={entry.id} value={entry.id}>
-                          {catalogLabel(entry.name)}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  ) : null}
-                  <SelectGroup>
-                    <SelectLabel>{t("modelBudget")}</SelectLabel>
-                    {budgetModels.map((entry) => (
-                      <SelectItem key={entry.id} value={entry.id}>
-                        {entry.label}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectLabel>{t("modelStandard")}</SelectLabel>
-                    {standardModels.map((entry) => (
-                      <SelectItem key={entry.id} value={entry.id}>
-                        {entry.label}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-              <input name="openrouterModel" type="hidden" value={openrouterModel} />
-            </div>
-          )}
+                </SelectGroup>
+                <SelectGroup>
+                  <SelectLabel>{t("modelStandard")}</SelectLabel>
+                  {standardModels.map((entry) => (
+                    <SelectItem key={entry.id} value={entry.id}>
+                      {entry.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <input name="openrouterModel" type="hidden" value={openrouterModel} />
+            <input name="provider" type="hidden" value={provider} />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="cardCount">{t("cardCount")}</Label>
             <Input
-              defaultValue={usingOllama ? (ollamaModel === "gemma4:e4b" ? 6 : 8) : 10}
+              defaultValue={10}
               disabled={pending}
               id="cardCount"
-              max={usingOllama ? (ollamaModel === "gemma4:e4b" ? 8 : 12) : 30}
+              max={30}
               min={3}
               name="cardCount"
               onChange={(event) =>
@@ -611,9 +517,6 @@ export function CreateDeckForm({
               }
               type="number"
             />
-            {usingOllama ? (
-              <span className="block text-xs text-muted-foreground">{t("ollamaCardHint")}</span>
-            ) : null}
           </div>
           {createMode === "flashcards" ? (
             <div className="space-y-2">

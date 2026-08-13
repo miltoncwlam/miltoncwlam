@@ -103,9 +103,8 @@ export function allocateCardCounts(
   return counts;
 }
 
-/** Cloud can afford more sequential passes; local Ollama cannot. */
+/** Cloud can afford more sequential passes. */
 export const DEFAULT_MAX_CHUNKS = 8;
-export const OLLAMA_MAX_CHUNKS = 2;
 
 export function chunkStudyText(
   text: string,

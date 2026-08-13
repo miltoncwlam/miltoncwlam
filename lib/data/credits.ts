@@ -10,7 +10,6 @@ import {
   FREE_GENERATE_LIMIT_HOUR,
   GENERATE_RATE_LIMIT_WINDOW_MS,
   IMAGE_PERIOD_GRANT,
-  OLLAMA_GENERATE_LIMIT_HOUR,
   PAID_GENERATE_LIMIT_HOUR,
 } from "@/lib/credits/config";
 import { isPaidOpenRouterModel } from "@/lib/llm/models";
@@ -371,12 +370,9 @@ export async function assertGenerateRateLimit(
   const model = input?.model ?? "";
   const isFree =
     provider === "openrouter" && !isPaidOpenRouterModel(model);
-  const hourlyMax =
-    provider === "ollama"
-      ? OLLAMA_GENERATE_LIMIT_HOUR
-      : isFree
-        ? FREE_GENERATE_LIMIT_HOUR
-        : PAID_GENERATE_LIMIT_HOUR;
+  const hourlyMax = isFree
+    ? FREE_GENERATE_LIMIT_HOUR
+    : PAID_GENERATE_LIMIT_HOUR;
 
   const hourResult = await pool.query<{ count: string }>(
     `select count(*)::text as count

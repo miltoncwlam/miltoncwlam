@@ -1,13 +1,13 @@
 # Study A — AI Flashcard Generator
 
-Turn notes, PDFs, and photos into interactive flashcards. Built with **Next.js 16**, **Better Auth**, **Supabase** (Postgres + Storage), and multimodel LLM generation (OpenAI / Anthropic / Google / optional local Ollama).
+Turn notes, PDFs, and photos into interactive flashcards. Built with **Next.js 16**, **Better Auth**, **Supabase** (Postgres + Storage), and **OpenRouter** LLM generation.
 
 ## Features
 
 - Auth via **Better Auth** (email/password + passkeys) **and optional Clerk** (social / hosted sign-in)
 - Create decks from pasted text, URL/YouTube, PDF, TXT/Markdown, or JPG/PNG
 - **Sample deck** for testing study/share without an LLM key
-- Multimodel AI generation (cloud keys or local **Ollama + Gemma 4**)
+- AI generation via **OpenRouter** (DeepSeek, Qwen, and other catalog models)
 - Collectible-style flip cards with Hard / OK / Easy ratings
 - Shuffle, restart, and saved study progress
 - Read-only share links (anonymous study; signed-in users can save progress)
@@ -49,8 +49,7 @@ Legacy Clerk `user_…` deck rows still work. Better Auth users get separate IDs
 
 | Need | Variable | Source |
 |------|----------|--------|
-| AI generation (cloud) | `OPENAI_API_KEY` (or Anthropic/Google) | Provider dashboard |
-| AI generation (local) | `OLLAMA_ENABLED=true` + Ollama running | See Ollama setup below |
+| AI generation | `OPENROUTER_API_KEY` | [OpenRouter](https://openrouter.ai) |
 | File/photo uploads | `SUPABASE_SECRET_KEY` | Settings → API Keys → **Secret** (`sb_secret_…`, server only) |
 
 ### Legal pages & languages
@@ -66,36 +65,11 @@ Legacy Clerk `user_…` deck rows still work. Better Auth users get separate IDs
 3. Sign in at `/sign-in`, then open `/admin` to create learners and set weekly energy / unlimited.
 4. Optional: add a passkey from the admin page after sign-in.
 
-Optional: set `LLM_DEFAULT_PROVIDER` to `openai`, `anthropic`, `google`, or `ollama`. Enable the **Supabase Cursor plugin** for agent access to your project (no extra env vars needed).
+Optional: set `LLM_DEFAULT_PROVIDER=openrouter` (legacy `openai` / `anthropic` / `google` / `ollama` values also map to OpenRouter). Enable the **Supabase Cursor plugin** for agent access to your project (no extra env vars needed).
 
-With Ollama, PDFs are converted to page images for Gemma vision (not sent as raw PDF). Source uploads are deleted after successful generation.
+Source uploads are deleted after successful generation when you pick “clear immediately”.
 
-### Local Ollama (no cloud API key)
-
-1. Install [Ollama](https://ollama.com) and pull a Gemma 4 model:
-
-```bash
-ollama pull gemma4:e4b
-```
-
-Supported in the app: **`gemma4:e4b`** (default, better quality) and **`gemma4:e2b`** (faster / lighter). Pick either in the create form when provider is Ollama.
-
-```bash
-ollama pull gemma4:e2b   # optional lighter model
-```
-
-2. In `.env.local`:
-
-```bash
-OLLAMA_ENABLED=true
-OLLAMA_BASE_URL=http://127.0.0.1:11434
-OLLAMA_MODEL=gemma4:e4b
-LLM_DEFAULT_PROVIDER=ollama
-```
-
-3. Restart `npm run dev`. The create form lists **ollama** as a provider and lets you choose `e4b` or `e2b`.
-
-4. After migrations, seed the community library:
+After migrations, seed the community library:
 
 ```bash
 npm run db:migrate
@@ -154,7 +128,7 @@ Set `E2E_LLM=true` to run the optional paid LLM generation E2E flow.
 | `NEXT_PUBLIC_SUPABASE_URL` | Project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key |
 | `SUPABASE_SECRET_KEY` | Secret key (uploads) |
-| `OPENROUTER_API_KEY` | Required for generation on Vercel (Ollama is local-only) |
+| `OPENROUTER_API_KEY` | Required for generation on Vercel |
 | `NEXT_PUBLIC_LEGAL_EMAIL` | Real inbox for `/privacy` contact |
 | `NEXT_PUBLIC_LEGAL_OPERATOR` | Your name or organisation |
 | `ADMIN_BOOTSTRAP_EMAIL` / `ADMIN_BOOTSTRAP_PASSWORD` | First admin (run migrate **once** against prod) |
@@ -168,9 +142,7 @@ npm run db:seed-community
 
 4. Deploy. Open `/privacy`, `/terms`, and `/cookies`, then sign in at `/sign-in`.
 
-**Limits:** Vercel Hobby caps serverless functions at 60s, so large/scanned PDFs may time out. Pro can raise `maxDuration` toward 300s. Local `npm run dev` still allows longer Ollama runs.
-
-**Do not enable `OLLAMA_ENABLED` on Vercel** — there is no local Ollama daemon on the host.
+**Limits:** Vercel Hobby caps serverless functions at 60s, so large/scanned PDFs may time out. Pro can raise `maxDuration` toward 300s.
 
 ### Generic Node host
 

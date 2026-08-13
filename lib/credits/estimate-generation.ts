@@ -3,7 +3,7 @@ import { creditsFromImageUsd, creditsFromTokens } from "@/lib/credits/token-cost
 import { resolveBillingRates } from "@/lib/llm/models";
 
 export type EstimateGenerationInput = {
-  provider: "openrouter" | "ollama";
+  provider: "openrouter";
   modelId: string;
   sourceMode: SourceMode;
   sourceSize?: SourceSizeHints;

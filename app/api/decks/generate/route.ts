@@ -37,13 +37,12 @@ import {
 import {
   assertLLMReady,
   getLLMConfig,
-  resolveOllamaModel,
   resolveOpenRouterModel,
 } from "@/lib/llm/config";
-import { generateFlashcardsFromContent,
+import {
+  generateFlashcardsFromContent,
   generateFlashcardsFromImages,
   generateFlashcardsFromTopic,
-  ollamaMaterialCap,
   TOPIC_SOURCE_MIME,
   UnrelatedSourceError,
 } from "@/lib/llm/generate-flashcards";
@@ -61,7 +60,13 @@ import { normalizeLLMProvider } from "@/lib/types/flashcard";
 
 const optionsSchema = z.object({
   title: z.string().trim().min(1).max(100).optional(),
-  provider: z.enum(["openrouter", "ollama", "openai", "anthropic", "google"]),
+  provider: z.preprocess(
+    (value) =>
+      typeof value === "string"
+        ? (normalizeLLMProvider(value) ?? value)
+        : value,
+    z.enum(["openrouter"]),
+  ),
   model: z.string().trim().min(1).max(200).optional(),
   cardCount: z.number().int().min(3).max(30).default(10),
   difficulty: z
@@ -113,13 +118,7 @@ function resolveRequestProvider(raw: string): LLMProvider {
   return normalizeLLMProvider(raw) ?? "openrouter";
 }
 
-async function resolveRequestModel(
-  provider: LLMProvider,
-  requested?: string,
-): Promise<string> {
-  if (provider === "ollama") {
-    return resolveOllamaModel(requested);
-  }
+async function resolveRequestModel(requested?: string): Promise<string> {
   const model = resolveOpenRouterModel(requested);
   if (isPaidOpenRouterModel(model)) return model;
   const free = await listOpenRouterFreeModels();
@@ -180,18 +179,6 @@ async function generateFromLongText(
     includeImagePrompts?: boolean;
   },
 ): Promise<GeneratedDeck> {
-  const isOllama = generationOptions.provider === "ollama";
-  const ollamaModel =
-    generationOptions.provider === "ollama"
-      ? resolveOllamaModel(generationOptions.model)
-      : null;
-
-  // Local models: one bounded pass — chunking multiplies timeout failures.
-  if (isOllama && ollamaModel) {
-    const cap = ollamaMaterialCap(ollamaModel);
-    return generateFlashcardsFromContent(content.slice(0, cap), generationOptions);
-  }
-
   if (!shouldChunkText(content)) {
     return generateFlashcardsFromContent(content, generationOptions);
   }
@@ -203,20 +190,11 @@ async function generateFromLongText(
     try {
       const part = await generateFlashcardsFromContent(chunk.text, {
         ...generationOptions,
-        // Local models struggle with tiny per-chunk targets.
-        cardCount: Math.min(30, Math.max(isOllama ? 3 : 1, chunk.cardCount)),
+        cardCount: Math.min(30, Math.max(1, chunk.cardCount)),
       });
       partials.push(part);
     } catch (error) {
       if (error instanceof UnrelatedSourceError) throw error;
-      // Timeout/abort on Ollama: stop burning more sequential calls.
-      if (
-        isOllama &&
-        error instanceof Error &&
-        /timed out|aborted|timeout/i.test(error.message)
-      ) {
-        break;
-      }
       // Skip weak chunks; merge may still succeed
     }
   }
@@ -224,7 +202,7 @@ async function generateFromLongText(
   if (!partials.length) {
     // One bounded retry on the head of the document (not the full multi-chunk loop).
     return generateFlashcardsFromContent(
-      content.slice(0, isOllama ? 12_000 : 80_000),
+      content.slice(0, 80_000),
       generationOptions,
     );
   }
@@ -239,8 +217,7 @@ async function generateFromLongText(
     throw new Error("Chunked generation produced too few usable cards");
   }
 
-  // Extra fill-in pass is too expensive for local Ollama — accept a partial deck.
-  if (!isOllama && merged.cards.length < generationOptions.cardCount) {
+  if (merged.cards.length < generationOptions.cardCount) {
     const missing = generationOptions.cardCount - merged.cards.length;
     if (missing >= 3) {
       try {
@@ -276,7 +253,7 @@ export async function POST(request: Request) {
     void purgeFailedGenerations(userId).then(cleanupDiscardedGenerations);
     const input = requestSchema.parse(await request.json());
     const provider = assertLLMReady(resolveRequestProvider(input.provider));
-    const model = await resolveRequestModel(provider, input.model);
+    const model = await resolveRequestModel(input.model);
     const credits = await getOrRefreshCredits(userId);
     await assertGenerateRateLimit(userId, {
       provider,

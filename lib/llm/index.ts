@@ -1,9 +1,7 @@
 export {
   assertLLMReady,
-  assertOllamaReachable,
   getConfiguredProviders,
   getLLMConfig,
-  isOllamaConfigured,
 } from "./config";
 export {
   generateFlashcardsFromContent,

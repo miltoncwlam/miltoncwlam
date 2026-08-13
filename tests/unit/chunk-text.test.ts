@@ -22,7 +22,7 @@ describe("chunkStudyText", () => {
     expect(chunks.reduce((sum, chunk) => sum + chunk.cardCount, 0)).toBe(10);
   });
 
-  it("respects maxChunks for local Ollama bounds", () => {
+  it("respects maxChunks", () => {
     const text = Array.from({ length: 40 }, (_, i) => `Paragraph ${i}. ${"word ".repeat(80)}`).join(
       "\n\n",
     );

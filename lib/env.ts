@@ -7,12 +7,6 @@ const optionalSecret = z.preprocess(
   z.string().min(1).optional(),
 );
 
-const booleanFlag = z.preprocess((value) => {
-  if (value === undefined || value === "") return false;
-  if (typeof value === "boolean") return value;
-  return ["1", "true", "yes", "on"].includes(String(value).toLowerCase());
-}, z.boolean());
-
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
   NEXT_PUBLIC_APP_URL: z.string().url(),
@@ -26,20 +20,14 @@ const envSchema = z.object({
   SUPABASE_STORAGE_BUCKET: z.string().min(1).default("flashcard-media"),
   LLM_DEFAULT_PROVIDER: z.preprocess((value) => {
     const raw = String(value ?? "openrouter");
-    if (raw === "openai" || raw === "anthropic" || raw === "google") {
+    if (raw === "openai" || raw === "anthropic" || raw === "google" || raw === "ollama") {
       return "openrouter";
     }
     return raw;
-  }, z.enum(["openrouter", "ollama"]).default("openrouter")),
+  }, z.literal("openrouter").default("openrouter")),
   OPENROUTER_API_KEY: optionalSecret,
   OPENROUTER_MODEL: z.string().min(1).default("deepseek/deepseek-v4-flash"),
   OPENROUTER_FREE_MODEL_BLOCKLIST: z.string().optional(),
-  OLLAMA_ENABLED: booleanFlag.default(false),
-  OLLAMA_BASE_URL: z.string().url().default("http://127.0.0.1:11434"),
-  OLLAMA_MODEL: z.preprocess((value) => {
-    const raw = String(value ?? "gemma4:e4b");
-    return raw === "gemma4:e2b" || raw === "gemma4:e4b" ? raw : "gemma4:e4b";
-  }, z.enum(["gemma4:e4b", "gemma4:e2b"])),
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: optionalSecret,
   CLERK_SECRET_KEY: optionalSecret,
 });

@@ -7,7 +7,7 @@ import {
   UnrelatedSourceError,
 } from "@/lib/llm/parse-deck-json";
 
-describe("ollama JSON deck parsing", () => {
+describe("JSON deck parsing", () => {
   it("parses raw JSON", () => {
     const deck = parseGeneratedDeck(
       extractJsonObject(

@@ -1,14 +1,10 @@
-import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { z } from "zod";
 
 import {
   assertLLMReady,
-  assertOllamaReachable,
   getConfiguredProviders,
-  getLLMConfig,
   getOpenRouterClient,
-  resolveOllamaModel,
 } from "@/lib/llm/config";
 import { resolveOpenRouterModerationModel } from "@/lib/llm/openrouter-models";
 import { extractJsonObject } from "@/lib/llm/parse-deck-json";
@@ -22,24 +18,14 @@ const resultSchema = z.object({
 
 export type ModerationResult = z.infer<typeof resultSchema>;
 
-async function getModel(provider: LLMProvider) {
-  const config = getLLMConfig();
-  if (provider === "openrouter") {
-    const client = getOpenRouterClient();
-    const modelId = await resolveOpenRouterModerationModel();
-    return client(modelId);
-  }
-  const ollama = createOpenAI({
-    baseURL: `${config.ollama.baseUrl}/v1`,
-    apiKey: "ollama",
-    name: "ollama",
-  });
-  return ollama(resolveOllamaModel());
+async function getModel() {
+  const client = getOpenRouterClient();
+  const modelId = await resolveOpenRouterModerationModel();
+  return client(modelId);
 }
 
 function pickProvider(): LLMProvider {
   const configured = getConfiguredProviders();
-  if (configured.includes("ollama")) return "ollama";
   if (configured.includes("openrouter")) return "openrouter";
   throw new Error("No LLM provider available to review this deck");
 }
@@ -98,7 +84,6 @@ export async function moderateDeckForCommunity(input: {
   if (heuristic && !heuristic.ok) return heuristic;
 
   const provider = assertLLMReady(pickProvider());
-  if (provider === "ollama") await assertOllamaReachable();
 
   const sample = input.cards.slice(0, 12).map((card, index) => ({
     n: index + 1,
@@ -128,7 +113,7 @@ ${JSON.stringify(sample, null, 2)}`;
 
   try {
     const result = await generateText({
-      model: await getModel(provider),
+      model: await getModel(),
       abortSignal: AbortSignal.timeout(60_000),
       prompt,
     });

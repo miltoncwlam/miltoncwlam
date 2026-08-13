@@ -1,9 +1,7 @@
 import {
   FREE_MODEL_BILLING_RATES,
-  OLLAMA_BILLING_MULTIPLIERS,
   type BillingRates,
 } from "@/lib/credits/config";
-import type { OllamaModelId } from "@/lib/types/flashcard";
 
 export type PaidModelGroup = "budget" | "standard";
 
@@ -50,26 +48,10 @@ export function getPaidOpenRouterModel(
   return PAID_BY_ID.get(modelId);
 }
 
-export function ollamaBillingRates(modelId: OllamaModelId): BillingRates {
-  const multiplier = OLLAMA_BILLING_MULTIPLIERS[modelId];
-  return {
-    inputPerM: FREE_MODEL_BILLING_RATES.inputPerM * multiplier,
-    outputPerM: FREE_MODEL_BILLING_RATES.outputPerM * multiplier,
-  };
-}
-
 export function resolveBillingRates(input: {
-  provider: "openrouter" | "ollama";
+  provider: "openrouter";
   modelId: string;
 }): BillingRates {
-  if (input.provider === "ollama") {
-    const model =
-      input.modelId === "gemma4:e2b" || input.modelId === "gemma4:e4b"
-        ? input.modelId
-        : "gemma4:e4b";
-    return ollamaBillingRates(model);
-  }
-
   const paid = getPaidOpenRouterModel(input.modelId);
   if (paid) {
     return { inputPerM: paid.inputPerM, outputPerM: paid.outputPerM };

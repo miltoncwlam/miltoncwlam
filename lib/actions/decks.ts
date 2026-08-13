@@ -25,7 +25,6 @@ import {
   generateFlashcardsFromTopic,
   TOPIC_SOURCE_MIME,
 } from "@/lib/llm/generate-flashcards";
-import { resolveOllamaModel } from "@/lib/llm/config";
 import { DEFAULT_OPENROUTER_MODEL } from "@/lib/llm/models";
 import { normalizeLLMProvider } from "@/lib/types/flashcard";
 import {
@@ -121,10 +120,7 @@ export async function regenerateDeckAction(formData: FormData) {
 
   const provider =
     normalizeLLMProvider(deck.generationProvider) ?? "openrouter";
-  const model =
-    provider === "ollama"
-      ? resolveOllamaModel(deck.generationModel)
-      : deck.generationModel || DEFAULT_OPENROUTER_MODEL;
+  const model = deck.generationModel || DEFAULT_OPENROUTER_MODEL;
 
   try {
     let generated;
@@ -152,36 +148,14 @@ export async function regenerateDeckAction(formData: FormData) {
       }
       const data = await downloadSourceMedia(deck.storagePath);
       validateFileSignature(data, deck.sourceMimeType);
-      if (
-        provider === "ollama" &&
-        deck.sourceMimeType === "application/pdf"
-      ) {
-        const { pdfPagesToImages } = await import("@/lib/ingest/pdf-to-images");
-        const { generateFlashcardsFromImages } = await import(
-          "@/lib/llm/generate-flashcards"
-        );
-        const pages = await pdfPagesToImages(data);
-        generated = await generateFlashcardsFromImages(
-          pages.map((page) => ({
-            data: page.data,
-            mediaType: page.mediaType,
-          })),
-          {
-            provider,
-            model,
-            cardCount: Math.max(3, deck.cards.length),
-          },
-        );
-      } else {
-        generated = await generateFlashcardsFromContent(
-          await extractStudyText(data, deck.sourceMimeType),
-          {
-            provider,
-            model,
-            cardCount: Math.max(3, deck.cards.length),
-          },
-        );
-      }
+      generated = await generateFlashcardsFromContent(
+        await extractStudyText(data, deck.sourceMimeType),
+        {
+          provider,
+          model,
+          cardCount: Math.max(3, deck.cards.length),
+        },
+      );
     } else {
       throw new Error(
         "The original source was removed for privacy. Create a new deck to regenerate.",

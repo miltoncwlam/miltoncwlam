@@ -22,7 +22,6 @@ const PHASE_IDS: GenerationPhase[] = [
 export function GenerationLoadingScreen({
   phase,
   label,
-  usingOllama,
   includeUpload,
   error,
   onRetry,
@@ -30,7 +29,6 @@ export function GenerationLoadingScreen({
 }: {
   phase: GenerationPhase;
   label: string;
-  usingOllama: boolean;
   includeUpload: boolean;
   error?: string | null;
   onRetry?: () => void;
@@ -88,9 +86,7 @@ export function GenerationLoadingScreen({
             : phase === "done"
               ? t("opening")
               : waitingOnModel
-                ? usingOllama
-                  ? t("waitingOllama")
-                  : t("waitingCloud")
+                ? t("waitingCloud")
                 : t("moving")}
         </p>
 

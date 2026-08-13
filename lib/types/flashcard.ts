@@ -6,7 +6,7 @@ export type SourceRetention = "none" | "24h" | "keep";
 
 export type CardRating = "easy" | "ok" | "hard";
 
-export type LLMProvider = "openrouter" | "ollama";
+export type LLMProvider = "openrouter";
 
 export const LEGACY_CLOUD_PROVIDERS = [
   "openai",
@@ -17,14 +17,12 @@ export const LEGACY_CLOUD_PROVIDERS = [
 export function normalizeLLMProvider(
   value: string | null | undefined,
 ): LLMProvider | null {
-  if (value === "openrouter" || value === "ollama") return value;
+  if (value === "openrouter" || value === "ollama") return "openrouter";
   if (value && LEGACY_CLOUD_PROVIDERS.includes(value as (typeof LEGACY_CLOUD_PROVIDERS)[number])) {
     return "openrouter";
   }
   return null;
 }
-
-export type OllamaModelId = "gemma4:e4b" | "gemma4:e2b";
 
 export type GenerationStatus = "pending" | "processing" | "complete" | "failed";
 
@@ -141,14 +139,6 @@ export type LibraryFilter =
   | "public"
   | "quiz-ready"
   | "all";
-
-export const OLLAMA_MODELS: {
-  id: OllamaModelId;
-  label: string;
-}[] = [
-  { id: "gemma4:e2b", label: "Recommended — faster (gemma4:e2b)" },
-  { id: "gemma4:e4b", label: "Higher quality — slower (gemma4:e4b)" },
-];
 
 export type QuizSession = {
   id: string;

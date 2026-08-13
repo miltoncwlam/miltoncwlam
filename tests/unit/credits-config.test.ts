@@ -7,7 +7,6 @@ import {
   GENERATE_RATE_LIMIT_MAX,
   IMAGE_CREDITS_PER_USD,
   MIN_GENERATION_CREDITS,
-  OLLAMA_BILLING_MULTIPLIERS,
   PAID_GENERATE_LIMIT_HOUR,
 } from "@/lib/credits/config";
 import { estimateGenerationCredits } from "@/lib/credits/estimate-generation";
@@ -15,16 +14,8 @@ import { creditsFromImageUsd, creditsFromTokens } from "@/lib/credits/token-cost
 import { resolveBillingRates } from "@/lib/llm/models";
 
 describe("unified token credits", () => {
-  it("keeps e4b cheaper than the OpenRouter catalog energy floor", () => {
+  it("bills Qwen below DeepSeek and keeps DeepSeek at the free reference", () => {
     const usage = { inputTokens: 2000, outputTokens: 1640 };
-    const e2b = creditsFromTokens(usage, resolveBillingRates({
-      provider: "ollama",
-      modelId: "gemma4:e2b",
-    }));
-    const e4b = creditsFromTokens(usage, resolveBillingRates({
-      provider: "ollama",
-      modelId: "gemma4:e4b",
-    }));
     const catalog = creditsFromTokens(usage, FREE_MODEL_BILLING_RATES);
     const qwen = creditsFromTokens(usage, resolveBillingRates({
       provider: "openrouter",
@@ -35,17 +26,9 @@ describe("unified token credits", () => {
       modelId: "deepseek/deepseek-v4-flash",
     }));
 
-    expect(e2b).toBeLessThanOrEqual(e4b);
-    expect(e4b).toBeLessThan(catalog);
     expect(qwen).toBeLessThan(deepseek);
     expect(deepseek).toBe(catalog);
-    expect(e2b).toBeGreaterThanOrEqual(MIN_GENERATION_CREDITS);
-  });
-
-  it("uses 0.70 / 0.85 Ollama multipliers vs free reference", () => {
-    expect(OLLAMA_BILLING_MULTIPLIERS["gemma4:e2b"]).toBe(0.7);
-    expect(OLLAMA_BILLING_MULTIPLIERS["gemma4:e4b"]).toBe(0.85);
-    expect(OLLAMA_BILLING_MULTIPLIERS["gemma4:e4b"]).toBeLessThanOrEqual(1);
+    expect(qwen).toBeGreaterThanOrEqual(MIN_GENERATION_CREDITS);
   });
 
   it("charges topic less than text less than file", () => {

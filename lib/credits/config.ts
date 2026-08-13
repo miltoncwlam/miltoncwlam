@@ -12,7 +12,6 @@ export const MIN_GENERATION_CREDITS = 10;
 export const GENERATE_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 export const FREE_GENERATE_LIMIT_HOUR = 5;
 export const FREE_GENERATE_LIMIT_DAY = 15;
-export const OLLAMA_GENERATE_LIMIT_HOUR = 10;
 export const PAID_GENERATE_LIMIT_HOUR = 20;
 
 /** @deprecated Use PAID_GENERATE_LIMIT_HOUR. Kept for older tests. */
@@ -22,11 +21,6 @@ export const GENERATE_RATE_LIMIT_MAX = PAID_GENERATE_LIMIT_HOUR;
 export const FREE_MODEL_BILLING_RATES = {
   inputPerM: 0.08,
   outputPerM: 0.25,
-} as const;
-
-export const OLLAMA_BILLING_MULTIPLIERS = {
-  "gemma4:e2b": 0.7,
-  "gemma4:e4b": 0.85,
 } as const;
 
 export type BillingRates = {

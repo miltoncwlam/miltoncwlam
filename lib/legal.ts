@@ -92,7 +92,6 @@ export function privacyBlocks(v: LegalValues): LegalBlock[] {
     block("5. AI processing", [
       "When you generate a deck or quiz, the study text (and, for scanned PDFs or photos, page images) is sent to the model provider you pick.",
       "Cloud generation uses OpenRouter, which routes the request to the selected model. OpenRouter and that model host process the prompt under their own privacy terms. Do not paste secrets, exam papers you are not allowed to share, or other people’s personal data.",
-      "If you run local Ollama, prompts stay on the machine that hosts Ollama. Ollama is not available on our {hosting} production app; it is for self-hosted or local use only.",
       "Learners do not pay for or run image-generation models. User generate may look up a confirmed-licence photo when a picture would help. AI illustrations are a last resort for community/admin library art only, and those cards are labelled “AI-generated”.",
     ], undefined, v),
     block("6. Licensed images", [
@@ -152,7 +151,7 @@ export function termsBlocks(v: LegalValues): LegalBlock[] {
     ], undefined, v),
     block("2. The service", [
       "{product} helps you generate flashcards and quizzes from topics, text, URLs, and files; study with flip cards, ratings, and speech; take trainer-style quizzes; and browse or copy community encyclopedia packs.",
-      "Features, models, energy grants, and limits can change as we improve the product. Cloud generation on {hosting} needs a configured OpenRouter key. Local Ollama is optional and not part of the hosted {hosting} deployment.",
+      "Features, models, energy grants, and limits can change as we improve the product. Cloud generation on {hosting} needs a configured OpenRouter key.",
     ], undefined, v),
     block("3. Eligibility", [
       "You must be able to form a contract under the laws of {jurisdiction}. If you are under 18, a parent, guardian, or school must agree to these Terms for you. Do not use the service if you are under 13.",
