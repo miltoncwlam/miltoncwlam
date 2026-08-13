@@ -3,6 +3,7 @@
 import { z } from "zod";
 
 import { requireSession } from "@/lib/auth-server";
+import { getClassLinkById } from "@/lib/data/class-links";
 import { completeGameRun, startGameRun } from "@/lib/data/games";
 import { getDeckWithCards } from "@/lib/data/decks";
 import { gradeTypedAnswer } from "@/lib/llm/grade-answer";
@@ -12,6 +13,7 @@ const startSchema = z.object({
   deckId: z.string().uuid(),
   template: z.enum(PLAY_TEMPLATE_IDS),
   clientKey: z.string().uuid(),
+  classLinkId: z.string().uuid().optional(),
 });
 
 const completeSchema = z.object({
@@ -32,16 +34,23 @@ export async function startGameRunAction(input: {
   deckId: string;
   template: string;
   clientKey: string;
+  classLinkId?: string;
 }) {
   const session = await requireSession();
   const parsed = startSchema.parse(input);
   const deck = await getDeckWithCards(parsed.deckId, session.user.id);
   if (!deck) throw new Error("Deck not found");
+  const classLink = parsed.classLinkId
+    ? await getClassLinkById(parsed.classLinkId)
+    : null;
+  const classLinkId =
+    classLink && !classLink.revoked_at ? classLink.id : undefined;
   const run = await startGameRun({
     deckId: parsed.deckId,
     userId: session.user.id,
     template: parsed.template,
     clientKey: parsed.clientKey,
+    classLinkId,
   });
   return { ok: true as const, stake: run.stake, clientKey: run.clientKey };
 }
@@ -63,6 +72,7 @@ export async function completeGameRunAction(input: {
     template: parsed.template,
     score: parsed.score,
     maxScore: parsed.maxScore,
+    cardCount: deck.cards.length,
     clientKey: parsed.clientKey,
   });
   return {

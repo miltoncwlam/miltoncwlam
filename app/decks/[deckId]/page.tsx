@@ -80,6 +80,9 @@ export default async function DeckDetailPage({
               <Link className="secondary-button" href={`/decks/${deck.id}/play`}>
                 Play activities
               </Link>
+              <Link className="secondary-button" href={`/decks/${deck.id}/class`}>
+                Class scores
+              </Link>
             </>
           ) : (
             <p className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-500">
@@ -200,6 +203,11 @@ export default async function DeckDetailPage({
                 isShared={deck.isShared}
               />
               <ClassLinkControls deckId={deck.id} links={classLinks} />
+              <p className="text-sm">
+                <Link className="text-button" href={`/decks/${deck.id}/class`}>
+                  Open class scores →
+                </Link>
+              </p>
               <CommunityVisibilityControls
                 deckId={deck.id}
                 moderationReasons={deck.moderationReasons}

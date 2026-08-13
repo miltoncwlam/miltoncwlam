@@ -1,7 +1,12 @@
 import "server-only";
 
-import { PLAY_STAKE, playPayout } from "@/lib/credits/play";
-import { assertAndSpendCredits, refundCredits } from "@/lib/data/credits";
+import { PLAY_STAKE, assertPlayScore, playPayout } from "@/lib/credits/play";
+import {
+  assertAndSpendCredits,
+  assertPlayStakeRateLimit,
+  getOrRefreshCredits,
+  refundCredits,
+} from "@/lib/data/credits";
 import { pool } from "@/lib/db";
 import type { PlayTemplateId } from "@/lib/play/templates";
 
@@ -14,6 +19,7 @@ export type GameRun = {
   stake: number;
   payout: number;
   clientKey: string;
+  classLinkId: string | null;
 };
 
 type GameRow = {
@@ -22,7 +28,12 @@ type GameRow = {
   template: string;
   score: number;
   max_score: number;
-  payload: { clientKey?: string; stake?: number; payout?: number } | null;
+  payload: {
+    clientKey?: string;
+    stake?: number;
+    payout?: number;
+    classLinkId?: string;
+  } | null;
   completed_at: Date | null;
 };
 
@@ -37,6 +48,7 @@ function mapRow(row: GameRow): GameRun {
     stake: payload.stake ?? PLAY_STAKE,
     payout: payload.payout ?? 0,
     clientKey: payload.clientKey ?? "",
+    classLinkId: payload.classLinkId ?? null,
   };
 }
 
@@ -57,9 +69,15 @@ export async function startGameRun(input: {
   userId: string;
   template: PlayTemplateId;
   clientKey: string;
+  classLinkId?: string | null;
 }): Promise<GameRun> {
   const existing = await findByClientKey(input.userId, input.clientKey);
   if (existing) return mapRow(existing);
+
+  const credits = await getOrRefreshCredits(input.userId);
+  await assertPlayStakeRateLimit(input.userId, {
+    isUnlimited: credits.isUnlimited,
+  });
 
   await assertAndSpendCredits({
     userId: input.userId,
@@ -69,6 +87,7 @@ export async function startGameRun(input: {
       deckId: input.deckId,
       template: input.template,
       clientKey: input.clientKey,
+      classLinkId: input.classLinkId ?? undefined,
     },
   });
 
@@ -81,7 +100,12 @@ export async function startGameRun(input: {
       input.deckId,
       input.userId,
       input.template,
-      JSON.stringify({ clientKey: input.clientKey, stake: PLAY_STAKE, payout: 0 }),
+      JSON.stringify({
+        clientKey: input.clientKey,
+        stake: PLAY_STAKE,
+        payout: 0,
+        ...(input.classLinkId ? { classLinkId: input.classLinkId } : {}),
+      }),
     ],
   );
   return mapRow(result.rows[0]);
@@ -93,6 +117,7 @@ export async function completeGameRun(input: {
   template: PlayTemplateId;
   score: number;
   maxScore: number;
+  cardCount: number;
   clientKey?: string;
 }): Promise<GameRun> {
   const row = input.clientKey
@@ -100,6 +125,12 @@ export async function completeGameRun(input: {
     : null;
 
   if (row?.completed_at) return mapRow(row);
+
+  assertPlayScore({
+    score: input.score,
+    maxScore: input.maxScore,
+    cardCount: input.cardCount,
+  });
 
   const stake = row ? mapRow(row).stake : 0;
   const payout = stake > 0 ? playPayout(input.score, input.maxScore, stake) : 0;
@@ -152,4 +183,63 @@ export async function completeGameRun(input: {
     ],
   );
   return mapRow(inserted.rows[0]);
+}
+
+export type ClassAssignmentRun = {
+  id: string;
+  userId: string;
+  template: PlayTemplateId;
+  score: number;
+  maxScore: number;
+  stake: number;
+  payout: number;
+  completedAt: Date;
+  classLinkId: string;
+};
+
+export async function listClassRunsForDeck(
+  deckId: string,
+  teacherUserId: string,
+) {
+  const result = await pool.query<{
+    id: string;
+    user_id: string;
+    template: string;
+    score: number;
+    max_score: number;
+    payload: GameRow["payload"];
+    completed_at: Date;
+    class_link_id: string;
+  }>(
+    `select gr.id,
+            gr.user_id,
+            gr.template,
+            gr.score,
+            gr.max_score,
+            gr.payload,
+            gr.completed_at,
+            cl.id as class_link_id
+     from game_runs gr
+     join class_links cl
+       on cl.id::text = gr.payload->>'classLinkId'
+     where cl.deck_id = $1
+       and cl.teacher_user_id = $2
+       and gr.completed_at is not null
+     order by gr.completed_at desc
+     limit 80`,
+    [deckId, teacherUserId],
+  );
+  return result.rows.map(
+    (row): ClassAssignmentRun => ({
+      id: row.id,
+      userId: row.user_id,
+      template: row.template as PlayTemplateId,
+      score: row.score,
+      maxScore: row.max_score,
+      stake: row.payload?.stake ?? PLAY_STAKE,
+      payout: row.payload?.payout ?? 0,
+      completedAt: row.completed_at,
+      classLinkId: row.class_link_id,
+    }),
+  );
 }

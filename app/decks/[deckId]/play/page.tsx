@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { requireSession } from "@/lib/auth-server";
 import { getDeckWithCards } from "@/lib/data/decks";
 import { listDueCardIds } from "@/lib/data/study";
+import { classAssignFromQuery, classJoinPath, playAssignSearch } from "@/lib/play/activity";
 import { templatesForDeck } from "@/lib/play/eligibility";
 import { PLAY_SKIN_EMOJI, PLAY_SKINS } from "@/lib/play/worlds";
 
@@ -22,25 +23,29 @@ export default async function DeckPlayPage({
   searchParams,
 }: {
   params: Promise<{ deckId: string }>;
-  searchParams: Promise<{ due?: string }>;
+  searchParams: Promise<{ due?: string; lock?: string; class?: string; activity?: string }>;
 }) {
   const session = await requireSession();
   const { deckId } = await params;
-  const { due } = await searchParams;
+  const query = await searchParams;
   const deck = await getDeckWithCards(deckId, session.user.id);
   if (!deck || deck.generationStatus !== "complete" || !deck.cards.length) {
     notFound();
   }
 
-  const dueOnly = due === "1";
-  const dueIds = dueOnly
+  const assign = classAssignFromQuery(query);
+  if (assign.locked && assign.activity) {
+    redirect(classJoinPath(deck.id, assign));
+  }
+
+  const dueIds = assign.dueOnly
     ? new Set(await listDueCardIds(deck.id, session.user.id))
     : null;
   const cards = dueIds
     ? deck.cards.filter((card) => dueIds.has(card.id))
     : deck.cards;
   const templates = templatesForDeck(cards);
-  const dueQuery = dueOnly ? "?due=1" : "";
+  const dueQuery = playAssignSearch(assign);
 
   return (
     <main className="page-shell">
@@ -55,14 +60,14 @@ export default async function DeckPlayPage({
           to get it back, and a perfect run pays double.
         </p>
         <p className="mt-3 text-sm">
-          {dueOnly ? (
-            <Link className="text-button" href={`/decks/${deck.id}/play`}>
+          {assign.dueOnly ? (
+            <Link className="text-button" href={`/decks/${deck.id}/play${playAssignSearch({ ...assign, dueOnly: false })}`}>
               Using due cards ({cards.length}) · Show all
             </Link>
           ) : (
             <Link
               className="text-button"
-              href={`/decks/${deck.id}/play?due=1`}
+              href={`/decks/${deck.id}/play${playAssignSearch({ ...assign, dueOnly: true })}`}
             >
               Due today only
             </Link>

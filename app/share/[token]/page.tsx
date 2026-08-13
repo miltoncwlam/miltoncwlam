@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { PlayDispatcher } from "@/components/play/play-dispatcher";
+import { QuizPlayer } from "@/components/quiz-player";
 import { StudyPlayer } from "@/components/study-player";
 import { startSharedStudyAction } from "@/lib/actions/study";
 import { getSession } from "@/lib/auth-server";
@@ -12,6 +13,8 @@ import { activityFromQuery } from "@/lib/play/activity";
 import { templateReason } from "@/lib/play/eligibility";
 import { PLAY_TEMPLATES } from "@/lib/play/templates";
 import { PLAY_SKIN_EMOJI, PLAY_SKINS } from "@/lib/play/worlds";
+import { shuffleIds } from "@/lib/study/shuffle";
+import type { QuizSession } from "@/lib/types/flashcard";
 
 export async function generateMetadata({
   params,
@@ -29,18 +32,31 @@ export default async function SharedDeckPage({
   searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ activity?: string; t?: string }>;
+  searchParams: Promise<{ activity?: string; t?: string; mode?: string }>;
 }) {
   const { token } = await params;
   const query = await searchParams;
   const [deck, session] = await Promise.all([getSharedDeck(token), getSession()]);
   if (!deck) notFound();
 
-  const activity = activityFromQuery(query.activity);
+  const activity = activityFromQuery(query.activity) ?? activityFromQuery(query.mode);
+  const quizMode = query.mode === "quiz" && !activity;
   const studySession = session
     ? await getLatestStudySession(deck.id, session.user.id)
     : null;
   const home = `/share/${token}`;
+  const questionOrder = shuffleIds(deck.cards.map((card) => card.id));
+  const quizSession: QuizSession = {
+    id: "share",
+    deckId: deck.id,
+    userId: session?.user.id ?? "share",
+    questionOrder,
+    currentIndex: 0,
+    score: 0,
+    total: questionOrder.length,
+    startedAt: new Date(),
+    completedAt: null,
+  };
 
   return (
     <main className="page-shell max-w-3xl">
@@ -70,6 +86,20 @@ export default async function SharedDeckPage({
               template={activity}
             />
           )}
+        </>
+      ) : quizMode ? (
+        <>
+          <p className="mb-4 text-center text-sm">
+            <Link className="text-button" href={home}>
+              ← Study cards
+            </Link>
+          </p>
+          <QuizPlayer
+            cards={deck.cards}
+            deckId={deck.id}
+            initialSession={quizSession}
+            readOnly
+          />
         </>
       ) : (
         <>

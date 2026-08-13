@@ -37,6 +37,22 @@ export async function getClassLinkByToken(token: string) {
   return result.rows[0] ?? null;
 }
 
+export async function getClassLinkById(id: string) {
+  const result = await pool.query<{
+    id: string;
+    deck_id: string;
+    teacher_user_id: string;
+    revoked_at: Date | null;
+  }>(
+    `select id, deck_id, teacher_user_id, revoked_at
+     from class_links
+     where id = $1
+     limit 1`,
+    [id],
+  );
+  return result.rows[0] ?? null;
+}
+
 export async function joinClassLink(token: string, studentUserId: string) {
   const link = await getClassLinkByToken(token);
   if (!link || link.revoked_at) {
@@ -55,7 +71,7 @@ export async function joinClassLink(token: string, studentUserId: string) {
     `update decks set class_join_count = class_join_count + 1 where id = $1`,
     [link.deck_id],
   );
-  return { deckId: copiedId, joinCount: link.join_count + 1, title: link.title };
+  return { deckId: copiedId, joinCount: link.join_count + 1, title: link.title, classLinkId: link.id };
 }
 
 export async function listClassLinksForDeck(deckId: string, teacherUserId: string) {

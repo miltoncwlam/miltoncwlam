@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import {
   gameshowPoints,
   promptText,
   shortTarget,
 } from "@/lib/play/answers";
+import { playBeep } from "@/lib/play/juice";
 import { buildQuizChoices, quizExplanation, resolveCorrectChoice } from "@/lib/quiz/choices";
 import { shuffleList } from "@/lib/study/shuffle";
 import type { Flashcard } from "@/lib/types/flashcard";
@@ -17,7 +18,7 @@ import {
   ChestSvg,
   MoleSvg,
 } from "./play-art";
-import { PlayFinished, PlayShell, WhyBox } from "./play-shell";
+import { PlayFinished, PlayShell, WhyBox, usePlayJuice } from "./play-shell";
 
 function choiceList(card: Flashcard, pool: Flashcard[], imageOnly: boolean) {
   if (imageOnly) {
@@ -43,8 +44,6 @@ export function WhackAMoleGame({
   const pool = useMemo(() => shuffleList(cards).slice(0, 12), [cards]);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
-  const [up, setUp] = useState<number[]>([]);
-  const [hit, setHit] = useState<number | null>(null);
   const [combo, setCombo] = useState(0);
   const card = pool[index];
   const moles = useMemo(() => {
@@ -52,23 +51,6 @@ export function WhackAMoleGame({
     const others = shuffleList(pool.filter((item) => item.id !== card.id)).slice(0, 3);
     return shuffleList([card, ...others]);
   }, [card, pool]);
-
-  useEffect(() => {
-    setHit(null);
-    const correct = moles.findIndex((mole) => mole.id === card?.id);
-    if (correct < 0) return;
-    let tick = 0;
-    const pop = () => {
-      const showCorrect = tick % 2 === 0;
-      const others = moles.map((_, i) => i).filter((i) => i !== correct);
-      const other = others[tick % Math.max(others.length, 1)] ?? correct;
-      setUp(showCorrect ? [correct] : [other]);
-      tick += 1;
-    };
-    pop();
-    const id = window.setInterval(pop, 850);
-    return () => window.clearInterval(id);
-  }, [index, moles, card]);
 
   if (!card || index >= pool.length) {
     return (
@@ -90,34 +72,95 @@ export function WhackAMoleGame({
       title="Whack-a-mole"
     >
       <p className="play-prompt">{promptText(card)}</p>
-      <div className="play-mole-field">
-        {moles.map((mole, i) => (
-          <button
-            className={`play-hole ${up.includes(i) ? "is-up" : ""}`}
-            key={`${mole.id}-${i}`}
-            onClick={() => {
-              if (hit !== null) return;
-              const ok = mole.id === card.id;
-              setHit(i);
-              setCombo((n) => (ok ? n + 1 : 0));
-              if (ok) setScore((n) => n + 1);
-              window.setTimeout(() => {
-                setIndex((n) => n + 1);
-              }, 420);
-            }}
-            type="button"
-          >
-            <span className="play-mole">
-              <MoleSvg squash={hit === i} />
-            </span>
-            <span className="play-mole-label">
-              {(shortTarget(mole) ?? mole.back).slice(0, 32)}
-            </span>
-            <span className="play-hole-dirt" />
-          </button>
-        ))}
-      </div>
+      <MoleField
+        card={card}
+        key={index}
+        moles={moles}
+        onResult={(ok) => {
+          setCombo((n) => (ok ? n + 1 : 0));
+          if (ok) setScore((n) => n + 1);
+          window.setTimeout(() => setIndex((n) => n + 1), 420);
+        }}
+      />
     </PlayShell>
+  );
+}
+
+function MoleField({
+  card,
+  moles,
+  onResult,
+}: {
+  card: Flashcard;
+  moles: Flashcard[];
+  onResult: (ok: boolean) => void;
+}) {
+  const juice = usePlayJuice();
+  const addTime = juice.addTime;
+  const [up, setUp] = useState<number[]>([]);
+  const [hit, setHit] = useState<number | null>(null);
+  const hitRef = useRef(false);
+  const onResultRef = useRef(onResult);
+  useLayoutEffect(() => {
+    onResultRef.current = onResult;
+  }, [onResult]);
+
+  useEffect(() => {
+    hitRef.current = false;
+    const correct = moles.findIndex((mole) => mole.id === card.id);
+    if (correct < 0) return;
+    let tick = 0;
+    let lastCorrect = false;
+    const pop = () => {
+      if (hitRef.current) return;
+      if (lastCorrect) {
+        playBeep("miss");
+        addTime(-3);
+        onResultRef.current(false);
+        return;
+      }
+      const showCorrect = tick % 2 === 0;
+      const others = moles.map((_, i) => i).filter((i) => i !== correct);
+      const other = others[tick % Math.max(others.length, 1)] ?? correct;
+      lastCorrect = showCorrect;
+      setUp(showCorrect ? [correct] : [other]);
+      tick += 1;
+    };
+    const first = window.setTimeout(pop, 0);
+    const id = window.setInterval(pop, 850);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(id);
+    };
+  }, [card, moles, addTime]);
+
+  return (
+    <div className="play-mole-field">
+      {moles.map((mole, i) => (
+        <button
+          className={`play-hole ${up.includes(i) ? "is-up" : ""}`}
+          key={`${mole.id}-${i}`}
+          onClick={() => {
+            if (hit !== null) return;
+            const ok = mole.id === card.id;
+            hitRef.current = true;
+            setHit(i);
+            playBeep(ok ? "hit" : "miss");
+            if (!ok) addTime(-3);
+            onResult(ok);
+          }}
+          type="button"
+        >
+          <span className="play-mole">
+            <MoleSvg squash={hit === i} />
+          </span>
+          <span className="play-mole-label">
+            {(shortTarget(mole) ?? mole.back).slice(0, 32)}
+          </span>
+          <span className="play-hole-dirt" />
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -131,7 +174,6 @@ export function BalloonPopGame({
   const pool = useMemo(() => shuffleList(cards).slice(0, 12), [cards]);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
-  const [popped, setPopped] = useState<number | null>(null);
   const [combo, setCombo] = useState(0);
   const card = pool[index];
   const balloons = useMemo(() => {
@@ -160,35 +202,76 @@ export function BalloonPopGame({
       title="Balloon pop"
     >
       <p className="play-prompt">{promptText(card)}</p>
-      <div className="play-balloon-sky">
-        {balloons.map((balloon, i) => (
-          <button
-            className="play-balloon-btn"
-            key={`${balloon.id}-${i}`}
-            onClick={() => {
-              if (popped !== null) return;
-              const ok = balloon.id === card.id;
-              setPopped(i);
-              setCombo((n) => (ok ? n + 1 : 0));
-              if (ok) setScore((n) => n + 1);
-              window.setTimeout(() => {
-                setPopped(null);
-                setIndex((n) => n + 1);
-              }, 380);
-            }}
-            type="button"
-          >
-            <BalloonSvg
-              color={BALLOON_COLORS[i % BALLOON_COLORS.length]!}
-              popped={popped === i}
-            />
-            <span className="play-balloon-label">
-              {(shortTarget(balloon) ?? balloon.back).slice(0, 24)}
-            </span>
-          </button>
-        ))}
-      </div>
+      <BalloonField
+        balloons={balloons}
+        card={card}
+        key={index}
+        onResult={(ok) => {
+          setCombo((n) => (ok ? n + 1 : 0));
+          if (ok) setScore((n) => n + 1);
+          window.setTimeout(() => setIndex((n) => n + 1), 380);
+        }}
+      />
     </PlayShell>
+  );
+}
+
+function BalloonField({
+  balloons,
+  card,
+  onResult,
+}: {
+  balloons: Flashcard[];
+  card: Flashcard;
+  onResult: (ok: boolean) => void;
+}) {
+  const juice = usePlayJuice();
+  const addTime = juice.addTime;
+  const [popped, setPopped] = useState<number | null>(null);
+  const poppedRef = useRef(false);
+  const onResultRef = useRef(onResult);
+  useLayoutEffect(() => {
+    onResultRef.current = onResult;
+  }, [onResult]);
+
+  useEffect(() => {
+    poppedRef.current = false;
+    const id = window.setTimeout(() => {
+      if (poppedRef.current) return;
+      playBeep("miss");
+      addTime(-3);
+      onResultRef.current(false);
+    }, 3600);
+    return () => window.clearTimeout(id);
+  }, [card, addTime]);
+
+  return (
+    <div className="play-balloon-sky">
+      {balloons.map((balloon, i) => (
+        <button
+          className="play-balloon-btn"
+          key={`${balloon.id}-${i}`}
+          onClick={() => {
+            if (popped !== null) return;
+            const ok = balloon.id === card.id;
+            poppedRef.current = true;
+            setPopped(i);
+            playBeep(ok ? "hit" : "miss");
+            if (!ok) addTime(-3);
+            onResult(ok);
+          }}
+          type="button"
+        >
+          <BalloonSvg
+            color={BALLOON_COLORS[i % BALLOON_COLORS.length]!}
+            popped={popped === i}
+          />
+          <span className="play-balloon-label">
+            {(shortTarget(balloon) ?? balloon.back).slice(0, 24)}
+          </span>
+        </button>
+      ))}
+    </div>
   );
 }
 

@@ -69,9 +69,9 @@ Community seeds stay under `system:study-a-community`.
 Weekly text energy (default 600) is an in-app allowance, not money, and not cash-out.
 
 - **Generate** spends energy from the token estimate on the create-deck screen.
-- **Play** on a deck you own costs **20 energy** to start a round. Score **50%+** to get 20 back; **80%+** pays 30; a **perfect** run pays 40. Below 50% the ante stays spent.
+- **Play** on a deck you own costs **20 energy** to start a round. Score **50%+** to get 20 back; **80%+** pays 30; a **perfect** run pays 40. Below 50%, or if you quit before the finish screen, the ante stays spent. At most **10** paid rounds per hour.
 - **Share** and **embed** play is free (read-only). Visitors are not charged.
-- **Class links** copy the deck into the learner’s library; play on that copy uses the learner’s energy.
+- **Class links** copy the deck into the learner’s library; play on that copy uses the learner’s energy. Teachers can lock one activity, limit to due-today cards, and read scores at `/decks/[id]/class`.
 - **Type the answer** first checks an exact match, then grades synonyms with the OpenRouter catalog model. That check does not spend extra energy, but it needs `OPENROUTER_API_KEY`.
 
 Optional: set `LLM_DEFAULT_PROVIDER=openrouter` (legacy `openai` / `anthropic` / `google` / `ollama` values also map to OpenRouter). Enable the **Supabase Cursor plugin** for agent access to your project (no extra env vars needed).

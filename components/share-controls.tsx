@@ -91,6 +91,9 @@ export function ShareControls({
           <p className="break-all rounded-lg bg-white p-3 text-xs text-indigo-700">
             {activityLink}
           </p>
+          <p className="break-all rounded-lg bg-white p-3 text-xs text-indigo-700">
+            {appUrl}/share/{token}?mode=quiz
+          </p>
         </div>
       ) : null}
 
@@ -103,9 +106,9 @@ export function ShareControls({
             value={embedSnippet}
           />
           <p className="text-xs text-slate-500">
-            Use <code>?mode=quiz</code> for quiz battle, or{" "}
-            <code>?mode=match-up</code> (or any activity id) for a classroom
-            template.
+            Share <code>?mode=quiz</code> for quiz battle. Embed the same with{" "}
+            <code>?mode=quiz</code>, or <code>?mode=match-up</code> (or any
+            activity id) for a classroom template.
           </p>
         </div>
       ) : null}

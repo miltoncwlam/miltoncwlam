@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from "react";
 
+import { playBeep } from "@/lib/play/juice";
+import { promptText, shortTarget } from "@/lib/play/answers";
 import { quizExplanation } from "@/lib/quiz/choices";
 import { shuffleList } from "@/lib/study/shuffle";
 import type { Flashcard } from "@/lib/types/flashcard";
-import { promptText, shortTarget } from "@/lib/play/answers";
 
 import { PlayFinished, PlayShell, WhyBox } from "./play-shell";
 
@@ -75,9 +76,11 @@ export function MatchUpGame({
               onClick={() => {
                 if (!picked) return;
                 if (picked === card.id) {
+                  playBeep("hit");
                   setMatched(new Set(matched).add(card.id));
                   setPicked(null);
                 } else {
+                  playBeep("miss");
                   setWrong((value) => value + 1);
                   setPicked(null);
                 }
@@ -116,6 +119,7 @@ export function MatchingPairsGame({
   const [open, setOpen] = useState<string[]>([]);
   const [matched, setMatched] = useState<Set<string>>(new Set());
   const [misses, setMisses] = useState(0);
+  const [wrong, setWrongPair] = useState<string[]>([]);
 
   if (matched.size >= pairs.length) {
     return (
@@ -141,19 +145,25 @@ export function MatchingPairsGame({
           const show = open.includes(tile.id) || matched.has(tile.cardId);
           return (
             <button
-              className={`play-flip ${show ? "is-open" : ""} ${matched.has(tile.cardId) ? "is-matched" : ""}`}
+              className={`play-flip ${show ? "is-open" : ""} ${matched.has(tile.cardId) ? "is-matched" : ""} ${wrong.includes(tile.id) ? "is-wrong" : ""}`}
               disabled={show}
               key={tile.id}
               onClick={() => {
                 if (open.length === 1) {
                   const first = tiles.find((item) => item.id === open[0]);
                   if (first?.cardId === tile.cardId && first.id !== tile.id) {
+                    playBeep("hit");
                     setMatched(new Set(matched).add(tile.cardId));
                     setOpen([]);
                   } else {
+                    playBeep("miss");
                     setOpen([open[0]!, tile.id]);
+                    setWrongPair([open[0]!, tile.id]);
                     setMisses((value) => value + 1);
-                    window.setTimeout(() => setOpen([]), 650);
+                    window.setTimeout(() => {
+                      setOpen([]);
+                      setWrongPair([]);
+                    }, 650);
                   }
                 } else {
                   setOpen([tile.id]);

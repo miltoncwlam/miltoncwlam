@@ -3,6 +3,16 @@ import Link from "next/link";
 import { requireAdminSession } from "@/lib/auth-server";
 import { listCreditLedger } from "@/lib/data/credits";
 
+const REASON_LABELS: Record<string, string> = {
+  play_stake: "Play ante",
+  play_win: "Play payout",
+  generate_deck: "Generate deck",
+  generate_quiz: "Generate quiz",
+  generate_refund: "Generate refund",
+  period_refill: "Weekly refill",
+  admin_adjust: "Admin adjust",
+};
+
 export default async function AdminEnergyPage() {
   await requireAdminSession();
   const rows = await listCreditLedger(200);
@@ -14,7 +24,10 @@ export default async function AdminEnergyPage() {
           ← Admin
         </Link>
         <h1 className="text-3xl font-black tracking-tight">Energy ledger</h1>
-        <p className="text-slate-600">Recent grants, spends, and admin adjustments.</p>
+        <p className="text-slate-600">
+          Recent grants, spends, and admin adjustments — including play antes
+          (play_stake) and win payouts (play_win).
+        </p>
       </header>
 
       <div className="overflow-x-auto rounded-3xl border border-slate-200 bg-white">
@@ -37,7 +50,14 @@ export default async function AdminEnergyPage() {
                 <td className="px-4 py-3">{row.email ?? row.user_id}</td>
                 <td className="px-4 py-3 font-semibold">{row.delta}</td>
                 <td className="px-4 py-3">{row.pool}</td>
-                <td className="px-4 py-3">{row.reason}</td>
+                <td className="px-4 py-3">
+                  {REASON_LABELS[row.reason] ?? row.reason}
+                  {REASON_LABELS[row.reason] ? (
+                    <span className="ml-1 text-xs text-slate-400">
+                      {row.reason}
+                    </span>
+                  ) : null}
+                </td>
               </tr>
             ))}
           </tbody>

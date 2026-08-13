@@ -23,28 +23,50 @@ export function ClassLinkControls({
   const [freshLink, setFreshLink] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [activity, setActivity] = useState("");
+  const [dueOnly, setDueOnly] = useState(false);
+  const [locked, setLocked] = useState(false);
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
       <p className="font-bold text-slate-900">Class mode</p>
       <p className="mt-1 text-sm text-slate-600">
         Students open the link and get a copy of this deck in their library.
-        Optionally assign one activity.
+        Homework play uses their energy.
       </p>
       <label className="mt-3 block text-sm">
         <span className="font-semibold">Assigned activity</span>
         <select
           className="field mt-1"
-          onChange={(event) => setActivity(event.target.value)}
+          onChange={(event) => {
+            setActivity(event.target.value);
+            if (!event.target.value) setLocked(false);
+          }}
           value={activity}
         >
-          <option value="">Copy deck only</option>
+          <option value="">Any play activity</option>
           {PLAY_TEMPLATES.map((item) => (
             <option key={item.id} value={item.id}>
               {item.name}
             </option>
           ))}
         </select>
+      </label>
+      <label className="mt-3 flex items-center gap-2 text-sm">
+        <input
+          checked={dueOnly}
+          onChange={(event) => setDueOnly(event.target.checked)}
+          type="checkbox"
+        />
+        Due-today cards only
+      </label>
+      <label className="mt-2 flex items-center gap-2 text-sm">
+        <input
+          checked={locked}
+          disabled={!activity}
+          onChange={(event) => setLocked(event.target.checked)}
+          type="checkbox"
+        />
+        Lock to this activity
       </label>
 
       {freshLink ? (
@@ -58,7 +80,11 @@ export function ClassLinkControls({
         disabled={pending}
         onClick={() =>
           startTransition(async () => {
-            const link = await createClassLinkAction(deckId, activity || undefined);
+            const link = await createClassLinkAction(deckId, {
+              activity: activity || undefined,
+              dueOnly,
+              locked: Boolean(activity) && locked,
+            });
             setFreshLink(link);
             try {
               await navigator.clipboard.writeText(link);

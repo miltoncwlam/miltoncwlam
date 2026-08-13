@@ -41,6 +41,7 @@ export function PlayDispatcher({
   readOnly = false,
   homeHref,
   replayHref,
+  classLinkId,
 }: {
   cards: Flashcard[];
   deckId: string;
@@ -106,7 +107,7 @@ export function PlayDispatcher({
   })();
 
   return (
-    <PlayOptionsProvider value={{ readOnly, homeHref, replayHref }}>
+    <PlayOptionsProvider value={{ readOnly, homeHref, replayHref, deckId, template, classLinkId }}>
       <PlayStakeGate deckId={deckId} template={template}>
         {game}
       </PlayStakeGate>

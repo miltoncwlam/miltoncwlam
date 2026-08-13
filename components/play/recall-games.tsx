@@ -27,6 +27,7 @@ export function TypeAnswerGame({
   const [value, setValue] = useState("");
   const [feedback, setFeedback] = useState<boolean | null>(null);
   const [why, setWhy] = useState<string | null>(null);
+  const [source, setSource] = useState<"exact" | "ai" | "reject" | null>(null);
   const [checking, setChecking] = useState(false);
   const card = pool[index];
 
@@ -70,6 +71,7 @@ export function TypeAnswerGame({
           })
             .then((result) => {
               setFeedback(result.ok);
+              setSource(result.source);
               setWhy(
                 result.ok
                   ? result.why
@@ -79,6 +81,7 @@ export function TypeAnswerGame({
             })
             .catch(() => {
               setFeedback(false);
+              setSource("reject");
               setWhy(shortTarget(card) ?? card.back);
             })
             .finally(() => setChecking(false));
@@ -103,9 +106,11 @@ export function TypeAnswerGame({
             onContinue={() => {
               setFeedback(null);
               setWhy(null);
+              setSource(null);
               setValue("");
               setIndex((n) => n + 1);
             }}
+            source={source ?? undefined}
             why={why}
           />
         )}

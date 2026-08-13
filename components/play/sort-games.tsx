@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { categoryBins, categoryOf, promptText, shortTarget } from "@/lib/play/answers";
+import { playBeep } from "@/lib/play/juice";
 import { quizExplanation } from "@/lib/quiz/choices";
 import { shuffleList } from "@/lib/study/shuffle";
 import type { Flashcard } from "@/lib/types/flashcard";
 
-import { PlayFinished, PlayShell, WhyBox } from "./play-shell";
+import { PlayFinished, PlayShell, WhyBox, usePlayJuice } from "./play-shell";
 
 export function GroupSortGame({
   cards,
@@ -28,17 +29,10 @@ export function GroupSortGame({
   );
   const [startCount] = useState(queue.length);
   const [score, setScore] = useState(0);
-  const [seconds, setSeconds] = useState(60);
+  const [combo, setCombo] = useState(0);
   const current = queue[0];
 
-  useEffect(() => {
-    if (!timed) return;
-    if (seconds <= 0 || queue.length === 0) return;
-    const id = window.setTimeout(() => setSeconds((n) => n - 1), 1000);
-    return () => window.clearTimeout(id);
-  }, [timed, seconds, queue.length]);
-
-  if (!current || (timed && seconds <= 0)) {
+  if (!current) {
     return (
       <PlayFinished
         deckId={deckId}
@@ -51,7 +45,8 @@ export function GroupSortGame({
 
   return (
     <PlayShell
-      extra={timed ? `${seconds}s` : undefined}
+      clock={timed ? 60 : undefined}
+      combo={combo}
       maxScore={startCount}
       score={score}
       title={timed ? "Speed sorting" : "Group sort"}
@@ -59,22 +54,47 @@ export function GroupSortGame({
     >
       <p className="play-prompt">{promptText(current)}</p>
       <p className="play-muted">{shortTarget(current) ?? current.back}</p>
-      <div className="grid gap-2 sm:grid-cols-2">
-        {bins.map(([name]) => (
-          <button
-            className="play-choice"
-            key={name}
-            onClick={() => {
-              if (categoryOf(current) === name) setScore((n) => n + 1);
-              setQueue((list) => list.slice(1));
-            }}
-            type="button"
-          >
-            {name}
-          </button>
-        ))}
-      </div>
+      <SortBins
+        bins={bins}
+        current={current}
+        onPick={(ok) => {
+          setCombo((n) => (ok ? n + 1 : 0));
+          if (ok) setScore((n) => n + 1);
+          setQueue((list) => list.slice(1));
+        }}
+      />
     </PlayShell>
+  );
+}
+
+function SortBins({
+  bins,
+  current,
+  onPick,
+}: {
+  bins: [string, Flashcard[]][];
+  current: Flashcard;
+  onPick: (ok: boolean) => void;
+}) {
+  const juice = usePlayJuice();
+  return (
+    <div className="grid gap-2 sm:grid-cols-2">
+      {bins.map(([name]) => (
+        <button
+          className="play-choice play-bin"
+          key={name}
+          onClick={() => {
+            const ok = categoryOf(current) === name;
+            playBeep(ok ? "hit" : "miss");
+            if (!ok) juice.addTime(-2);
+            onPick(ok);
+          }}
+          type="button"
+        >
+          {name}
+        </button>
+      ))}
+    </div>
   );
 }
 

@@ -124,6 +124,9 @@ async function playRound(template: PlayTemplateId, node: HTMLElement) {
     const buttons = enabledButtons(node);
     const cont = buttons.find((button) => button.textContent === "Continue");
     if (cont) {
+      if (template === "type-the-answer") {
+        expect(node.textContent ?? "").toMatch(/AI accepted|Exact match|Miss/);
+      }
       click(cont);
       continue;
     }
@@ -286,6 +289,11 @@ describe("every classroom game", () => {
         node.querySelector(".play-stage, .play-finish, .play-xw, .play-ws, .play-mole-field, .play-sky, .play-maze-grid"),
         id,
       ).toBeTruthy();
+      if (node.querySelector(".play-stage")) {
+        expect(node.querySelector(".play-hud-score")?.textContent ?? "", id).toMatch(
+          /\d+s/,
+        );
+      }
     }
   }, 30_000);
 

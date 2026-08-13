@@ -161,7 +161,7 @@ export function termsBlocks(v: LegalValues): LegalBlock[] {
     ], undefined, v),
     block("5. Energy and limits", [
       "Weekly energy is an in-app allowance for text generation and classroom play. It is not money, not a stored-value facility, and not redeemable for cash. Image generation is not a learner product and is not billed as a separate learner balance.",
-      "Starting a play round spends energy. Scoring well can return that energy, sometimes with a bonus. Unused energy does not have to roll over. We may rate-limit generate, quiz, play, and speech requests to protect the service.",
+      "Starting a play round spends 20 energy. Leave before the finish screen and that ante stays spent. Score 50%+ to get 20 back; 80%+ pays 30; a perfect run pays 40. Unused energy does not have to roll over. We may rate-limit generate, quiz, play, and speech requests to protect the service.",
     ], undefined, v),
     block("6. Acceptable use", [
       "You agree not to:",
