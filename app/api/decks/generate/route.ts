@@ -165,8 +165,8 @@ async function attachLicensedWebImages(input: {
   return { cards, imagesAttached };
 }
 
-/** Hobby Vercel caps at 60s; local Ollama can take longer. Raise on Pro. */
-export const maxDuration = process.env.VERCEL ? 60 : 300;
+/** Vercel Hobby max is 60s; Next requires a static number here. */
+export const maxDuration = 60;
 
 async function generateFromLongText(
   content: string,

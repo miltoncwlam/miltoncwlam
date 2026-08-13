@@ -223,7 +223,7 @@ html[data-theme="dark"] .landing-hero-card {
 .text-indigo-600,
 .text-indigo-700,
 .hover\:text-indigo-700:hover,
-.group-hover\:text-indigo-700:group-hover {
+.group:hover .group-hover\:text-indigo-700 {
   color: var(--accent) !important;
 }
 
