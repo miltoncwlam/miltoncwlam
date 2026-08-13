@@ -235,3 +235,11 @@ export async function resolveOpenRouterModerationModel(): Promise<string> {
   if (catalog[0]?.id) return catalog[0].id;
   return "deepseek/deepseek-v4-flash";
 }
+
+/** Prefer the OpenRouter catalog router; never fall back to a paid model. */
+export async function resolveOpenRouterFreeModel(): Promise<string | null> {
+  const catalog = await listOpenRouterFreeModels();
+  const preferred =
+    catalog.find((model) => model.id === "openrouter/free") ?? catalog[0];
+  return preferred?.id ?? (env.OPENROUTER_API_KEY ? "openrouter/free" : null);
+}

@@ -5,6 +5,7 @@ import { requireSession } from "@/lib/auth-server";
 import { getDeckWithCards } from "@/lib/data/decks";
 import { listDueCardIds } from "@/lib/data/study";
 import { templatesForDeck } from "@/lib/play/eligibility";
+import { PLAY_SKIN_EMOJI, PLAY_SKINS } from "@/lib/play/worlds";
 
 const GROUPS: { id: string; label: string }[] = [
   { id: "pairing", label: "Match" },
@@ -50,8 +51,8 @@ export default async function DeckPlayPage({
         <p className="eyebrow">Classroom activities</p>
         <h1 className="page-title">Play · {deck.title}</h1>
         <p className="page-subtitle">
-          Same cards, Wordwall-style templates. Play is free — energy is only
-          for generating new cards.
+          Same cards, twenty-six arcade rooms. Each round costs energy; win 50%+
+          to get it back, and a perfect run pays double.
         </p>
         <p className="mt-3 text-sm">
           {dueOnly ? (
@@ -80,24 +81,26 @@ export default async function DeckPlayPage({
               {items.map((item) =>
                 item.blocked ? (
                   <div
-                    className="rounded-2xl border border-dashed border-[var(--border)] p-4 opacity-60"
+                    className={`play-pick is-blocked play-stage--${PLAY_SKINS[item.id]}`}
                     key={item.id}
                   >
                     <p className="font-bold">{item.name}</p>
-                    <p className="mt-1 text-sm text-[var(--muted)]">
-                      {item.blocked}
-                    </p>
+                    <p className="mt-1 text-sm">{item.blocked}</p>
+                    <span className="play-pick-emoji" aria-hidden>
+                      {PLAY_SKIN_EMOJI[PLAY_SKINS[item.id]]}
+                    </span>
                   </div>
                 ) : (
                   <Link
-                    className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 hover:border-[var(--accent)]"
+                    className={`play-pick play-stage--${PLAY_SKINS[item.id]}`}
                     href={`/decks/${deck.id}/play/${item.id}${dueQuery}`}
                     key={item.id}
                   >
                     <p className="font-bold">{item.name}</p>
-                    <p className="mt-1 text-sm text-[var(--muted)]">
-                      {item.blurb}
-                    </p>
+                    <p className="mt-1 text-sm">{item.blurb}</p>
+                    <span className="play-pick-emoji" aria-hidden>
+                      {PLAY_SKIN_EMOJI[PLAY_SKINS[item.id]]}
+                    </span>
                   </Link>
                 ),
               )}

@@ -10,7 +10,10 @@ Turn notes, PDFs, and photos into interactive flashcards. Built with **Next.js 1
 - AI generation via **OpenRouter** (DeepSeek, Qwen, and other catalog models)
 - Collectible-style flip cards with Hard / OK / Easy ratings
 - Shuffle, restart, and saved study progress
-- Read-only share links (anonymous study; signed-in users can save progress)
+- **Play:** 26 classroom games on the same cards (match, recall, arcade, puzzles)
+- Weekly **energy** for generation and play (not money; see Energy below)
+- Read-only share and embed links (anonymous study/play; signed-in users can save study progress)
+- Class links copy a deck into a learner library and can lock one activity
 
 ## Setup
 
@@ -46,7 +49,7 @@ Community seeds stay under `system:study-a-community`.
 
 | Need | Variable | Source |
 |------|----------|--------|
-| AI generation | `OPENROUTER_API_KEY` | [OpenRouter](https://openrouter.ai) |
+| AI generation + typed play grading | `OPENROUTER_API_KEY` | [OpenRouter](https://openrouter.ai) |
 | File/photo uploads | `SUPABASE_SECRET_KEY` | Settings → API Keys → **Secret** (`sb_secret_…`, server only) |
 
 ### Legal pages & languages
@@ -60,6 +63,16 @@ Community seeds stay under `system:study-a-community`.
 1. Set `ADMIN_BOOTSTRAP_EMAIL` to your Clerk account email (optional).
 2. Run `npm run db:migrate`.
 3. Sign in at `/sign-in` with that email, then open `/admin` to set weekly energy.
+
+### Energy
+
+Weekly text energy (default 600) is an in-app allowance, not money, and not cash-out.
+
+- **Generate** spends energy from the token estimate on the create-deck screen.
+- **Play** on a deck you own costs **20 energy** to start a round. Score **50%+** to get 20 back; **80%+** pays 30; a **perfect** run pays 40. Below 50% the ante stays spent.
+- **Share** and **embed** play is free (read-only). Visitors are not charged.
+- **Class links** copy the deck into the learner’s library; play on that copy uses the learner’s energy.
+- **Type the answer** first checks an exact match, then grades synonyms with the OpenRouter catalog model. That check does not spend extra energy, but it needs `OPENROUTER_API_KEY`.
 
 Optional: set `LLM_DEFAULT_PROVIDER=openrouter` (legacy `openai` / `anthropic` / `google` / `ollama` values also map to OpenRouter). Enable the **Supabase Cursor plugin** for agent access to your project (no extra env vars needed).
 
@@ -124,7 +137,7 @@ Set `E2E_LLM=true` to run the optional paid LLM generation E2E flow.
 | `NEXT_PUBLIC_SUPABASE_URL` | Project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key |
 | `SUPABASE_SECRET_KEY` | Secret key (uploads) |
-| `OPENROUTER_API_KEY` | Required for generation on Vercel |
+| `OPENROUTER_API_KEY` | Required for generation and Play typed-answer grading |
 | `NEXT_PUBLIC_LEGAL_EMAIL` | Real inbox for `/privacy` contact |
 | `NEXT_PUBLIC_LEGAL_OPERATOR` | Your name or organisation |
 | `ADMIN_BOOTSTRAP_EMAIL` | Clerk email treated as admin |

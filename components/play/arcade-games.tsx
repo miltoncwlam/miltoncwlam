@@ -6,6 +6,7 @@ import { promptText, shortTarget } from "@/lib/play/answers";
 import { shuffleList } from "@/lib/study/shuffle";
 import type { Flashcard } from "@/lib/types/flashcard";
 
+import { GhostSvg, HeroSvg, PlaneSvg } from "./play-art";
 import { PlayFinished, PlayShell } from "./play-shell";
 
 const MAZE = [
@@ -153,59 +154,59 @@ export function MazeChaseGame({
 
   return (
     <PlayShell
-      extra={`${lives} lives`}
+      lives={lives}
       maxScore={pool.length}
       score={score}
+      skin="maze"
       title="Maze chase"
     >
-      <p className="text-center font-bold">{promptText(card)}</p>
-      <div className="mx-auto grid w-max gap-px rounded-xl bg-[var(--border)] p-1">
-        {MAZE.map((row, r) => (
-          <div className="flex gap-px" key={r}>
-            {row.split("").map((cell, c) => {
+      <p className="play-prompt">{promptText(card)}</p>
+      <div className="play-maze-board">
+        <div
+          className="play-maze-grid"
+          style={{ gridTemplateColumns: `repeat(${MAZE[0]!.length}, 1.55rem)` }}
+        >
+          {MAZE.flatMap((row, r) =>
+            row.split("").map((cell, c) => {
               const exit = choices.find((item) => item.r === r && item.c === c);
               const here = pos[0] === r && pos[1] === c;
               const foe = ghost[0] === r && ghost[1] === c;
               return (
                 <div
-                  className={`flex h-7 w-7 items-center justify-center text-[8px] font-bold ${
+                  className={`play-maze-cell ${
                     cell === "#"
-                      ? "bg-[var(--ink)]"
-                      : here
-                        ? "bg-[var(--accent)] text-[var(--primary-foreground)]"
-                        : foe
-                          ? "bg-rose-500 text-white"
-                          : exit
-                            ? "bg-[var(--secondary)]"
-                            : "bg-[var(--surface)]"
+                      ? "play-maze-cell--wall"
+                      : exit
+                        ? "play-maze-cell--exit"
+                        : "play-maze-cell--floor"
                   }`}
                   key={`${r}-${c}`}
                   title={exit?.label}
                 >
-                  {here ? "•" : foe ? "!" : exit ? exit.label.slice(0, 2) : ""}
+                  {here ? <HeroSvg /> : foe ? <GhostSvg /> : exit ? exit.label.slice(0, 2) : ""}
                 </div>
               );
-            })}
-          </div>
-        ))}
+            }),
+          )}
+        </div>
       </div>
-      <div className="mx-auto grid w-36 grid-cols-3 gap-1">
+      <div className="mx-auto mt-6 grid w-40 grid-cols-3 gap-1">
         <span />
-        <button className="secondary-button py-2" onClick={() => nudge(-1, 0)} type="button">
+        <button className="play-choice play-choice--center py-3" onClick={() => nudge(-1, 0)} type="button">
           ↑
         </button>
         <span />
-        <button className="secondary-button py-2" onClick={() => nudge(0, -1)} type="button">
+        <button className="play-choice play-choice--center py-3" onClick={() => nudge(0, -1)} type="button">
           ←
         </button>
-        <button className="secondary-button py-2" onClick={() => nudge(1, 0)} type="button">
+        <button className="play-choice play-choice--center py-3" onClick={() => nudge(1, 0)} type="button">
           ↓
         </button>
-        <button className="secondary-button py-2" onClick={() => nudge(0, 1)} type="button">
+        <button className="play-choice play-choice--center py-3" onClick={() => nudge(0, 1)} type="button">
           →
         </button>
       </div>
-      <ul className="text-xs text-[var(--muted)]">
+      <ul className="play-muted mt-3 text-center text-xs">
         {choices.map((exit) => (
           <li key={exit.card.id}>{exit.label}</li>
         ))}
@@ -304,12 +305,12 @@ export function AirplaneGame({
   }
 
   return (
-    <PlayShell maxScore={pool.length} score={score} title="Airplane">
-      <p className="text-center font-bold">{promptText(card)}</p>
-      <div className="relative h-80 overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--secondary)]">
+    <PlayShell maxScore={pool.length} score={score} skin="plane" title="Airplane">
+      <p className="play-prompt">{promptText(card)}</p>
+      <div className="play-sky">
         {clouds.map((cloud) => (
           <button
-            className="absolute w-[22%] rounded-full bg-[var(--surface)] px-1 py-3 text-center text-[10px] font-bold shadow"
+            className="play-cloud"
             key={cloud.id}
             onClick={() => setLane(cloud.lane)}
             style={{ left: `${6 + cloud.lane * 24}%`, top: `${cloud.y}%` }}
@@ -318,22 +319,19 @@ export function AirplaneGame({
             {(shortTarget(cloud.card) ?? cloud.card.back).slice(0, 28)}
           </button>
         ))}
-        <div
-          className="absolute bottom-3 flex h-10 w-[22%] items-center justify-center rounded-lg bg-[var(--accent)] text-sm font-black"
-          style={{ left: `${6 + lane * 24}%` }}
-        >
-          ✈
+        <div className="play-plane-wrap" style={{ left: `${6 + lane * 24}%` }}>
+          <PlaneSvg />
         </div>
       </div>
-      <div className="grid grid-cols-4 gap-2">
+      <div className="mt-3 grid grid-cols-4 gap-2">
         {[0, 1, 2, 3].map((value) => (
           <button
-            className="secondary-button"
+            className="play-choice play-choice--center"
             key={value}
             onClick={() => setLane(value)}
             type="button"
           >
-            {value + 1}
+            Lane {value + 1}
           </button>
         ))}
       </div>

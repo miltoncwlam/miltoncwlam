@@ -42,21 +42,20 @@ export function MatchUpGame({
     <PlayShell
       maxScore={pairs.length}
       score={matched.size}
+      skin="match"
       title="Match up"
     >
-      <p className="text-sm text-[var(--muted)]">
-        Tap a prompt, then the matching answer.
-      </p>
+      <p className="play-prompt">Tap a prompt, then its twin.</p>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           {left.map((card) => (
             <button
-              className={`w-full rounded-2xl border px-3 py-3 text-left text-sm font-semibold ${
+              className={`play-choice w-full ${
                 matched.has(card.id)
-                  ? "border-emerald-400 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100"
+                  ? "is-done"
                   : picked === card.id
-                    ? "border-[var(--accent)] bg-[var(--secondary)]"
-                    : "border-[var(--border)] bg-[var(--surface)]"
+                    ? "is-picked"
+                    : ""
               }`}
               disabled={matched.has(card.id)}
               key={`l-${card.id}`}
@@ -70,11 +69,7 @@ export function MatchUpGame({
         <div className="space-y-2">
           {right.map((card) => (
             <button
-              className={`w-full rounded-2xl border px-3 py-3 text-left text-sm ${
-                matched.has(card.id)
-                  ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-950/40"
-                  : "border-[var(--border)] bg-[var(--surface)]"
-              }`}
+              className={`play-choice w-full ${matched.has(card.id) ? "is-done" : ""}`}
               disabled={matched.has(card.id)}
               key={`r-${card.id}`}
               onClick={() => {
@@ -138,20 +133,15 @@ export function MatchingPairsGame({
       extra={`${misses} misses`}
       maxScore={pairs.length}
       score={matched.size}
+      skin="flip"
       title="Matching pairs"
     >
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="play-flip-grid">
         {tiles.map((tile) => {
           const show = open.includes(tile.id) || matched.has(tile.cardId);
           return (
             <button
-              className={`min-h-24 rounded-2xl border p-3 text-sm font-semibold ${
-                matched.has(tile.cardId)
-                  ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-950/40"
-                  : show
-                    ? "border-[var(--accent)] bg-[var(--secondary)]"
-                    : "border-[var(--border)] bg-[var(--surface)]"
-              }`}
+              className={`play-flip ${show ? "is-open" : ""} ${matched.has(tile.cardId) ? "is-matched" : ""}`}
               disabled={show}
               key={tile.id}
               onClick={() => {
@@ -171,7 +161,10 @@ export function MatchingPairsGame({
               }}
               type="button"
             >
-              {show ? tile.text : "?"}
+              <span className="play-flip-inner">
+                <span className="play-flip-face play-flip-back">★</span>
+                <span className="play-flip-face play-flip-front">{tile.text}</span>
+              </span>
             </button>
           );
         })}
@@ -208,16 +201,14 @@ export function FindTheMatchGame({
     <PlayShell
       maxScore={pool.length}
       score={pool.length - remaining.length}
+      skin="match"
       title="Find the match"
     >
-      <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
-        <p className="eyebrow">Prompt</p>
-        <h2 className="mt-2 text-xl font-bold">{promptText(prompt)}</h2>
-      </div>
+      <p className="play-prompt">{promptText(prompt)}</p>
       <div className="grid gap-2">
         {remaining.map((card) => (
           <button
-            className="tcg-choice"
+            className="play-choice"
             disabled={feedback !== null}
             key={card.id}
             onClick={() => {

@@ -11,6 +11,7 @@ import { getLatestStudySession } from "@/lib/data/study";
 import { activityFromQuery } from "@/lib/play/activity";
 import { templateReason } from "@/lib/play/eligibility";
 import { PLAY_TEMPLATES } from "@/lib/play/templates";
+import { PLAY_SKIN_EMOJI, PLAY_SKINS } from "@/lib/play/worlds";
 
 export async function generateMetadata({
   params,
@@ -82,14 +83,18 @@ export default async function SharedDeckPage({
             <h2 className="text-sm font-black uppercase tracking-[0.2em] text-[var(--muted)]">
               Classroom activities
             </h2>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
               {PLAY_TEMPLATES.map((item) => (
                 <Link
-                  className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3 text-sm font-semibold"
+                  className={`play-pick play-stage--${PLAY_SKINS[item.id]}`}
                   href={`${home}?activity=${item.id}`}
                   key={item.id}
                 >
-                  {item.name}
+                  <p className="font-bold">{item.name}</p>
+                  <p className="mt-1 text-sm">{item.blurb}</p>
+                  <span className="play-pick-emoji" aria-hidden>
+                    {PLAY_SKIN_EMOJI[PLAY_SKINS[item.id]]}
+                  </span>
                 </Link>
               ))}
             </div>

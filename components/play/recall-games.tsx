@@ -2,11 +2,13 @@
 
 import { useMemo, useState } from "react";
 
-import { clozeBlank, promptText, shortTarget, spellingWord, typedMatches } from "@/lib/play/answers";
+import { gradeTypedAnswerAction } from "@/lib/actions/games";
+import { clozeBlank, promptText, shortTarget, spellingWord } from "@/lib/play/answers";
 import { quizExplanation } from "@/lib/quiz/choices";
 import { shuffleList } from "@/lib/study/shuffle";
 import type { Flashcard } from "@/lib/types/flashcard";
 
+import { HangmanSvg, MicSvg } from "./play-art";
 import { PlayFinished, PlayShell, WhyBox } from "./play-shell";
 
 export function TypeAnswerGame({
@@ -24,6 +26,8 @@ export function TypeAnswerGame({
   const [score, setScore] = useState(0);
   const [value, setValue] = useState("");
   const [feedback, setFeedback] = useState<boolean | null>(null);
+  const [why, setWhy] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
   const card = pool[index];
 
   if (!card || index >= pool.length) {
@@ -38,9 +42,9 @@ export function TypeAnswerGame({
   }
 
   return (
-    <PlayShell maxScore={pool.length} score={score} title="Type the answer">
-      <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
-        <p className="eyebrow">
+    <PlayShell maxScore={pool.length} score={score} skin="spell" title="Type the answer">
+      <div className="play-board">
+        <p className="play-muted">
           {index + 1} / {pool.length}
         </p>
         {card.imageUrl ? (
@@ -51,44 +55,58 @@ export function TypeAnswerGame({
             src={card.imageUrl}
           />
         ) : null}
-        <h2 className="mt-3 text-xl font-bold">{promptText(card)}</h2>
+        <h2 className="play-prompt mb-0 mt-3">{promptText(card)}</h2>
       </div>
       <form
-        className="space-y-3"
+        className="mt-4 space-y-3"
         onSubmit={(event) => {
           event.preventDefault();
-          if (feedback !== null) return;
-          const ok = typedMatches(value, card);
-          setFeedback(ok);
-          if (ok) setScore((n) => n + 1);
+          if (feedback !== null || checking) return;
+          setChecking(true);
+          void gradeTypedAnswerAction({
+            deckId,
+            cardId: card.id,
+            typed: value,
+          })
+            .then((result) => {
+              setFeedback(result.ok);
+              setWhy(
+                result.ok
+                  ? result.why
+                  : `${shortTarget(card) ?? card.back}${result.why ? ` — ${result.why}` : ""}`,
+              );
+              if (result.ok) setScore((n) => n + 1);
+            })
+            .catch(() => {
+              setFeedback(false);
+              setWhy(shortTarget(card) ?? card.back);
+            })
+            .finally(() => setChecking(false));
         }}
       >
         <input
           autoCapitalize="off"
           autoComplete="off"
-          className="w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
-          disabled={feedback !== null}
+          className="play-input"
+          disabled={feedback !== null || checking}
           onChange={(event) => setValue(event.target.value)}
-          placeholder="Type the answer"
+          placeholder="Type the answer — close counts"
           value={value}
         />
         {feedback === null ? (
-          <button className="primary-button" type="submit">
-            Check
+          <button className="primary-button" disabled={checking} type="submit">
+            {checking ? "Checking…" : "Check"}
           </button>
         ) : (
           <WhyBox
             ok={feedback}
             onContinue={() => {
               setFeedback(null);
+              setWhy(null);
               setValue("");
               setIndex((n) => n + 1);
             }}
-            why={
-              feedback
-                ? quizExplanation(card)
-                : `${shortTarget(card) ?? card.back}${quizExplanation(card) ? ` — ${quizExplanation(card)}` : ""}`
-            }
+            why={why}
           />
         )}
       </form>
@@ -139,15 +157,14 @@ export function SpellWordGame({
       maxScore={pool.length}
       score={score}
       title={mode === "unjumble" ? "Unjumble" : "Spell the word"}
+      skin="spell"
     >
-      <p className="text-lg font-bold">{promptText(card)}</p>
-      <p className="min-h-10 text-center font-mono text-2xl tracking-[0.3em]">
-        {built.join("") || "—"}
-      </p>
+      <p className="play-prompt">{promptText(card)}</p>
+      <p className="play-spell-slots">{built.join("") || "—"}</p>
       <div className="flex flex-wrap justify-center gap-2">
         {bank.map((letter, i) => (
           <button
-            className="secondary-button min-w-10"
+            className="play-key"
             key={`${letter}-${i}`}
             onClick={() => {
               setBuilt((letters) => [...letters, letter]);
@@ -159,9 +176,9 @@ export function SpellWordGame({
           </button>
         ))}
       </div>
-      <div className="flex justify-center gap-2">
+      <div className="mt-3 flex justify-center gap-2">
         <button
-          className="secondary-button"
+          className="play-choice play-choice--center"
           onClick={() => resetBank(word)}
           type="button"
         >
@@ -228,14 +245,18 @@ export function HangmanGame({
       extra={`${6 - misses} lives`}
       maxScore={pool.length}
       score={score}
+      skin="spell"
       title="Hangman"
     >
-      <p className="font-bold">{promptText(card)}</p>
-      <p className="font-mono text-2xl tracking-widest">{display}</p>
+      <p className="play-prompt">{promptText(card)}</p>
+      <div className="play-hang">
+        <HangmanSvg misses={misses} />
+      </div>
+      <p className="play-spell-slots">{display}</p>
       <div className="flex flex-wrap justify-center gap-1">
         {letters.map((letter) => (
           <button
-            className="secondary-button min-w-9 px-2 py-1 text-sm"
+            className="play-key"
             disabled={guessed.has(letter) || won || lost}
             key={letter}
             onClick={() => {
@@ -311,12 +332,13 @@ export function ClozeGame({
       maxScore={pool.length}
       score={score}
       title="Complete the sentence"
+      skin="spell"
     >
-      <p className="text-lg font-bold leading-relaxed">{blank.sentence}</p>
-      <div className="flex flex-wrap gap-2">
+      <p className="play-prompt">{blank.sentence}</p>
+      <div className="flex flex-wrap justify-center gap-2">
         {chips.map((chip) => (
           <button
-            className="tcg-choice"
+            className="play-choice"
             disabled={feedback !== null}
             key={chip}
             onClick={() => {
@@ -369,28 +391,25 @@ export function SpeakingCardsGame({
   }
 
   return (
-    <PlayShell maxScore={pool.length} score={score} title="Speaking cards">
-      <p className="text-sm text-[var(--muted)]">
-        Say the answer out loud, then reveal.
-      </p>
-      <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8 text-center">
-        <p className="text-xl font-bold">{promptText(card)}</p>
+    <PlayShell maxScore={pool.length} score={score} skin="talk" title="Speaking cards">
+      <p className="play-muted">Say the answer out loud, then reveal.</p>
+      <div className="play-talk-card">
+        <MicSvg />
+        <p className="play-prompt mb-0">{promptText(card)}</p>
         {revealed ? (
-          <p className="mt-4 text-[var(--muted)]">
-            {shortTarget(card) ?? card.back}
-          </p>
+          <p className="mt-4 text-lg font-bold">{shortTarget(card) ?? card.back}</p>
         ) : null}
       </div>
       {!revealed ? (
         <button
-          className="primary-button"
+          className="primary-button mt-4"
           onClick={() => setRevealed(true)}
           type="button"
         >
           Reveal
         </button>
       ) : (
-        <div className="flex justify-center gap-3">
+        <div className="mt-4 flex justify-center gap-3">
           <button
             className="secondary-button"
             onClick={() => {

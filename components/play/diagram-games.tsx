@@ -69,19 +69,18 @@ export function LabelledDiagramGame({
       maxScore={boards.reduce((sum, group) => sum + group.length, 0)}
       score={score}
       title="Labelled diagram"
+      skin="gallery"
     >
-      <p className="text-sm text-[var(--muted)]">
-        Tap a picture, then the matching label.
-      </p>
-      <div className="grid grid-cols-2 gap-2">
+      <p className="play-muted">Tap a picture, then the matching label.</p>
+      <div className="grid grid-cols-2 gap-3">
         {board.map((card) => (
           <button
-            className={`overflow-hidden rounded-2xl border ${
+            className={`play-polaroid ${
               matched.has(card.id)
-                ? "border-emerald-400"
+                ? "is-done"
                 : picked === card.id
-                  ? "border-[var(--accent)]"
-                  : "border-[var(--border)]"
+                  ? "is-picked"
+                  : ""
             }`}
             disabled={matched.has(card.id)}
             key={card.id}
@@ -89,18 +88,14 @@ export function LabelledDiagramGame({
             type="button"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              alt={promptText(card)}
-              className="h-28 w-full object-cover"
-              src={card.imageUrl!}
-            />
+            <img alt={promptText(card)} src={card.imageUrl!} />
           </button>
         ))}
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="mt-4 flex flex-wrap justify-center gap-2">
         {labels.map((label) => (
           <button
-            className="secondary-button"
+            className="play-chip"
             disabled={matched.has(label.id)}
             key={label.id}
             onClick={() => {
@@ -162,19 +157,18 @@ export function LabelMatchGame({
       maxScore={pool.length}
       score={matched.size}
       title="Label match"
+      skin="gallery"
     >
-      <p className="text-sm text-[var(--muted)]">
-        Tap a picture, then tap its label.
-      </p>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <p className="play-muted">Tap a picture, then tap its label.</p>
+      <div className="grid gap-3 sm:grid-cols-2">
         {pool.map((card) => (
           <button
-            className={`flex items-center gap-3 rounded-2xl border p-2 text-left ${
+            className={`play-polaroid flex items-center gap-3 !p-2 text-left ${
               matched.has(card.id)
-                ? "border-emerald-400 bg-emerald-50 dark:bg-emerald-950/30"
+                ? "is-done"
                 : picked === card.id
-                  ? "border-[var(--accent)]"
-                  : "border-[var(--border)]"
+                  ? "is-picked"
+                  : ""
             }`}
             disabled={matched.has(card.id)}
             key={card.id}
@@ -184,19 +178,19 @@ export function LabelMatchGame({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               alt=""
-              className="h-16 w-16 rounded-xl object-cover"
+              className="!h-16 !w-16 rounded-md object-cover"
               src={card.imageUrl!}
             />
-            <span className="text-xs text-[var(--muted)]">
+            <span className="text-xs font-bold">
               {matched.has(card.id) ? shortTarget(card) : "Label this"}
             </span>
           </button>
         ))}
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="mt-4 flex flex-wrap justify-center gap-2">
         {labels.map((label) => (
           <button
-            className="secondary-button"
+            className="play-chip"
             disabled={matched.has(label.id)}
             key={label.id}
             onClick={() => {

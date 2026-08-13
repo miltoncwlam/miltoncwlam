@@ -55,15 +55,14 @@ export function GroupSortGame({
       maxScore={startCount}
       score={score}
       title={timed ? "Speed sorting" : "Group sort"}
+      skin="sort"
     >
-      <p className="text-lg font-bold">{promptText(current)}</p>
-      <p className="text-sm text-[var(--muted)]">
-        {shortTarget(current) ?? current.back}
-      </p>
+      <p className="play-prompt">{promptText(current)}</p>
+      <p className="play-muted">{shortTarget(current) ?? current.back}</p>
       <div className="grid gap-2 sm:grid-cols-2">
         {bins.map(([name]) => (
           <button
-            className="tcg-choice"
+            className="play-choice"
             key={name}
             onClick={() => {
               if (categoryOf(current) === name) setScore((n) => n + 1);
@@ -124,14 +123,14 @@ export function OddOneOutGame({
   const oddCategory = [...counts.entries()].find(([, n]) => n === 1)?.[0];
 
   return (
-    <PlayShell maxScore={rounds.length} score={score} title="Odd one out">
-      <p className="text-sm text-[var(--muted)]">
+    <PlayShell maxScore={rounds.length} score={score} skin="sort" title="Odd one out">
+      <p className="play-muted">
         Three share a group. Tap the one that does not belong.
       </p>
       <div className="grid gap-2">
         {round.map((card) => (
           <button
-            className="tcg-choice text-left"
+            className="play-choice text-left"
             disabled={feedback !== null}
             key={card.id}
             onClick={() => {
@@ -188,24 +187,17 @@ export function RankOrderGame({
   }
 
   return (
-    <PlayShell maxScore={original.length} score={0} title="Rank order">
-      <p className="text-sm text-[var(--muted)]">
+    <PlayShell maxScore={original.length} score={0} skin="sort" title="Rank order">
+      <p className="play-muted">
         Put these in the deck’s study order (first to last).
       </p>
-      <ol className="space-y-2">
+      <ol className="play-rank">
         {order.map((card, index) => (
-          <li
-            className="flex items-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2"
-            key={card.id}
-          >
-            <span className="text-xs font-bold text-[var(--muted)]">
-              {index + 1}
-            </span>
-            <span className="flex-1 text-sm font-semibold">
-              {promptText(card)}
-            </span>
+          <li className="play-rank-item" key={card.id}>
+            <span className="play-rank-num">{index + 1}</span>
+            <span className="flex-1 text-sm font-semibold">{promptText(card)}</span>
             <button
-              className="secondary-button px-2 py-1 text-xs"
+              className="play-key"
               disabled={index === 0}
               onClick={() => {
                 const next = [...order];
@@ -214,10 +206,10 @@ export function RankOrderGame({
               }}
               type="button"
             >
-              Up
+              ↑
             </button>
             <button
-              className="secondary-button px-2 py-1 text-xs"
+              className="play-key"
               disabled={index === order.length - 1}
               onClick={() => {
                 const next = [...order];
@@ -226,7 +218,7 @@ export function RankOrderGame({
               }}
               type="button"
             >
-              Down
+              ↓
             </button>
           </li>
         ))}
@@ -275,27 +267,34 @@ export function TrueFalseGame({
   }
 
   return (
-    <PlayShell maxScore={rounds.length} score={score} title="True or false">
-      <p className="font-bold">{promptText(round.card)}</p>
-      <p className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm">
-        {round.statement}
-      </p>
+    <PlayShell maxScore={rounds.length} score={score} skin="arena" title="True or false">
+      <p className="play-prompt">{promptText(round.card)}</p>
+      <p className="play-scroll mb-4">{round.statement}</p>
       <div className="grid grid-cols-2 gap-3">
-        {["True", "False"].map((label) => (
-          <button
-            className="tcg-choice"
-            disabled={feedback !== null}
-            key={label}
-            onClick={() => {
-              const ok = (label === "True") === round.truth;
-              setFeedback(ok);
-              if (ok) setScore((n) => n + 1);
-            }}
-            type="button"
-          >
-            {label}
-          </button>
-        ))}
+        <button
+          className="play-choice play-tf play-tf--yes"
+          disabled={feedback !== null}
+          onClick={() => {
+            const ok = round.truth;
+            setFeedback(ok);
+            if (ok) setScore((n) => n + 1);
+          }}
+          type="button"
+        >
+          True
+        </button>
+        <button
+          className="play-choice play-tf play-tf--no"
+          disabled={feedback !== null}
+          onClick={() => {
+            const ok = !round.truth;
+            setFeedback(ok);
+            if (ok) setScore((n) => n + 1);
+          }}
+          type="button"
+        >
+          False
+        </button>
       </div>
       {feedback !== null ? (
         <WhyBox

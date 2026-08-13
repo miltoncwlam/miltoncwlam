@@ -6,7 +6,7 @@ import { requireSession } from "@/lib/auth-server";
 import { getDeckWithCards } from "@/lib/data/decks";
 import { listDueCardIds } from "@/lib/data/study";
 import { templateReason } from "@/lib/play/eligibility";
-import { isPlayTemplateId, PLAY_TEMPLATES } from "@/lib/play/templates";
+import { isPlayTemplateId } from "@/lib/play/templates";
 
 export default async function DeckPlayTemplatePage({
   params,
@@ -33,17 +33,13 @@ export default async function DeckPlayTemplatePage({
     ? deck.cards.filter((card) => dueIds.has(card.id))
     : deck.cards;
   const blocked = templateReason(template, cards);
-  const meta = PLAY_TEMPLATES.find((item) => item.id === template);
 
   return (
     <main className="page-shell">
-      <Link className="text-button" href={`/decks/${deck.id}/play${dueOnly ? "?due=1" : ""}`}>
-        ← Activities
-      </Link>
-      <div className="mt-6 mb-8">
-        <p className="eyebrow">Play</p>
-        <h1 className="page-title">{meta?.name ?? template}</h1>
-        <p className="page-subtitle">{meta?.blurb}</p>
+      <div className="mt-4 mb-4">
+        <Link className="text-button" href={`/decks/${deck.id}/play${dueOnly ? "?due=1" : ""}`}>
+          ← Activities
+        </Link>
       </div>
       {blocked ? (
         <p className="empty-state">{blocked}</p>

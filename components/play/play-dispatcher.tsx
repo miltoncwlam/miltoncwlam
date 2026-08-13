@@ -19,7 +19,7 @@ import {
   MatchUpGame,
 } from "./pairing-games";
 import { CrosswordGame, WordsearchGame } from "./puzzle-games";
-import { PlayOptionsProvider, type PlayOptions } from "./play-shell";
+import { PlayOptionsProvider, PlayStakeGate, type PlayOptions } from "./play-shell";
 import {
   ClozeGame,
   HangmanGame,
@@ -107,7 +107,9 @@ export function PlayDispatcher({
 
   return (
     <PlayOptionsProvider value={{ readOnly, homeHref, replayHref }}>
-      {game}
+      <PlayStakeGate deckId={deckId} template={template}>
+        {game}
+      </PlayStakeGate>
     </PlayOptionsProvider>
   );
 }

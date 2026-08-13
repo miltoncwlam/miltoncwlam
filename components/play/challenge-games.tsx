@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   gameshowPoints,
@@ -11,7 +11,271 @@ import { buildQuizChoices, quizExplanation, resolveCorrectChoice } from "@/lib/q
 import { shuffleList } from "@/lib/study/shuffle";
 import type { Flashcard } from "@/lib/types/flashcard";
 
+import {
+  BALLOON_COLORS,
+  BalloonSvg,
+  ChestSvg,
+  MoleSvg,
+} from "./play-art";
 import { PlayFinished, PlayShell, WhyBox } from "./play-shell";
+
+function choiceList(card: Flashcard, pool: Flashcard[], imageOnly: boolean) {
+  if (imageOnly) {
+    return shuffleList(
+      [
+        shortTarget(card) ?? card.back,
+        ...shuffleList(pool.filter((item) => item.id !== card.id))
+          .slice(0, 3)
+          .map((item) => shortTarget(item) ?? item.back),
+      ].filter((item, i, all) => all.indexOf(item) === i),
+    );
+  }
+  return buildQuizChoices(card, pool);
+}
+
+export function WhackAMoleGame({
+  cards,
+  deckId,
+}: {
+  cards: Flashcard[];
+  deckId: string;
+}) {
+  const pool = useMemo(() => shuffleList(cards).slice(0, 12), [cards]);
+  const [index, setIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [up, setUp] = useState<number[]>([]);
+  const [hit, setHit] = useState<number | null>(null);
+  const [combo, setCombo] = useState(0);
+  const card = pool[index];
+  const moles = useMemo(() => {
+    if (!card) return [];
+    const others = shuffleList(pool.filter((item) => item.id !== card.id)).slice(0, 3);
+    return shuffleList([card, ...others]);
+  }, [card, pool]);
+
+  useEffect(() => {
+    setHit(null);
+    const correct = moles.findIndex((mole) => mole.id === card?.id);
+    if (correct < 0) return;
+    let tick = 0;
+    const pop = () => {
+      const showCorrect = tick % 2 === 0;
+      const others = moles.map((_, i) => i).filter((i) => i !== correct);
+      const other = others[tick % Math.max(others.length, 1)] ?? correct;
+      setUp(showCorrect ? [correct] : [other]);
+      tick += 1;
+    };
+    pop();
+    const id = window.setInterval(pop, 850);
+    return () => window.clearInterval(id);
+  }, [index, moles, card]);
+
+  if (!card || index >= pool.length) {
+    return (
+      <PlayFinished
+        deckId={deckId}
+        maxScore={pool.length}
+        score={score}
+        template="whack-a-mole"
+      />
+    );
+  }
+
+  return (
+    <PlayShell
+      combo={combo}
+      maxScore={pool.length}
+      score={score}
+      skin="mole"
+      title="Whack-a-mole"
+    >
+      <p className="play-prompt">{promptText(card)}</p>
+      <div className="play-mole-field">
+        {moles.map((mole, i) => (
+          <button
+            className={`play-hole ${up.includes(i) ? "is-up" : ""}`}
+            key={`${mole.id}-${i}`}
+            onClick={() => {
+              if (hit !== null) return;
+              const ok = mole.id === card.id;
+              setHit(i);
+              setCombo((n) => (ok ? n + 1 : 0));
+              if (ok) setScore((n) => n + 1);
+              window.setTimeout(() => {
+                setIndex((n) => n + 1);
+              }, 420);
+            }}
+            type="button"
+          >
+            <span className="play-mole">
+              <MoleSvg squash={hit === i} />
+            </span>
+            <span className="play-mole-label">
+              {(shortTarget(mole) ?? mole.back).slice(0, 32)}
+            </span>
+            <span className="play-hole-dirt" />
+          </button>
+        ))}
+      </div>
+    </PlayShell>
+  );
+}
+
+export function BalloonPopGame({
+  cards,
+  deckId,
+}: {
+  cards: Flashcard[];
+  deckId: string;
+}) {
+  const pool = useMemo(() => shuffleList(cards).slice(0, 12), [cards]);
+  const [index, setIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [popped, setPopped] = useState<number | null>(null);
+  const [combo, setCombo] = useState(0);
+  const card = pool[index];
+  const balloons = useMemo(() => {
+    if (!card) return [];
+    const others = shuffleList(pool.filter((item) => item.id !== card.id)).slice(0, 3);
+    return shuffleList([card, ...others]);
+  }, [card, pool]);
+
+  if (!card || index >= pool.length) {
+    return (
+      <PlayFinished
+        deckId={deckId}
+        maxScore={pool.length}
+        score={score}
+        template="balloon-pop"
+      />
+    );
+  }
+
+  return (
+    <PlayShell
+      combo={combo}
+      maxScore={pool.length}
+      score={score}
+      skin="balloon"
+      title="Balloon pop"
+    >
+      <p className="play-prompt">{promptText(card)}</p>
+      <div className="play-balloon-sky">
+        {balloons.map((balloon, i) => (
+          <button
+            className="play-balloon-btn"
+            key={`${balloon.id}-${i}`}
+            onClick={() => {
+              if (popped !== null) return;
+              const ok = balloon.id === card.id;
+              setPopped(i);
+              setCombo((n) => (ok ? n + 1 : 0));
+              if (ok) setScore((n) => n + 1);
+              window.setTimeout(() => {
+                setPopped(null);
+                setIndex((n) => n + 1);
+              }, 380);
+            }}
+            type="button"
+          >
+            <BalloonSvg
+              color={BALLOON_COLORS[i % BALLOON_COLORS.length]!}
+              popped={popped === i}
+            />
+            <span className="play-balloon-label">
+              {(shortTarget(balloon) ?? balloon.back).slice(0, 24)}
+            </span>
+          </button>
+        ))}
+      </div>
+    </PlayShell>
+  );
+}
+
+export function OpenTheBoxGame({
+  cards,
+  deckId,
+}: {
+  cards: Flashcard[];
+  deckId: string;
+}) {
+  const pool = useMemo(() => shuffleList(cards).slice(0, 9), [cards]);
+  const [opened, setOpened] = useState<number | null>(null);
+  const [score, setScore] = useState(0);
+  const [done, setDone] = useState<number[]>([]);
+  const [feedback, setFeedback] = useState<boolean | null>(null);
+  const card = opened === null ? null : pool[opened];
+
+  if (done.length >= pool.length) {
+    return (
+      <PlayFinished
+        deckId={deckId}
+        maxScore={pool.length}
+        score={score}
+        template="open-the-box"
+      />
+    );
+  }
+
+  return (
+    <PlayShell
+      maxScore={pool.length}
+      score={score}
+      skin="chest"
+      title="Open the box"
+    >
+      {card && opened !== null ? (
+        <>
+          <p className="play-prompt">{promptText(card)}</p>
+          <div className="grid gap-2">
+            {buildQuizChoices(card, pool).map((choice) => (
+              <button
+                className="play-choice"
+                disabled={feedback !== null}
+                key={choice}
+                onClick={() => {
+                  const ok =
+                    choice.trim().toLowerCase() ===
+                    resolveCorrectChoice(card).trim().toLowerCase();
+                  setFeedback(ok);
+                  if (ok) setScore((n) => n + 1);
+                }}
+                type="button"
+              >
+                {choice}
+              </button>
+            ))}
+          </div>
+          {feedback !== null ? (
+            <WhyBox
+              ok={feedback}
+              onContinue={() => {
+                setDone((list) => [...list, opened]);
+                setOpened(null);
+                setFeedback(null);
+              }}
+              why={quizExplanation(card)}
+            />
+          ) : null}
+        </>
+      ) : (
+        <div className="play-chest-grid">
+          {pool.map((item, i) => (
+            <button
+              className="play-chest-btn"
+              disabled={done.includes(i)}
+              key={item.id}
+              onClick={() => setOpened(i)}
+              type="button"
+            >
+              <ChestSvg open={done.includes(i)} />
+            </button>
+          ))}
+        </div>
+      )}
+    </PlayShell>
+  );
+}
 
 function McqGame({
   cards,
@@ -21,32 +285,25 @@ function McqGame({
   lives,
   points,
   imageOnly,
+  skin,
 }: {
   cards: Flashcard[];
   deckId: string;
-  template:
-    | "image-quiz"
-    | "gameshow-quiz"
-    | "win-or-lose"
-    | "open-the-box"
-    | "whack-a-mole"
-    | "balloon-pop";
+  template: "image-quiz" | "gameshow-quiz" | "win-or-lose";
   title: string;
   lives?: number;
   points?: boolean;
   imageOnly?: boolean;
+  skin: "gallery" | "neon" | "arena";
 }) {
   const pool = useMemo(() => {
-    const source = imageOnly
-      ? cards.filter((card) => card.imageUrl)
-      : cards;
+    const source = imageOnly ? cards.filter((card) => card.imageUrl) : cards;
     return shuffleList(source).slice(0, 12);
   }, [cards, imageOnly]);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [remainingLives, setRemainingLives] = useState(lives ?? 99);
   const [feedback, setFeedback] = useState<boolean | null>(null);
-  const [opened, setOpened] = useState(template !== "open-the-box");
   const card = pool[index];
   const maxScore = points
     ? pool.reduce((sum, item) => sum + gameshowPoints(item), 0)
@@ -63,133 +320,70 @@ function McqGame({
     );
   }
 
-  const choices = imageOnly
-    ? shuffleList(
-        [
-          shortTarget(card) ?? card.back,
-          ...shuffleList(pool.filter((item) => item.id !== card.id))
-            .slice(0, 3)
-            .map((item) => shortTarget(item) ?? item.back),
-        ].filter((item, i, all) => all.indexOf(item) === i),
-      )
-    : buildQuizChoices(card, pool);
+  const choices = choiceList(card, pool, Boolean(imageOnly));
   const correct = imageOnly
     ? (shortTarget(card) ?? card.back)
     : resolveCorrectChoice(card);
 
   return (
     <PlayShell
-      extra={lives ? `${remainingLives} lives` : undefined}
+      lives={lives ? remainingLives : undefined}
       maxScore={maxScore}
       score={score}
+      skin={skin}
       title={title}
     >
-      {template === "open-the-box" && !opened ? (
-        <div className="grid grid-cols-3 gap-3">
-          {pool.map((item, i) => (
-            <button
-              className="flex min-h-20 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--secondary)] font-bold"
-              key={item.id}
-              onClick={() => {
-                setIndex(i);
-                setOpened(true);
-              }}
-              type="button"
-            >
-              {i + 1}
-            </button>
-          ))}
+      {imageOnly && card.imageUrl ? (
+        <div className="play-polaroid mx-auto mb-4 max-w-xs">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img alt="" src={card.imageUrl} />
         </div>
       ) : (
-        <>
-          {imageOnly && card.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              alt=""
-              className="mx-auto max-h-56 rounded-3xl object-contain"
-              src={card.imageUrl}
-            />
-          ) : (
-            <h2 className="text-xl font-bold">{promptText(card)}</h2>
-          )}
-          <div
-            className={
-              template === "balloon-pop"
-                ? "flex flex-wrap justify-center gap-3"
-                : "grid gap-2"
-            }
-          >
-            {choices.map((choice) => (
-              <button
-                className={
-                  template === "balloon-pop"
-                    ? "flex h-24 w-24 items-center justify-center rounded-full border border-[var(--accent)] bg-[var(--secondary)] px-2 text-center text-xs font-bold"
-                    : "tcg-choice"
-                }
-                disabled={feedback !== null}
-                key={choice}
-                onClick={() => {
-                  const ok =
-                    choice.trim().toLowerCase() === correct.trim().toLowerCase();
-                  setFeedback(ok);
-                  if (ok) {
-                    setScore((n) => n + (points ? gameshowPoints(card) : 1));
-                  } else if (lives) {
-                    setRemainingLives((n) => n - 1);
-                  }
-                }}
-                type="button"
-              >
-                {choice}
-              </button>
-            ))}
-          </div>
-          {feedback !== null ? (
-            <WhyBox
-              ok={feedback}
-              onContinue={() => {
-                setFeedback(null);
-                if (template === "open-the-box") {
-                  const next = pool.findIndex(
-                    (item, i) => i !== index && i > index,
-                  );
-                  if (next === -1) setIndex(pool.length);
-                  else {
-                    setIndex(next);
-                    setOpened(false);
-                  }
-                } else {
-                  setIndex((n) => n + 1);
-                }
-              }}
-              why={quizExplanation(card)}
-            />
-          ) : null}
-        </>
+        <p className="play-prompt">{promptText(card)}</p>
       )}
+      <div className="grid gap-2">
+        {choices.map((choice, i) => (
+          <button
+            className={skin === "neon" ? "play-choice play-choice--neon" : "play-choice"}
+            disabled={feedback !== null}
+            key={choice}
+            onClick={() => {
+              const ok =
+                choice.trim().toLowerCase() === correct.trim().toLowerCase();
+              setFeedback(ok);
+              if (ok) setScore((n) => n + (points ? gameshowPoints(card) : 1));
+              else if (lives) setRemainingLives((n) => n - 1);
+            }}
+            type="button"
+          >
+            <span className="play-choice-letter">{String.fromCharCode(65 + i)}</span>
+            {choice}
+          </button>
+        ))}
+      </div>
+      {feedback !== null ? (
+        <WhyBox
+          ok={feedback}
+          onContinue={() => {
+            setFeedback(null);
+            setIndex((n) => n + 1);
+          }}
+          why={quizExplanation(card)}
+        />
+      ) : null}
     </PlayShell>
   );
 }
 
 export function ImageQuizGame(props: { cards: Flashcard[]; deckId: string }) {
   return (
-    <McqGame
-      {...props}
-      imageOnly
-      template="image-quiz"
-      title="Image quiz"
-    />
+    <McqGame {...props} imageOnly skin="gallery" template="image-quiz" title="Image quiz" />
   );
 }
 
 export function GameshowQuizGame(props: { cards: Flashcard[]; deckId: string }) {
   return (
-    <McqGame
-      {...props}
-      points
-      template="gameshow-quiz"
-      title="Gameshow quiz"
-    />
+    <McqGame {...props} points skin="neon" template="gameshow-quiz" title="Gameshow quiz" />
   );
 }
 
@@ -198,26 +392,9 @@ export function WinOrLoseGame(props: { cards: Flashcard[]; deckId: string }) {
     <McqGame
       {...props}
       lives={3}
+      skin="arena"
       template="win-or-lose"
-      title="Win or lose quiz"
+      title="Win or lose"
     />
-  );
-}
-
-export function OpenTheBoxGame(props: { cards: Flashcard[]; deckId: string }) {
-  return (
-    <McqGame {...props} template="open-the-box" title="Open the box" />
-  );
-}
-
-export function WhackAMoleGame(props: { cards: Flashcard[]; deckId: string }) {
-  return (
-    <McqGame {...props} template="whack-a-mole" title="Whack-a-mole" />
-  );
-}
-
-export function BalloonPopGame(props: { cards: Flashcard[]; deckId: string }) {
-  return (
-    <McqGame {...props} template="balloon-pop" title="Balloon pop" />
   );
 }

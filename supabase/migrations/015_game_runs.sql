@@ -1,4 +1,4 @@
--- Wordwall-style classroom activity runs (scores only; play is free)
+-- Classroom activity runs. Owned play stakes energy in payload (stake/payout); share/embed stay free.
 
 create table if not exists public.game_runs (
   id uuid primary key default gen_random_uuid(),

@@ -49,22 +49,19 @@ export function CrosswordGame({
       maxScore={puzzle.entries.length}
       score={score}
       title="Crossword"
+      skin="puzzle"
     >
-      <div className="overflow-x-auto">
+      <div className="play-xw-wrap">
         <div
-          className="grid w-max gap-px bg-[var(--border)]"
+          className="play-xw"
           style={{
-            gridTemplateColumns: `repeat(${puzzle.width}, 1.6rem)`,
+            gridTemplateColumns: `repeat(${puzzle.width}, 1.7rem)`,
           }}
         >
           {puzzle.grid.flatMap((row, r) =>
             row.map((cell, c) => (
               <div
-                className={`flex h-7 w-7 items-center justify-center text-xs ${
-                  cell
-                    ? "bg-[var(--surface)] font-bold"
-                    : "bg-[var(--background)]"
-                }`}
+                className={`play-xw-cell ${cell ? "" : "is-empty"}`}
                 key={`${r}-${c}`}
               >
                 {cell ? "·" : ""}
@@ -80,7 +77,7 @@ export function CrosswordGame({
               {entry.number} {entry.dir}: {entry.clue}
             </label>
             <input
-              className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-mono uppercase"
+              className="play-input mt-1 font-mono uppercase"
               maxLength={entry.word.length}
               onChange={(event) =>
                 setGuesses((current) => ({
@@ -135,71 +132,77 @@ export function WordsearchGame({
       maxScore={puzzle.words.length}
       score={found.size}
       title="Wordsearch"
+      skin="puzzle"
     >
-      <div
-        className="grid w-max gap-px"
-        style={{ gridTemplateColumns: `repeat(${puzzle.size}, 1.7rem)` }}
-      >
-        {puzzle.grid.flatMap((row, r) =>
-          row.map((cell, c) => (
-            <button
-              className="h-7 w-7 rounded-sm bg-[var(--surface)] font-mono text-xs font-bold"
-              key={`${r}-${c}`}
-              onClick={() => {
-                const last = select[select.length - 1];
-                let next: { r: number; c: number }[];
-                if (!last) {
-                  next = [{ r, c }];
-                } else {
-                  const dr = r - last.r;
-                  const dc = c - last.c;
-                  const stepOk =
-                    Math.abs(dr) <= 1 &&
-                    Math.abs(dc) <= 1 &&
-                    !(dr === 0 && dc === 0);
-                  const dir =
-                    select.length >= 2
-                      ? {
-                          dr: select[1]!.r - select[0]!.r,
-                          dc: select[1]!.c - select[0]!.c,
-                        }
-                      : null;
-                  const sameDir =
-                    !dir || (dr === dir.dr && dc === dir.dc);
-                  next =
-                    stepOk && sameDir ? [...select, { r, c }] : [{ r, c }];
-                }
-                setSelect(next);
-                const letters = next
-                  .map((cell) => puzzle.grid[cell.r]![cell.c]!)
-                  .join("");
-                const reversed = letters.split("").reverse().join("");
-                const hit = puzzle.words.find(
-                  (item) => item.word === letters || item.word === reversed,
-                );
-                if (hit) {
-                  setFound((current) => new Set(current).add(hit.word));
-                  setSelect([]);
-                }
-              }}
-              type="button"
-            >
-              {cell}
-            </button>
-          )),
-        )}
+      <div className="play-ws-wrap">
+        <div
+          className="play-ws"
+          style={{ gridTemplateColumns: `repeat(${puzzle.size}, 1.7rem)` }}
+        >
+          {puzzle.grid.flatMap((row, r) =>
+            row.map((cell, c) => {
+              const on = select.some((item) => item.r === r && item.c === c);
+              return (
+                <button
+                  className={`play-ws-cell ${on ? "is-on" : ""}`}
+                  key={`${r}-${c}`}
+                  onClick={() => {
+                    const last = select[select.length - 1];
+                    let next: { r: number; c: number }[];
+                    if (!last) {
+                      next = [{ r, c }];
+                    } else {
+                      const dr = r - last.r;
+                      const dc = c - last.c;
+                      const stepOk =
+                        Math.abs(dr) <= 1 &&
+                        Math.abs(dc) <= 1 &&
+                        !(dr === 0 && dc === 0);
+                      const dir =
+                        select.length >= 2
+                          ? {
+                              dr: select[1]!.r - select[0]!.r,
+                              dc: select[1]!.c - select[0]!.c,
+                            }
+                          : null;
+                      const sameDir =
+                        !dir || (dr === dir.dr && dc === dir.dc);
+                      next =
+                        stepOk && sameDir ? [...select, { r, c }] : [{ r, c }];
+                    }
+                    setSelect(next);
+                    const letters = next
+                      .map((item) => puzzle.grid[item.r]![item.c]!)
+                      .join("");
+                    const reversed = letters.split("").reverse().join("");
+                    const hit = puzzle.words.find(
+                      (item) => item.word === letters || item.word === reversed,
+                    );
+                    if (hit) {
+                      setFound((current) => new Set(current).add(hit.word));
+                      setSelect([]);
+                    }
+                  }}
+                  type="button"
+                >
+                  {cell}
+                </button>
+              );
+            }),
+          )}
+        </div>
       </div>
       <ul className="text-sm">
         {puzzle.words.map((item) => (
           <li
-            className={found.has(item.word) ? "text-emerald-600 line-through" : ""}
+            className={found.has(item.word) ? "text-emerald-300 line-through" : ""}
             key={item.word}
           >
             {item.clue}
           </li>
         ))}
       </ul>
-      <p className="text-xs text-[var(--muted)]">
+      <p className="play-muted">
         Tap neighbouring letters in a straight line to select a word.
       </p>
     </PlayShell>
