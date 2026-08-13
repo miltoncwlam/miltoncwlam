@@ -74,10 +74,11 @@ async function main() {
 
     await pool.query(
       `insert into user_credits (
-         user_id, balance, period_start, period_end, period_grant, is_unlimited
+         user_id, balance, image_balance, period_start, period_end,
+         period_grant, image_period_grant, is_unlimited
        ) values (
-         $1, 100, date_trunc('week', now()), date_trunc('week', now()) + interval '7 days',
-         100, true
+         $1, 600, 200, date_trunc('week', now()), date_trunc('week', now()) + interval '7 days',
+         600, 200, true
        )
        on conflict (user_id) do update
        set is_unlimited = true, updated_at = now()`,

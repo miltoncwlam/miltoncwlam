@@ -103,3 +103,32 @@ export function formatGradeLabel(grade: string | null | undefined): string {
   if (!grade?.trim()) return "";
   return formatTagLabel(grade);
 }
+
+export type EncyclopediaBand = "primary" | "junior" | "senior";
+
+export function encyclopediaBandForGrade(
+  grade: string | null | undefined,
+): EncyclopediaBand | null {
+  const key = grade?.trim().toLowerCase() ?? "";
+  if (["p1", "p2", "p3", "p4", "p5", "p6"].includes(key)) return "primary";
+  if (["s1", "s2", "s3"].includes(key)) return "junior";
+  if (["s4", "s5", "s6"].includes(key)) return "senior";
+  return null;
+}
+
+export function encyclopediaAnchorGrade(band: EncyclopediaBand): HkGradeId {
+  if (band === "primary") return "p3";
+  if (band === "junior") return "s2";
+  return "s5";
+}
+
+export function encyclopediaTopicTitle(title: string) {
+  return title.replace(/\s·\s(Primary|Junior|Senior)$/i, "").trim();
+}
+
+export function encyclopediaBandFromTitle(title: string): EncyclopediaBand | null {
+  if (/·\s*Primary$/i.test(title)) return "primary";
+  if (/·\s*Junior$/i.test(title)) return "junior";
+  if (/·\s*Senior$/i.test(title)) return "senior";
+  return null;
+}

@@ -4,6 +4,7 @@ import { useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
+import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import type { AuthProvider } from "@/lib/types/auth";
 
@@ -12,17 +13,17 @@ function BetterAuthSignOutButton() {
   const t = useTranslations("nav");
 
   return (
-    <button
-      className="text-button"
+    <Button
       onClick={async () => {
         await authClient.signOut();
         router.push("/");
         router.refresh();
       }}
       type="button"
+      variant="ghost"
     >
       {t("signOut")}
-    </button>
+    </Button>
   );
 }
 
@@ -32,17 +33,17 @@ function ClerkSignOutButton() {
   const { signOut } = useClerk();
 
   return (
-    <button
-      className="text-button"
+    <Button
       onClick={async () => {
         await signOut();
         router.push("/");
         router.refresh();
       }}
       type="button"
+      variant="ghost"
     >
       {t("signOut")}
-    </button>
+    </Button>
   );
 }
 

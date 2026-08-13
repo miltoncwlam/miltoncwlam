@@ -55,7 +55,7 @@ Legacy Clerk `user_…` deck rows still work. Better Auth users get separate IDs
 
 ### Legal pages & languages
 
-- Public routes: `/privacy`, `/terms`, `/cookies` (edit contact/operator in `lib/legal.ts`)
+- Public routes: `/privacy`, `/terms`, `/cookies` (English is the official legal text; set contact/operator via `NEXT_PUBLIC_LEGAL_*` or `lib/legal.ts`)
 - UI languages: English, 繁體中文, 简体中文, 日本語, 한국어, Español, Français (header switcher; cookie `NEXT_LOCALE`)
 - Card generation language is a dropdown of the same list (not free text)
 
@@ -140,6 +140,40 @@ Set `E2E_LLM=true` to run the optional paid LLM generation E2E flow.
 
 ## Deploy
 
+### Vercel
+
+1. Push the repo and [import it in Vercel](https://vercel.com/new). Framework preset is Next.js (`vercel.json`). The Hong Kong region (`hkg1`) matches the app’s governing law; change `regions` in `vercel.json` if your Supabase project is far away.
+2. Set **Production** env vars (same names as `.env.example`). Use HTTPS URLs:
+
+| Variable | Production value |
+|----------|------------------|
+| `NEXT_PUBLIC_APP_URL` | `https://your-domain.com` (or `https://your-app.vercel.app`) |
+| `BETTER_AUTH_URL` | **Same** HTTPS origin (passkeys break if this stays `localhost`) |
+| `BETTER_AUTH_SECRET` | `openssl rand -base64 32` |
+| `DATABASE_URL` | Supabase **Transaction pooler** (port **6543**) + `?pgbouncer=true` |
+| `NEXT_PUBLIC_SUPABASE_URL` | Project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key |
+| `SUPABASE_SECRET_KEY` | Secret key (uploads) |
+| `OPENROUTER_API_KEY` | Required for generation on Vercel (Ollama is local-only) |
+| `NEXT_PUBLIC_LEGAL_EMAIL` | Real inbox for `/privacy` contact |
+| `NEXT_PUBLIC_LEGAL_OPERATOR` | Your name or organisation |
+| `ADMIN_BOOTSTRAP_EMAIL` / `ADMIN_BOOTSTRAP_PASSWORD` | First admin (run migrate **once** against prod) |
+
+3. Do **not** run `db:migrate` as the Vercel build command. From your laptop, point `DATABASE_URL` at production and run:
+
+```bash
+npm run db:migrate
+npm run db:seed-community
+```
+
+4. Deploy. Open `/privacy`, `/terms`, and `/cookies`, then sign in at `/sign-in`.
+
+**Limits:** Vercel Hobby caps serverless functions at 60s, so large/scanned PDFs may time out. Pro can raise `maxDuration` toward 300s. Local `npm run dev` still allows longer Ollama runs.
+
+**Do not enable `OLLAMA_ENABLED` on Vercel** — there is no local Ollama daemon on the host.
+
+### Generic Node host
+
 1. Set all production env vars (use HTTPS for `NEXT_PUBLIC_APP_URL` and `BETTER_AUTH_URL`).
 2. Run `db:migrate` against production Postgres.
-3. Deploy with `npm run build` (e.g. Vercel).
+3. `npm run build` && `npm start`.

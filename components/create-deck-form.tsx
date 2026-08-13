@@ -2,24 +2,43 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useMemo, useRef, useState } from "react";
 
 import {
   GenerationLoadingScreen,
   type GenerationPhase,
 } from "@/components/generation-loading-screen";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { estimateGenerationCredits } from "@/lib/credits/estimate-generation";
 import {
   LOCALE_CODES,
   LOCALE_LABELS,
   type AppLocale,
 } from "@/lib/i18n/locales";
 import { createClient } from "@/lib/supabase/client";
-import { CREDIT_COST_PER_CARD } from "@/lib/credits/config";
+import {
+  DEFAULT_OPENROUTER_MODEL,
+  PAID_OPENROUTER_MODELS,
+} from "@/lib/llm/models";
 import type { LLMProvider, OllamaModelId } from "@/lib/types/flashcard";
 import { OLLAMA_MODELS } from "@/lib/types/flashcard";
 
-type SourceMode = "topic" | "text" | "url" | "file" | "photo";
+type SourceMode = "topic" | "text" | "url" | "file";
 type CreateMode = "flashcards" | "quiz";
+
+type FreeModel = { id: string; name: string };
 
 function friendlyError(
   message: string,
@@ -43,13 +62,8 @@ function friendlyError(
   }
   if (/failed to fetch|networkerror|load failed/i.test(message)) {
     return usingOllama
-      ? "The request timed out or the connection dropped. Try gemma4:e2b, 6–10 cards, and paste text instead of a long PDF."
-      : "The request timed out or the connection dropped. Try again with fewer cards or a shorter source.";
-  }
-  if (/timed out|aborted|timeout/i.test(message)) {
-    return usingOllama
-      ? `${message} Tip: switch to gemma4:e2b, use 6–10 cards, and prefer pasted text / TXT over scanned PDFs.`
-      : message;
+      ? "The connection dropped. Try gemma4:e2b, 6–10 cards, and paste text instead of a long PDF."
+      : "The connection dropped. Try again with fewer cards or a shorter source.";
   }
   if (/returned \d+ cards but \d+ were requested/i.test(message)) {
     return usingOllama
@@ -59,12 +73,31 @@ function friendlyError(
   return message;
 }
 
+function providerLabel(provider: LLMProvider) {
+  return provider === "ollama" ? "Ollama" : "OpenRouter";
+}
+
+function catalogLabel(name: string) {
+  return name
+    .replace(/\s*\(free\)/gi, "")
+    .replace(/:free\b/gi, "")
+    .replace(/\bfree\b/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 export function CreateDeckForm({
   providers,
   canUpload,
+  energyBalance = 0,
+  energyUnlimited = false,
+  freeModels = [],
 }: {
   providers: LLMProvider[];
   canUpload: boolean;
+  energyBalance?: number;
+  energyUnlimited?: boolean;
+  freeModels?: FreeModel[];
 }) {
   const router = useRouter();
   const t = useTranslations("create");
@@ -76,11 +109,16 @@ export function CreateDeckForm({
   const [pending, setPending] = useState(false);
   const [phase, setPhase] = useState<GenerationPhase>("prepare");
   const [label, setLabel] = useState(tg("preparing"));
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [providerChoice, setProviderChoice] = useState<LLMProvider | null>(null);
   const [ollamaModel, setOllamaModel] = useState<OllamaModelId>("gemma4:e2b");
+  const [openrouterModel, setOpenrouterModel] = useState(DEFAULT_OPENROUTER_MODEL);
   const [createMode, setCreateMode] = useState<CreateMode>("flashcards");
   const [cardCountPreview, setCardCountPreview] = useState(8);
+  const [topicChars, setTopicChars] = useState(0);
+  const [textChars, setTextChars] = useState(0);
+  const [fileMeta, setFileMeta] = useState<{ bytes: number; mimeType: string } | null>(
+    null,
+  );
   const activeMode =
     mode === "text" || mode === "url" || mode === "topic" || canUpload
       ? mode
@@ -90,20 +128,38 @@ export function CreateDeckForm({
       ? providerChoice
       : providers[0];
   const usingOllama = provider === "ollama";
-  const perCard =
-    provider === "ollama" && ollamaModel === "gemma4:e2b"
-      ? CREDIT_COST_PER_CARD["gemma4:e2b"]
-      : CREDIT_COST_PER_CARD["gemma4:e4b"];
-  const energyCost = Math.max(3, Math.min(30, cardCountPreview)) * perCard;
-
-  useEffect(() => {
-    if (!pending || error) return;
-    const started = Date.now();
-    const id = window.setInterval(() => {
-      setElapsedSeconds(Math.floor((Date.now() - started) / 1000));
-    }, 1000);
-    return () => window.clearInterval(id);
-  }, [pending, error]);
+  const estimate = useMemo(
+    () =>
+      estimateGenerationCredits({
+        provider: usingOllama ? "ollama" : "openrouter",
+        modelId: usingOllama ? ollamaModel : openrouterModel,
+        sourceMode: activeMode,
+        sourceSize:
+          activeMode === "topic"
+            ? { charCount: topicChars }
+            : activeMode === "text"
+              ? { charCount: textChars }
+              : activeMode === "file"
+                ? {
+                    fileBytes: fileMeta?.bytes,
+                    mimeType: fileMeta?.mimeType,
+                  }
+                : {},
+        cardCount: cardCountPreview,
+      }),
+    [
+      usingOllama,
+      ollamaModel,
+      openrouterModel,
+      activeMode,
+      topicChars,
+      textChars,
+      fileMeta,
+      cardCountPreview,
+    ],
+  );
+  const textShort = !energyUnlimited && estimate.textCredits > energyBalance;
+  const overBalance = textShort;
 
   async function uploadFile(file: File) {
     const signedResponse = await fetch("/api/uploads/sign", {
@@ -120,7 +176,7 @@ export function CreateDeckForm({
       .uploadToSignedUrl(signed.path, signed.token, file, {
         contentType: file.type,
       });
-    if (uploadError) throw uploadError;
+    if (uploadError) throw new Error(uploadError.message);
 
     return signed.path as string;
   }
@@ -128,7 +184,6 @@ export function CreateDeckForm({
   async function runGeneration(form: HTMLFormElement) {
     setError(null);
     setPending(true);
-    setElapsedSeconds(0);
     setPhase("prepare");
     setLabel(tg("preparing"));
 
@@ -153,6 +208,9 @@ export function CreateDeckForm({
 
       if (selectedProvider === "ollama") {
         payload.model = (formData.get("ollamaModel") as string) || ollamaModel;
+      } else {
+        payload.model =
+          (formData.get("openrouterModel") as string) || openrouterModel;
       }
 
       if (activeMode === "topic") {
@@ -178,6 +236,7 @@ export function CreateDeckForm({
         }
         setPhase("upload");
         setLabel(tg("uploading"));
+        payload.sourceType = "file";
         payload.storagePath = await uploadFile(file);
         payload.file = { name: file.name, type: file.type, size: file.size };
         setPhase("read");
@@ -240,12 +299,12 @@ export function CreateDeckForm({
           ? friendlyError(caught.message, usingOllama)
           : "Generation failed",
       );
-      // Keep overlay open with Retry / Dismiss
     }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (overBalance) return;
     await runGeneration(event.currentTarget);
   }
 
@@ -263,19 +322,21 @@ export function CreateDeckForm({
       { value: "text", label: t("text"), enabled: true },
       { value: "url", label: t("url"), enabled: true },
       { value: "file", label: t("file"), enabled: canUpload },
-      { value: "photo", label: t("photo"), enabled: canUpload },
     ] as const
   );
 
   const showOverlay = pending || Boolean(error);
+  const budgetModels = PAID_OPENROUTER_MODELS.filter((entry) => entry.group === "budget");
+  const standardModels = PAID_OPENROUTER_MODELS.filter(
+    (entry) => entry.group === "standard",
+  );
 
   return (
     <>
       {showOverlay ? (
         <GenerationLoadingScreen
-          elapsedSeconds={elapsedSeconds}
           error={error}
-          includeUpload={activeMode === "file" || activeMode === "photo"}
+          includeUpload={activeMode === "file"}
           label={label}
           onDismiss={() => {
             setError(null);
@@ -291,7 +352,7 @@ export function CreateDeckForm({
       ) : null}
 
       <form className="space-y-6" onSubmit={handleSubmit} ref={formRef}>
-        <div className="grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-2 sm:grid-cols-5">
+        <div className="grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-2 sm:grid-cols-4">
           {modes.map(({ value, label: modeLabel, enabled }) => (
             <button
               className={`rounded-xl px-3 py-3 text-sm font-bold ${
@@ -333,8 +394,8 @@ export function CreateDeckForm({
             <button
               className={`rounded-xl px-3 py-3 text-sm font-bold ${
                 createMode === entry.value
-                  ? "bg-white text-indigo-700 shadow"
-                  : "text-slate-600"
+                  ? "bg-background text-primary shadow"
+                  : "text-muted-foreground"
               }`}
               disabled={pending}
               key={entry.value}
@@ -346,15 +407,21 @@ export function CreateDeckForm({
           ))}
         </div>
         <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
-          {t("energyCost", { cost: energyCost, per: perCard })}
+          {t("energyCost", { cost: estimate.textCredits })}
         </p>
+        {textShort ? (
+          <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-900">
+            {t("energyShort", {
+              need: estimate.textCredits,
+              have: energyBalance,
+            })}
+          </p>
+        ) : null}
 
-        <label className="block space-y-2">
-          <span className="text-sm font-bold text-slate-700">
-            Source retention
-          </span>
+        <div className="space-y-2">
+          <Label>Source retention</Label>
           <select
-            className="field"
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             defaultValue="24h"
             disabled={pending}
             name="sourceRetention"
@@ -363,121 +430,179 @@ export function CreateDeckForm({
             <option value="24h">Keep 24 hours (allows regenerate)</option>
             <option value="keep">Keep until I delete the deck</option>
           </select>
-        </label>
+        </div>
 
-        <label className="block space-y-2">
-          <span className="text-sm font-bold text-slate-700">{t("titleLabel")}</span>
-          <input
-            className="field"
+        <div className="space-y-2">
+          <Label htmlFor="title">{t("titleLabel")}</Label>
+          <Input
             disabled={pending}
+            id="title"
             maxLength={100}
             name="title"
             placeholder={t("titlePlaceholder")}
           />
-        </label>
+        </div>
 
         {activeMode === "topic" ? (
-          <label className="block space-y-2">
-            <span className="text-sm font-bold text-slate-700">{t("topicLabel")}</span>
-            <input
-              className="field"
+          <div className="space-y-2">
+            <Label htmlFor="topic">{t("topicLabel")}</Label>
+            <Input
               disabled={pending}
+              id="topic"
               maxLength={200}
               minLength={2}
               name="topic"
+              onChange={(event) => setTopicChars(event.target.value.length)}
               placeholder={t("topicPlaceholder")}
               required
             />
-            <p className="text-xs text-slate-500">{t("topicHint")}</p>
-          </label>
+            <p className="text-xs text-muted-foreground">{t("topicHint")}</p>
+          </div>
         ) : activeMode === "text" ? (
-          <label className="block space-y-2">
-            <span className="text-sm font-bold text-slate-700">{t("material")}</span>
-            <textarea
-              className="field min-h-64 resize-y"
+          <div className="space-y-2">
+            <Label htmlFor="content">{t("material")}</Label>
+            <Textarea
+              className="min-h-64 resize-y"
               disabled={pending}
+              id="content"
               minLength={50}
               maxLength={80000}
               name="content"
+              onChange={(event) => setTextChars(event.target.value.length)}
               placeholder={t("materialPlaceholder")}
               required
             />
-          </label>
+          </div>
         ) : activeMode === "url" ? (
-          <label className="block space-y-2">
-            <span className="text-sm font-bold text-slate-700">{t("urlLabel")}</span>
-            <input
-              className="field"
+          <div className="space-y-2">
+            <Label htmlFor="sourceUrl">{t("urlLabel")}</Label>
+            <Input
               disabled={pending}
+              id="sourceUrl"
               name="sourceUrl"
               placeholder={t("urlPlaceholder")}
               required
               type="url"
             />
-            <p className="text-xs text-slate-500">{t("urlHint")}</p>
-          </label>
+            <p className="text-xs text-muted-foreground">{t("urlHint")}</p>
+          </div>
         ) : (
-          <label className="block space-y-2">
-            <span className="text-sm font-bold text-slate-700">
-              {activeMode === "photo" ? t("photoLabel") : t("fileLabel")}
-            </span>
-            <input
-              accept={activeMode === "photo" ? ".jpg,.jpeg,.png" : ".pdf,.txt,.md"}
-              className="field file:mr-4 file:rounded-full file:border-0 file:bg-indigo-100 file:px-4 file:py-2 file:font-bold file:text-indigo-700"
+          <div className="space-y-2">
+            <Label htmlFor="sourceFile">{t("fileLabel")}</Label>
+            <Input
+              accept=".pdf,.txt,.md"
+              className="file:mr-4 file:rounded-full file:border-0 file:bg-secondary file:px-4 file:py-2 file:font-medium"
               disabled={pending}
+              id="sourceFile"
               name="sourceFile"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                setFileMeta(
+                  file ? { bytes: file.size, mimeType: file.type } : null,
+                );
+              }}
               required
               type="file"
             />
-            <p className="text-xs text-slate-500">{t("fileHint")}</p>
-          </label>
+            <p className="text-xs text-muted-foreground">{t("fileHint")}</p>
+          </div>
         )}
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="space-y-2">
-            <span className="text-sm font-bold text-slate-700">{t("provider")}</span>
-            <select
-              className="field"
+          <div className="space-y-2">
+            <Label>{t("provider")}</Label>
+            <Select
               disabled={pending}
-              name="provider"
-              onChange={(event) =>
-                setProviderChoice(event.target.value as LLMProvider)
+              onValueChange={(value) =>
+                setProviderChoice(value as LLMProvider)
               }
               value={provider}
             >
-              {providers.map((entry) => (
-                <option key={entry} value={entry}>
-                  {entry}
-                </option>
-              ))}
-            </select>
-          </label>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {providers.map((entry) => (
+                  <SelectItem key={entry} value={entry}>
+                    {providerLabel(entry)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <input name="provider" type="hidden" value={provider} />
+          </div>
           {usingOllama ? (
-            <label className="space-y-2">
-              <span className="text-sm font-bold text-slate-700">{t("ollamaModel")}</span>
-              <select
-                className="field"
+            <div className="space-y-2">
+              <Label>{t("ollamaModel")}</Label>
+              <Select
                 disabled={pending}
-                name="ollamaModel"
-                onChange={(event) =>
-                  setOllamaModel(event.target.value as OllamaModelId)
+                onValueChange={(value) =>
+                  setOllamaModel(value as OllamaModelId)
                 }
                 value={ollamaModel}
               >
-                {OLLAMA_MODELS.map((entry) => (
-                  <option key={entry.id} value={entry.id}>
-                    {entry.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
-          <label className="space-y-2">
-            <span className="text-sm font-bold text-slate-700">{t("cardCount")}</span>
-            <input
-              className="field"
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {OLLAMA_MODELS.map((entry) => (
+                    <SelectItem key={entry.id} value={entry.id}>
+                      {entry.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <input name="ollamaModel" type="hidden" value={ollamaModel} />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label>{t("model")}</Label>
+              <Select
+                disabled={pending}
+                onValueChange={setOpenrouterModel}
+                value={openrouterModel}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {freeModels.length ? (
+                    <SelectGroup>
+                      <SelectLabel>{t("modelFree")}</SelectLabel>
+                      {freeModels.map((entry) => (
+                        <SelectItem key={entry.id} value={entry.id}>
+                          {catalogLabel(entry.name)}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ) : null}
+                  <SelectGroup>
+                    <SelectLabel>{t("modelBudget")}</SelectLabel>
+                    {budgetModels.map((entry) => (
+                      <SelectItem key={entry.id} value={entry.id}>
+                        {entry.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>{t("modelStandard")}</SelectLabel>
+                    {standardModels.map((entry) => (
+                      <SelectItem key={entry.id} value={entry.id}>
+                        {entry.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <input name="openrouterModel" type="hidden" value={openrouterModel} />
+            </div>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="cardCount">{t("cardCount")}</Label>
+            <Input
               defaultValue={usingOllama ? (ollamaModel === "gemma4:e4b" ? 6 : 8) : 10}
               disabled={pending}
+              id="cardCount"
               max={usingOllama ? (ollamaModel === "gemma4:e4b" ? 8 : 12) : 30}
               min={3}
               name="cardCount"
@@ -487,14 +612,14 @@ export function CreateDeckForm({
               type="number"
             />
             {usingOllama ? (
-              <span className="block text-xs text-slate-500">{t("ollamaCardHint")}</span>
+              <span className="block text-xs text-muted-foreground">{t("ollamaCardHint")}</span>
             ) : null}
-          </label>
+          </div>
           {createMode === "flashcards" ? (
-            <label className="space-y-2">
-              <span className="text-sm font-bold text-slate-700">{t("questionStyle")}</span>
+            <div className="space-y-2">
+              <Label>{t("questionStyle")}</Label>
               <select
-                className="field"
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                 defaultValue="mixed"
                 disabled={pending}
                 name="questionStyle"
@@ -505,16 +630,16 @@ export function CreateDeckForm({
                 <option value="cloze">{t("styleCloze")}</option>
                 <option value="mcq">{t("styleMcq")}</option>
               </select>
-            </label>
+            </div>
           ) : (
-            <p className="self-end rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-600">
+            <p className="self-end rounded-xl bg-muted px-3 py-3 text-sm text-muted-foreground">
               {t("quizModeNote")}
             </p>
           )}
-          <label className="space-y-2">
-            <span className="text-sm font-bold text-slate-700">{t("difficulty")}</span>
+          <div className="space-y-2">
+            <Label>{t("difficulty")}</Label>
             <select
-              className="field"
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
               defaultValue="beginner"
               disabled={pending}
               name="difficulty"
@@ -523,11 +648,11 @@ export function CreateDeckForm({
               <option value="intermediate">{t("intermediate")}</option>
               <option value="advanced">{t("advanced")}</option>
             </select>
-          </label>
-          <label className="space-y-2">
-            <span className="text-sm font-bold text-slate-700">{t("language")}</span>
+          </div>
+          <div className="space-y-2">
+            <Label>{t("language")}</Label>
             <select
-              className="field"
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
               defaultValue={locale}
               disabled={pending}
               name="language"
@@ -538,12 +663,12 @@ export function CreateDeckForm({
                 </option>
               ))}
             </select>
-          </label>
+          </div>
         </div>
 
-        <button className="primary-button w-full" disabled={pending} type="submit">
+        <Button className="w-full" disabled={pending || overBalance} type="submit">
           {t("generate")}
-        </button>
+        </Button>
       </form>
     </>
   );

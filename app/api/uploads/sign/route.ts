@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       return Response.json(
         {
           error:
-            "Add SUPABASE_SECRET_KEY to .env.local to enable file and photo uploads",
+            "Add SUPABASE_SECRET_KEY to .env.local to enable file uploads",
         },
         { status: 503 },
       );

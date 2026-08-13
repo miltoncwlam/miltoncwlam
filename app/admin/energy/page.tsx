@@ -24,6 +24,7 @@ export default async function AdminEnergyPage() {
               <th className="px-4 py-3">Time</th>
               <th className="px-4 py-3">User</th>
               <th className="px-4 py-3">Delta</th>
+              <th className="px-4 py-3">Pool</th>
               <th className="px-4 py-3">Reason</th>
             </tr>
           </thead>
@@ -35,6 +36,7 @@ export default async function AdminEnergyPage() {
                 </td>
                 <td className="px-4 py-3">{row.email ?? row.user_id}</td>
                 <td className="px-4 py-3 font-semibold">{row.delta}</td>
+                <td className="px-4 py-3">{row.pool}</td>
                 <td className="px-4 py-3">{row.reason}</td>
               </tr>
             ))}

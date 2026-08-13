@@ -1,13 +1,17 @@
 import { z } from "zod";
 
 import { requireApiSession } from "@/lib/auth-server";
-import { creditCostForGeneration } from "@/lib/credits/config";
+import { estimateGenerationCredits } from "@/lib/credits/estimate-generation";
+import { creditsFromTokens, usdFromTokens } from "@/lib/credits/token-cost";
+import { resolveBillingRates } from "@/lib/llm/models";
+import { isPaidOpenRouterModel } from "@/lib/llm/models";
 import { LOCALE_CODES } from "@/lib/i18n/locales";
 import { writeAuditLog } from "@/lib/data/audit";
 import { captureException } from "@/lib/sentry";
 import {
   assertAndSpendCredits,
   assertGenerateRateLimit,
+  getOrRefreshCredits,
   refundCredits,
 } from "@/lib/data/credits";
 import {
@@ -16,10 +20,10 @@ import {
   createPendingDeck,
   failDeckGeneration,
   purgeExpiredSources,
+  purgeFailedGenerations,
 } from "@/lib/data/decks";
 import {
   chunkStudyText,
-  OLLAMA_MAX_CHUNKS,
   shouldChunkText,
 } from "@/lib/ingest/chunk-text";
 import { extractStudyText } from "@/lib/ingest/extract-text";
@@ -30,26 +34,35 @@ import {
   validateFileSignature,
   validateUpload,
 } from "@/lib/ingest/validate-upload";
-import { assertLLMReady, getLLMConfig, resolveOllamaModel } from "@/lib/llm/config";
 import {
-  generateFlashcardsFromContent,
-  generateFlashcardsFromImage,
+  assertLLMReady,
+  getLLMConfig,
+  resolveOllamaModel,
+  resolveOpenRouterModel,
+} from "@/lib/llm/config";
+import { generateFlashcardsFromContent,
   generateFlashcardsFromImages,
   generateFlashcardsFromTopic,
+  ollamaMaterialCap,
   TOPIC_SOURCE_MIME,
   UnrelatedSourceError,
 } from "@/lib/llm/generate-flashcards";
 import { mergeGeneratedDecks } from "@/lib/llm/merge-decks";
+import { listOpenRouterFreeModels } from "@/lib/llm/openrouter-models";
+import { resolveLicensedImage } from "@/lib/images/resolve-licensed-image";
 import {
+  deleteDeckMedia,
   deleteSourceMedia,
   downloadSourceMedia,
+  cleanupDiscardedGenerations,
 } from "@/lib/supabase/storage";
-import type { GeneratedDeck, QuestionStyle } from "@/lib/types/flashcard";
+import type { GeneratedDeck, GeneratedFlashcard, LLMProvider, QuestionStyle } from "@/lib/types/flashcard";
+import { normalizeLLMProvider } from "@/lib/types/flashcard";
 
 const optionsSchema = z.object({
   title: z.string().trim().min(1).max(100).optional(),
-  provider: z.enum(["openai", "anthropic", "google", "ollama"]),
-  model: z.enum(["gemma4:e4b", "gemma4:e2b"]).optional(),
+  provider: z.enum(["openrouter", "ollama", "openai", "anthropic", "google"]),
+  model: z.string().trim().min(1).max(200).optional(),
   cardCount: z.number().int().min(3).max(30).default(10),
   difficulty: z
     .enum(["beginner", "intermediate", "advanced"])
@@ -60,6 +73,8 @@ const optionsSchema = z.object({
     .default("mixed"),
   mode: z.enum(["flashcards", "quiz"]).default("flashcards"),
   sourceRetention: z.enum(["none", "24h", "keep"]).default("24h"),
+  illustrations: z.boolean().optional().default(false),
+  imageModel: z.string().trim().min(1).max(200).optional(),
 });
 
 const textRequestSchema = optionsSchema.extend({
@@ -78,7 +93,7 @@ const urlRequestSchema = optionsSchema.extend({
 });
 
 const uploadRequestSchema = optionsSchema.extend({
-  sourceType: z.enum(["file", "photo"]),
+  sourceType: z.literal("file"),
   storagePath: z.string().min(3).max(500),
   file: z.object({
     name: z.string(),
@@ -94,15 +109,75 @@ const requestSchema = z.discriminatedUnion("sourceType", [
   uploadRequestSchema,
 ]);
 
+function resolveRequestProvider(raw: string): LLMProvider {
+  return normalizeLLMProvider(raw) ?? "openrouter";
+}
+
+async function resolveRequestModel(
+  provider: LLMProvider,
+  requested?: string,
+): Promise<string> {
+  if (provider === "ollama") {
+    return resolveOllamaModel(requested);
+  }
+  const model = resolveOpenRouterModel(requested);
+  if (isPaidOpenRouterModel(model)) return model;
+  const free = await listOpenRouterFreeModels();
+  if (free.some((entry) => entry.id === model)) return model;
+  return getLLMConfig().openrouter.model;
+}
+
+async function attachLicensedWebImages(input: {
+  userId: string;
+  deckId: string;
+  cards: GeneratedFlashcard[];
+}): Promise<{ cards: GeneratedFlashcard[]; imagesAttached: number }> {
+  const cards: GeneratedFlashcard[] = [];
+  let imagesAttached = 0;
+
+  for (const [index, card] of input.cards.entries()) {
+    const query = card.imageSearchQuery?.trim() || card.imagePrompt?.trim();
+    if (!query) {
+      cards.push(card);
+      continue;
+    }
+    try {
+      const resolved = await resolveLicensedImage({
+        query,
+        allowAi: false,
+        storagePath: `${input.userId}/decks/${input.deckId}/${index}`,
+      });
+      if (!resolved) {
+        cards.push(card);
+        continue;
+      }
+      imagesAttached += 1;
+      cards.push({
+        ...card,
+        imageUrl: resolved.imageUrl,
+        imageAttribution: resolved.attribution,
+      });
+    } catch {
+      cards.push(card);
+    }
+  }
+
+  return { cards, imagesAttached };
+}
+
+/** Hobby Vercel caps at 60s; local Ollama can take longer. Raise on Pro. */
+export const maxDuration = process.env.VERCEL ? 60 : 300;
+
 async function generateFromLongText(
   content: string,
   generationOptions: {
-    provider: "openai" | "anthropic" | "google" | "ollama";
+    provider: LLMProvider;
     model?: string;
     cardCount: number;
     difficulty: "beginner" | "intermediate" | "advanced";
     language: string;
     questionStyle: QuestionStyle;
+    includeImagePrompts?: boolean;
   },
 ): Promise<GeneratedDeck> {
   const isOllama = generationOptions.provider === "ollama";
@@ -110,16 +185,18 @@ async function generateFromLongText(
     generationOptions.provider === "ollama"
       ? resolveOllamaModel(generationOptions.model)
       : null;
-  const ollamaChunkCap =
-    ollamaModel === "gemma4:e4b" ? 1 : OLLAMA_MAX_CHUNKS;
+
+  // Local models: one bounded pass — chunking multiplies timeout failures.
+  if (isOllama && ollamaModel) {
+    const cap = ollamaMaterialCap(ollamaModel);
+    return generateFlashcardsFromContent(content.slice(0, cap), generationOptions);
+  }
 
   if (!shouldChunkText(content)) {
     return generateFlashcardsFromContent(content, generationOptions);
   }
 
-  const chunks = chunkStudyText(content, generationOptions.cardCount, {
-    maxChunks: isOllama ? ollamaChunkCap : undefined,
-  });
+  const chunks = chunkStudyText(content, generationOptions.cardCount);
   const partials: GeneratedDeck[] = [];
 
   for (const chunk of chunks) {
@@ -188,44 +265,82 @@ async function generateFromLongText(
 export async function POST(request: Request) {
   let deckId: string | undefined;
   let userId: string | undefined;
-  let spentAmount = 0;
+  let spentTextAmount = 0;
+  let spentImageAmount = 0;
   let charged = false;
 
   try {
     const session = await requireApiSession();
     userId = session.user.id;
-    await assertGenerateRateLimit(userId);
     void purgeExpiredSources(userId);
+    void purgeFailedGenerations(userId).then(cleanupDiscardedGenerations);
     const input = requestSchema.parse(await request.json());
-    const provider = assertLLMReady(input.provider);
-    const config = getLLMConfig();
-    const model =
-      provider === "ollama"
-        ? resolveOllamaModel(input.model)
-        : config[provider].model;
+    const provider = assertLLMReady(resolveRequestProvider(input.provider));
+    const model = await resolveRequestModel(provider, input.model);
+    const credits = await getOrRefreshCredits(userId);
+    await assertGenerateRateLimit(userId, {
+      provider,
+      model,
+      isUnlimited: credits.isUnlimited,
+    });
 
     const questionStyle = (
       input.mode === "quiz" ? "mcq" : input.questionStyle
     ) as QuestionStyle;
-
-    const creditCost = creditCostForGeneration({
+    const wantWebImages = input.mode !== "quiz";
+    const sourceMode =
+      input.sourceType === "topic"
+        ? "topic"
+        : input.sourceType === "url"
+          ? "url"
+          : input.sourceType === "file"
+            ? "file"
+            : "text";
+    const estimate = estimateGenerationCredits({
       provider,
-      model: provider === "ollama" ? model : null,
+      modelId: model,
+      sourceMode,
+      sourceSize: {
+        charCount:
+          input.sourceType === "text"
+            ? input.content.length
+            : input.sourceType === "topic"
+              ? input.topic.length
+              : undefined,
+        fileBytes:
+          input.sourceType === "file" ? input.file.size : undefined,
+        mimeType:
+          input.sourceType === "file" ? input.file.type : undefined,
+      },
       cardCount: input.cardCount,
     });
     const spent = await assertAndSpendCredits({
       userId,
-      amount: creditCost,
+      textAmount: estimate.textCredits,
+      imageAmount: 0,
       reason: input.mode === "quiz" ? "generate_quiz" : "generate_deck",
       meta: {
         provider,
         model,
         cardCount: input.cardCount,
         mode: input.mode,
+        sourceMode,
+        inputTokensEstimate: estimate.inputTokens,
+        outputTokens: estimate.outputTokens,
+        usdEstimate: usdFromTokens(
+          {
+            inputTokens: estimate.inputTokens,
+            outputTokens: estimate.outputTokens,
+          },
+          resolveBillingRates({ provider, modelId: model }),
+        ),
+        textCreditsEstimated: estimate.textCredits,
+        imageCreditsEstimated: 0,
       },
     });
     charged = true;
-    spentAmount = spent.isUnlimited ? 0 : creditCost;
+    spentTextAmount = spent.isUnlimited ? 0 : estimate.textCredits;
+    spentImageAmount = 0;
 
     let sourceContent: string | undefined;
     let storagePath: string | undefined;
@@ -254,7 +369,7 @@ export async function POST(request: Request) {
     } else {
       assertOwnedStoragePath(input.storagePath, userId);
       const upload = validateUpload(input.file);
-      if (upload.sourceType !== input.sourceType) {
+      if (input.sourceType !== upload.sourceType) {
         throw new Error("The selected source type does not match the file");
       }
       storagePath = input.storagePath;
@@ -283,11 +398,12 @@ export async function POST(request: Request) {
 
     const generationOptions = {
       provider,
-      model: provider === "ollama" ? model : undefined,
+      model,
       cardCount: input.cardCount,
       difficulty: input.difficulty,
       language: input.language,
       questionStyle,
+      includeImagePrompts: wantWebImages,
     };
 
     let generated: GeneratedDeck;
@@ -307,13 +423,7 @@ export async function POST(request: Request) {
       const data = await downloadSourceMedia(input.storagePath);
       validateFileSignature(data, input.file.type);
 
-      if (input.sourceType === "photo") {
-        generated = await generateFlashcardsFromImage(
-          data,
-          input.file.type as "image/jpeg" | "image/png",
-          generationOptions,
-        );
-      } else if (input.file.type === "application/pdf") {
+      if (input.file.type === "application/pdf") {
         const pdfBytes = new Uint8Array(data);
         let extractedText: string | null = null;
         try {
@@ -355,12 +465,54 @@ export async function POST(request: Request) {
       }
     }
 
-    await completeDeckGeneration(
-      deckId,
-      userId,
-      generated.title,
-      generated.cards,
+    let cards = generated.cards;
+    let imagesAttached = 0;
+    if (wantWebImages && deckId) {
+      const illustrated = await attachLicensedWebImages({
+        userId,
+        deckId,
+        cards,
+      });
+      cards = illustrated.cards;
+      imagesAttached = illustrated.imagesAttached;
+    }
+
+    await completeDeckGeneration(deckId, userId, generated.title, cards);
+
+    const rates = resolveBillingRates({ provider, modelId: model });
+    const actualTextCredits = creditsFromTokens(
+      generated.usage ?? {
+        inputTokens: estimate.inputTokens,
+        outputTokens: estimate.outputTokens,
+      },
+      rates,
     );
+    const textRefund =
+      !spent.isUnlimited && spentTextAmount > actualTextCredits
+        ? spentTextAmount - actualTextCredits
+        : 0;
+    const imageRefund = 0;
+    if (textRefund > 0 || imageRefund > 0) {
+      await refundCredits({
+        userId,
+        textAmount: textRefund,
+        imageAmount: imageRefund,
+        reason: "generate_reconcile",
+        meta: {
+          deckId,
+          textCreditsCharged: actualTextCredits,
+          imageCreditsCharged: 0,
+          textCreditsEstimated: estimate.textCredits,
+          imageCreditsEstimated: 0,
+          textCreditsRefunded: textRefund,
+          imageCreditsRefunded: imageRefund,
+          inputTokensEstimate: generated.usage?.inputTokens ?? estimate.inputTokens,
+          outputTokens: generated.usage?.outputTokens ?? estimate.outputTokens,
+          imagesAttached,
+        },
+      });
+      spentTextAmount = actualTextCredits;
+    }
 
     await writeAuditLog({
       userId,
@@ -370,8 +522,9 @@ export async function POST(request: Request) {
       meta: {
         provider,
         model,
-        cardCount: generated.cards.length,
+        cardCount: cards.length,
         mode: input.mode,
+        imagesAttached,
       },
     });
 
@@ -402,14 +555,24 @@ export async function POST(request: Request) {
           : "Generation failed";
 
     if (deckId && userId) {
-      await failDeckGeneration(deckId, userId, message);
+      const discarded = await failDeckGeneration(deckId, userId, message);
+      if (discarded) {
+        await cleanupDiscardedGenerations([discarded]);
+      } else {
+        try {
+          await deleteDeckMedia({ userId, deckId });
+        } catch {
+          // Best-effort storage cleanup if the deck row was already gone.
+        }
+      }
     }
 
-    if (charged && userId && spentAmount > 0) {
+    if (charged && userId && (spentTextAmount > 0 || spentImageAmount > 0)) {
       try {
         await refundCredits({
           userId,
-          amount: spentAmount,
+          textAmount: spentTextAmount,
+          imageAmount: spentImageAmount,
           reason: "generate_refund",
           meta: { deckId: deckId ?? null, error: message.slice(0, 200) },
         });
@@ -424,7 +587,7 @@ export async function POST(request: Request) {
         error: message,
         deckId,
         code: refusal ?? (rateLimited ? "RATE_LIMITED" : undefined),
-        refunded: charged && spentAmount > 0,
+        refunded: charged && (spentTextAmount > 0 || spentImageAmount > 0),
       },
       {
         status: refusal

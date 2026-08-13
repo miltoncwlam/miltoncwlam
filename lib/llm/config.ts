@@ -1,14 +1,15 @@
 import "server-only";
 
+import { createOpenAI } from "@ai-sdk/openai";
+
 import { env } from "@/lib/env";
+import { DEFAULT_OPENROUTER_MODEL, isPaidOpenRouterModel } from "@/lib/llm/models";
 import type { LLMProvider, OllamaModelId } from "@/lib/types/flashcard";
 import { OLLAMA_MODELS } from "@/lib/types/flashcard";
 
 export type LLMConfig = {
   defaultProvider: LLMProvider;
-  openai: { apiKey?: string; model: string };
-  anthropic: { apiKey?: string; model: string };
-  google: { apiKey?: string; model: string };
+  openrouter: { apiKey?: string; model: string };
   ollama: { enabled: boolean; baseUrl: string; model: OllamaModelId };
 };
 
@@ -26,17 +27,9 @@ export function resolveOllamaModel(requested?: string | null): OllamaModelId {
 export function getLLMConfig(): LLMConfig {
   return {
     defaultProvider: env.LLM_DEFAULT_PROVIDER,
-    openai: {
-      apiKey: env.OPENAI_API_KEY,
-      model: env.OPENAI_MODEL,
-    },
-    anthropic: {
-      apiKey: env.ANTHROPIC_API_KEY,
-      model: env.ANTHROPIC_MODEL,
-    },
-    google: {
-      apiKey: env.GOOGLE_GENERATIVE_AI_API_KEY,
-      model: env.GOOGLE_MODEL,
+    openrouter: {
+      apiKey: env.OPENROUTER_API_KEY,
+      model: env.OPENROUTER_MODEL || DEFAULT_OPENROUTER_MODEL,
     },
     ollama: {
       enabled: env.OLLAMA_ENABLED,
@@ -50,16 +43,43 @@ export function isOllamaConfigured(): boolean {
   return getLLMConfig().ollama.enabled;
 }
 
+export function isOpenRouterConfigured(): boolean {
+  return Boolean(getLLMConfig().openrouter.apiKey);
+}
+
 export function getConfiguredProviders(): LLMProvider[] {
   const config = getLLMConfig();
   const providers: LLMProvider[] = [];
-
-  if (config.openai.apiKey) providers.push("openai");
-  if (config.anthropic.apiKey) providers.push("anthropic");
-  if (config.google.apiKey) providers.push("google");
+  if (config.openrouter.apiKey) providers.push("openrouter");
   if (config.ollama.enabled) providers.push("ollama");
-
   return providers;
+}
+
+export function openRouterHeaders(): Record<string, string> {
+  return {
+    "HTTP-Referer": env.NEXT_PUBLIC_APP_URL,
+    "X-Title": "FlashCard Generator",
+  };
+}
+
+export function getOpenRouterClient() {
+  const config = getLLMConfig();
+  if (!config.openrouter.apiKey) {
+    throw new Error(
+      "Missing OPENROUTER_API_KEY. Add it to .env.local, or enable Ollama with OLLAMA_ENABLED=true.",
+    );
+  }
+  return createOpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: config.openrouter.apiKey,
+    name: "openrouter",
+    headers: openRouterHeaders(),
+  });
+}
+
+export function resolveOpenRouterModel(requested?: string | null): string {
+  if (requested?.trim()) return requested.trim();
+  return getLLMConfig().openrouter.model || DEFAULT_OPENROUTER_MODEL;
 }
 
 export function assertLLMReady(provider?: LLMProvider): LLMProvider {
@@ -69,20 +89,23 @@ export function assertLLMReady(provider?: LLMProvider): LLMProvider {
   if (selected === "ollama") {
     if (!config.ollama.enabled) {
       throw new Error(
-        'Ollama is not enabled. Set OLLAMA_ENABLED=true in .env.local and run `ollama pull gemma4:e4b` (or gemma4:e2b).',
+        "Ollama is not enabled. Set OLLAMA_ENABLED=true in .env.local and run `ollama pull gemma4:e4b` (or gemma4:e2b).",
       );
     }
     return selected;
   }
 
-  const key = config[selected].apiKey;
-  if (!key) {
+  if (!config.openrouter.apiKey) {
     throw new Error(
-      `Missing API key for LLM provider "${selected}". Add it to .env.local, or enable Ollama with OLLAMA_ENABLED=true.`,
+      'Missing API key for OpenRouter. Add OPENROUTER_API_KEY to .env.local, or enable Ollama with OLLAMA_ENABLED=true.',
     );
   }
 
   return selected;
+}
+
+export function isKnownPaidOrOllamaModel(modelId: string): boolean {
+  return isPaidOpenRouterModel(modelId) || ALLOWED_OLLAMA.has(modelId);
 }
 
 export async function assertOllamaReachable(modelOverride?: string): Promise<void> {

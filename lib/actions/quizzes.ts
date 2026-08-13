@@ -10,6 +10,7 @@ import {
   getCardForQuiz,
   startQuizSession,
 } from "@/lib/data/quizzes";
+import { resolveCorrectChoice } from "@/lib/quiz/choices";
 
 const idSchema = z.string().uuid();
 
@@ -40,7 +41,7 @@ export async function answerQuizAction(input: {
     userId: auth.user.id,
     cardId,
     selectedOption: input.selectedOption,
-    correctAnswer: card.back,
+    correctAnswer: resolveCorrectChoice(card),
   });
 
   revalidatePath(`/decks/${input.deckId}/quiz`);

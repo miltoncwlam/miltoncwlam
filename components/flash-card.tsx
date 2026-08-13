@@ -1,5 +1,11 @@
 "use client";
 
+import { useLocale } from "next-intl";
+import { useRef } from "react";
+
+import { Button } from "@/components/ui/button";
+import type { AppLocale } from "@/lib/i18n/locales";
+import { formatImageCredit, type ImageAttribution } from "@/lib/images/license";
 import type { CardType } from "@/lib/types/flashcard";
 
 function renderClozeFront(front: string) {
@@ -43,6 +49,8 @@ export function FlashCard({
   category,
   cardType = "qa",
   options,
+  imageUrl,
+  imageAttribution,
   flipped,
   onFlip,
   index = 1,
@@ -56,6 +64,8 @@ export function FlashCard({
   category?: string | null;
   cardType?: CardType;
   options?: string[] | null;
+  imageUrl?: string | null;
+  imageAttribution?: ImageAttribution | null;
   flipped: boolean;
   onFlip: () => void;
   index?: number;
@@ -63,6 +73,9 @@ export function FlashCard({
   selectedOption?: string | null;
   onSelectOption?: (option: string) => void;
 }) {
+  const locale = useLocale() as AppLocale;
+  const credit = formatImageCredit(imageAttribution);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const meta = typeMeta(cardType);
   const isMcq = cardType === "mcq" && Boolean(options?.length);
   const answered = selectedOption != null;
@@ -75,12 +88,28 @@ export function FlashCard({
           normalizeAnswer(option) === normalizeAnswer(selectedOption),
       ));
 
-  function speak(text: string) {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1;
-    window.speechSynthesis.speak(utterance);
+  async function speak(text: string) {
+    if (typeof window === "undefined" || !text.trim()) return;
+    audioRef.current?.pause();
+    audioRef.current = null;
+
+    try {
+      const response = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, locale }),
+      });
+      if (!response.ok) return;
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => URL.revokeObjectURL(url);
+      await audio.play();
+    } catch {
+      // Ignore playback errors (autoplay blocks, network, etc.)
+    }
   }
 
   return (
@@ -106,10 +135,21 @@ export function FlashCard({
                 </span>
               </span>
               <span className="tcg-art">
-                <span className="tcg-art-badge">{meta.label}</span>
-                <span className="tcg-art-mark" aria-hidden>
-                  {index % 5 === 0 ? "◆" : index % 3 === 0 ? "★" : "●"}
-                </span>
+                {imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    alt=""
+                    className="h-full w-full rounded-[0.55rem] object-cover"
+                    src={imageUrl}
+                  />
+                ) : (
+                  <>
+                    <span className="tcg-art-badge">{meta.label}</span>
+                    <span className="tcg-art-mark" aria-hidden>
+                      {index % 5 === 0 ? "◆" : index % 3 === 0 ? "★" : "●"}
+                    </span>
+                  </>
+                )}
               </span>
               <span className="tcg-stage">
                 Stage {index}/{total} ·{" "}
@@ -157,15 +197,18 @@ export function FlashCard({
           </span>
         </button>
       </div>
+      {credit ? (
+        <p className="text-center text-[11px] text-muted-foreground">{credit}</p>
+      ) : null}
 
       <div className="study-card-controls flex flex-wrap items-center justify-center gap-3">
-        <button
-          className="secondary-button"
+        <Button
           onClick={() => speak(flipped ? back : front)}
           type="button"
+          variant="secondary"
         >
           Speak {flipped ? "answer" : "prompt"}
-        </button>
+        </Button>
       </div>
 
       {isMcq && options?.length ? (

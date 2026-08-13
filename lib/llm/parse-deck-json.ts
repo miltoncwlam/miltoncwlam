@@ -1,6 +1,16 @@
 import { z } from "zod";
 
 import type { CardType, GeneratedDeck, GeneratedFlashcard } from "@/lib/types/flashcard";
+import { sanitizeMcqFields } from "@/lib/quiz/choices";
+
+export function mcqStyleRules() {
+  return `Card style: only multiple choice.
+- "options": exactly 4 short, same-kind, similar-length, plausible answers to THIS question (four cities, four organs, four numbers — never mix a name with a paragraph).
+- "back": the short correct option text only. It MUST match one option exactly.
+- Put any extra fact or "why" in "hint". Never put the why in "back" or "options".
+- Wrong options must be tempting mistakes on the same topic, never unrelated facts from other cards.
+Set "type":"mcq".`;
+}
 
 export class UnrelatedSourceError extends Error {
   code: "UNRELATED_SOURCE" | "INSUFFICIENT_CONTENT";
@@ -40,10 +50,12 @@ const generatedCardSchema = z.object({
     .min(1)
     .max(600)
     .describe("Concise answer on the card back"),
-  hint: z.string().max(180).optional(),
+  hint: z.string().max(400).optional(),
   category: z.string().max(60).optional(),
   type: cardTypeSchema.optional(),
   options: z.array(z.string().min(1).max(120)).min(2).max(6).optional(),
+  imagePrompt: z.string().max(280).optional(),
+  imageSearchQuery: z.string().max(80).optional(),
 });
 
 /** Loose schema for cloud generateObject (exact count enforced in parse). */
@@ -93,25 +105,34 @@ function throwIfRefusal(payload: unknown) {
 
 function normalizeCard(card: z.infer<typeof generatedCardSchema>): GeneratedFlashcard {
   const front = card.front.trim().slice(0, FRONT_MAX);
-  const back = card.back.trim().slice(0, BACK_MAX);
+  let back = card.back.trim().slice(0, BACK_MAX);
   if (!front || !back) {
     throw new Error("Card missing front or back after normalization");
   }
   const type = (card.type ?? "qa") as CardType;
-  const options =
+  let hint = card.hint?.trim().slice(0, 280) || undefined;
+  let options =
     type === "mcq"
       ? (card.options ?? []).map((entry) => entry.trim()).filter(Boolean).slice(0, 6)
       : undefined;
-  if (type === "mcq" && (!options || options.length < 2)) {
-    throw new Error("MCQ cards need at least 2 options");
+  if (type === "mcq") {
+    if (!options || options.length < 2) {
+      throw new Error("MCQ cards need at least 2 options");
+    }
+    const sanitized = sanitizeMcqFields({ back, hint, options });
+    back = sanitized.back.slice(0, BACK_MAX);
+    hint = sanitized.hint?.slice(0, 280) || undefined;
+    options = sanitized.options;
   }
   return {
     front,
     back,
-    hint: card.hint?.trim().slice(0, 180) || undefined,
+    hint,
     category: card.category?.trim().slice(0, 60) || undefined,
     type,
     options,
+    imagePrompt: card.imagePrompt?.trim().slice(0, 220) || undefined,
+    imageSearchQuery: card.imageSearchQuery?.trim().slice(0, 80) || undefined,
   };
 }
 

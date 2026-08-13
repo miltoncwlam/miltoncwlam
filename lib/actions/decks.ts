@@ -22,11 +22,14 @@ import { extractStudyText } from "@/lib/ingest/extract-text";
 import { validateFileSignature } from "@/lib/ingest/validate-upload";
 import {
   generateFlashcardsFromContent,
-  generateFlashcardsFromImage,
   generateFlashcardsFromTopic,
   TOPIC_SOURCE_MIME,
 } from "@/lib/llm/generate-flashcards";
+import { resolveOllamaModel } from "@/lib/llm/config";
+import { DEFAULT_OPENROUTER_MODEL } from "@/lib/llm/models";
+import { normalizeLLMProvider } from "@/lib/types/flashcard";
 import {
+  cleanupDiscardedGenerations,
   deleteSourceMedia,
   downloadSourceMedia,
 } from "@/lib/supabase/storage";
@@ -116,6 +119,13 @@ export async function regenerateDeckAction(formData: FormData) {
   const deck = await getDeckWithCards(deckId, session.user.id);
   if (!deck || !deck.generationProvider) throw new Error("Deck not found");
 
+  const provider =
+    normalizeLLMProvider(deck.generationProvider) ?? "openrouter";
+  const model =
+    provider === "ollama"
+      ? resolveOllamaModel(deck.generationModel)
+      : deck.generationModel || DEFAULT_OPENROUTER_MODEL;
+
   try {
     let generated;
     if (
@@ -124,28 +134,26 @@ export async function regenerateDeckAction(formData: FormData) {
       deck.sourceMimeType === TOPIC_SOURCE_MIME
     ) {
       generated = await generateFlashcardsFromTopic(deck.sourceContent, {
-        provider: deck.generationProvider,
+        provider,
+        model,
         cardCount: Math.max(3, deck.cards.length),
       });
     } else if (deck.sourceType === "text" && deck.sourceContent) {
       generated = await generateFlashcardsFromContent(deck.sourceContent, {
-        provider: deck.generationProvider,
+        provider,
+        model,
         cardCount: Math.max(3, deck.cards.length),
       });
     } else if (deck.storagePath && deck.sourceMimeType) {
+      if (deck.sourceType === "photo") {
+        throw new Error(
+          "Photo uploads are no longer supported. Create a new deck from text or PDF.",
+        );
+      }
       const data = await downloadSourceMedia(deck.storagePath);
       validateFileSignature(data, deck.sourceMimeType);
-      if (deck.sourceType === "photo") {
-        generated = await generateFlashcardsFromImage(
-          data,
-          deck.sourceMimeType as "image/jpeg" | "image/png",
-          {
-            provider: deck.generationProvider,
-            cardCount: Math.max(3, deck.cards.length),
-          },
-        );
-      } else if (
-        deck.generationProvider === "ollama" &&
+      if (
+        provider === "ollama" &&
         deck.sourceMimeType === "application/pdf"
       ) {
         const { pdfPagesToImages } = await import("@/lib/ingest/pdf-to-images");
@@ -159,7 +167,8 @@ export async function regenerateDeckAction(formData: FormData) {
             mediaType: page.mediaType,
           })),
           {
-            provider: deck.generationProvider,
+            provider,
+            model,
             cardCount: Math.max(3, deck.cards.length),
           },
         );
@@ -167,7 +176,8 @@ export async function regenerateDeckAction(formData: FormData) {
         generated = await generateFlashcardsFromContent(
           await extractStudyText(data, deck.sourceMimeType),
           {
-            provider: deck.generationProvider,
+            provider,
+            model,
             cardCount: Math.max(3, deck.cards.length),
           },
         );
@@ -202,7 +212,8 @@ export async function regenerateDeckAction(formData: FormData) {
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : "Regeneration failed";
-    await failDeckGeneration(deckId, session.user.id, message);
+    const discarded = await failDeckGeneration(deckId, session.user.id, message);
+    if (discarded) await cleanupDiscardedGenerations([discarded]);
     throw error;
   }
 

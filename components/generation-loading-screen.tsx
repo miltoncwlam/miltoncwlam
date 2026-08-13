@@ -24,7 +24,6 @@ export function GenerationLoadingScreen({
   label,
   usingOllama,
   includeUpload,
-  elapsedSeconds,
   error,
   onRetry,
   onDismiss,
@@ -33,7 +32,6 @@ export function GenerationLoadingScreen({
   label: string;
   usingOllama: boolean;
   includeUpload: boolean;
-  elapsedSeconds: number;
   error?: string | null;
   onRetry?: () => void;
   onDismiss?: () => void;
@@ -57,10 +55,6 @@ export function GenerationLoadingScreen({
     }, 4500);
     return () => window.clearInterval(id);
   }, [tips.length]);
-
-  const minutes = Math.floor(elapsedSeconds / 60);
-  const seconds = elapsedSeconds % 60;
-  const clock = `${minutes}:${String(seconds).padStart(2, "0")}`;
 
   const phaseTitle = (id: GenerationPhase) => {
     switch (id) {
@@ -142,11 +136,6 @@ export function GenerationLoadingScreen({
                       {state === "done" ? "✓" : state === "active" ? "●" : "○"}
                     </span>
                     <span>{phaseTitle(entry)}</span>
-                    {state === "active" ? (
-                      <span className="ml-auto text-xs font-semibold text-indigo-600">
-                        {clock}
-                      </span>
-                    ) : null}
                   </li>
                 );
               })}
@@ -180,7 +169,7 @@ export function GenerationLoadingScreen({
                   {phase === "done"
                     ? "100%"
                     : waitingOnModel
-                      ? clock
+                      ? "…"
                       : `${stepNumber}/${visiblePhases.length}`}
                 </span>
               </div>
@@ -200,9 +189,7 @@ export function GenerationLoadingScreen({
                   />
                 )}
               </div>
-              <p className="mt-2 text-xs text-slate-500">
-                {waitingOnModel ? t("noFakePercent") : t("phaseAdvances")}
-              </p>
+              <p className="mt-2 text-xs text-slate-500">{t("phaseAdvances")}</p>
             </div>
 
             <div className="mt-8 rounded-2xl bg-slate-50 p-5">

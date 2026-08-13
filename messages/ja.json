@@ -21,7 +21,7 @@
   "landing": {
     "eyebrow": "何からでも学べる",
     "title": "ノートが、コレクションしたくなるデッキに。",
-    "subtitle": "テキスト、PDF、写真をアップロード。Study A が AI でめくれる・評価できるフラッシュカードを作ります。",
+    "subtitle": "テキストや PDF をアップロード。Study A が AI でめくれる・評価できるフラッシュカードを作ります。",
     "continue": "Google / メールで続ける",
     "createAccount": "アカウント作成",
     "agree": "続行すると <terms>利用規約</terms> と <privacy>プライバシーポリシー</privacy> に同意したことになります。",
@@ -51,22 +51,20 @@
   },
   "create": {
     "title": "何でもフラッシュカードに",
-    "subtitle": "テキストを貼るか、PDF / TXT / Markdown / JPG / PNG をアップロード。LLMキーなしで試すならサンプルデッキも。",
+    "subtitle": "テキストを貼るか、PDF / TXT / Markdown をアップロード。LLMキーなしで試すならサンプルデッキも。",
     "topic": "トピック",
     "text": "テキスト",
     "file": "ファイル",
-    "photo": "写真",
     "topicLabel": "トピック / 科目",
     "topicPlaceholder": "例: 光合成、第二次世界大戦、分数の基礎",
     "topicHint": "トピックだけで学習用フラッシュカードを生成します。",
-    "uploadNeedsSecret": "ファイル/写真には .env.local の SUPABASE_SECRET_KEY が必要です。テキスト生成は可能です。",
+    "uploadNeedsSecret": "ファイルアップロードには .env.local の SUPABASE_SECRET_KEY が必要です。テキスト生成は可能です。",
     "ollamaPdfNote": "Ollama では PDF をページ画像に変換します。TXT/Markdown はテキスト抽出です。",
     "titleLabel": "デッキ名（任意）",
     "titlePlaceholder": "生物 第4章",
     "material": "学習素材",
     "materialPlaceholder": "ノートや記事を貼り付け…",
     "fileLabel": "PDF・TXT・Markdown",
-    "photoLabel": "JPG / PNG",
     "fileHint": "最大 10MB、テキストは最大 2MB。",
     "provider": "AIプロバイダ",
     "cardCount": "カード枚数",
@@ -80,6 +78,16 @@
     "chooseFile": "ファイルを選んでください",
     "uploadSecretError": "アップロードには SUPABASE_SECRET_KEY が必要です",
     "ollamaModel": "Ollama モデル",
+    "model": "モデル",
+    "modelFree": "低エネルギー",
+    "modelBudget": "節約",
+    "modelStandard": "標準",
+    "energyShort": "テキストエネルギー不足。必要 {need}、所持 {have}。",
+    "energyImageShort": "画像エネルギー不足。必要 {need}、所持 {have}。",
+    "illustrations": "イラストを追加",
+    "illustrationsHint": "イラストは別の画像エネルギーを使います。FLUX.2 Klein が最も少ないです。",
+    "imageModel": "イラストモデル",
+    "energyEach": "画像エネルギー／枚",
     "questionStyle": "問題形式",
     "styleMixed": "混合タイプ",
     "styleQa": "Q&A のみ",
@@ -88,7 +96,8 @@
     "styleMcq": "選択式",
     "modeFlashcards": "フラッシュカード",
     "modeQuiz": "クイズデッキ",
-    "energyCost": "{cost} エネルギーを使います（1枚あたり {per}）。エネルギーは毎週回復します。",
+    "energyCost": "テキストエネルギー: 約 {cost}",
+    "energyImageCost": "画像エネルギー: 約 {cost}",
     "quizModeNote": "クイズデッキはバトルモード用の選択問題を生成します。",
     "url": "URL",
     "urlLabel": "URL",
@@ -145,7 +154,8 @@
     "exit": "終了",
     "empty": "カードがありません。",
     "finished": "{count} 枚すべて復習しました。",
-    "nextCard": "次のカード"
+    "previous": "前へ",
+    "next": "次へ"
   },
   "share": {
     "title": "読み取り専用共有",
@@ -161,7 +171,8 @@
     "privacyTitle": "プライバシーポリシー",
     "termsTitle": "利用規約",
     "cookiesTitle": "Cookieについて",
-    "notLegalAdvice": "本ページは現状の説明であり、法的助言ではありません。"
+    "notLegalAdvice": "本ページは現状の説明であり、法的助言ではありません。",
+    "governingLanguage": "本ポリシーは英語版が正文です。他言語は画面表示用です。"
   },
   "privacy": {
     "intro": "{operator}（「当社」）が {product} 利用時に情報をどう扱うかを説明します。",
@@ -242,8 +253,12 @@
     "filter": "Filter",
     "allGrades": "All grades",
     "primary": "Primary",
+    "junior": "Junior",
+    "senior": "Senior",
     "secondary": "Secondary",
     "featured": "Featured",
+    "illustratedTopics": "Illustrated topics",
+    "attachImages": "Add licensed pictures",
     "study": "Study"
   }
 }

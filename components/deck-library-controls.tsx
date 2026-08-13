@@ -4,6 +4,8 @@ import {
   renameDeckAction,
   setDeckFolderAction,
 } from "@/lib/actions/decks";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export function DeckLibraryControls({
   deckId,
@@ -25,38 +27,38 @@ export function DeckLibraryControls({
 
       <form action={renameDeckAction} className="mt-4 flex flex-wrap gap-2">
         <input name="deckId" type="hidden" value={deckId} />
-        <input
-          className="field min-w-[12rem] flex-1"
+        <Input
+          className="min-w-[12rem] flex-1"
           defaultValue={title}
           maxLength={100}
           name="title"
           required
         />
-        <button className="secondary-button" type="submit">
+        <Button type="submit" variant="secondary">
           Rename
-        </button>
+        </Button>
       </form>
 
       <form action={setDeckFolderAction} className="mt-3 flex flex-wrap gap-2">
         <input name="deckId" type="hidden" value={deckId} />
-        <input
-          className="field min-w-[12rem] flex-1"
+        <Input
+          className="min-w-[12rem] flex-1"
           defaultValue={folderTag ?? ""}
           maxLength={40}
           name="folderTag"
           placeholder="Folder / tag"
         />
-        <button className="secondary-button" type="submit">
+        <Button type="submit" variant="secondary">
           Save tag
-        </button>
+        </Button>
       </form>
 
       <div className="mt-4 flex flex-wrap gap-2">
         <form action={duplicateDeckAction}>
           <input name="deckId" type="hidden" value={deckId} />
-          <button className="secondary-button" type="submit">
+          <Button type="submit" variant="secondary">
             Duplicate
-          </button>
+          </Button>
         </form>
         <form action={archiveDeckAction}>
           <input name="deckId" type="hidden" value={deckId} />
@@ -65,9 +67,9 @@ export function DeckLibraryControls({
             type="hidden"
             value={archived ? "false" : "true"}
           />
-          <button className="text-button" type="submit">
+          <Button type="submit" variant="ghost">
             {archived ? "Restore" : "Archive"}
-          </button>
+          </Button>
         </form>
       </div>
     </section>

@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 
 export function AuthForm({
@@ -105,62 +108,63 @@ export function AuthForm({
     <div className="mt-8 w-full max-w-sm space-y-4">
       <form className="space-y-4" onSubmit={onSubmit}>
         {mode === "sign-up" ? (
-          <label className="block space-y-2">
-            <span className="text-sm font-bold text-slate-700">Name</span>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="name">Name</Label>
+            <Input
               autoComplete="name"
-              className="field"
               disabled={pending}
+              id="name"
               onChange={(e) => setName(e.target.value)}
               type="text"
               value={name}
             />
-          </label>
+          </div>
         ) : null}
-        <label className="block space-y-2">
-          <span className="text-sm font-bold text-slate-700">Email</span>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
             autoComplete="username webauthn"
-            className="field"
             disabled={pending}
+            id="email"
             onChange={(e) => setEmail(e.target.value)}
             required
             type="email"
             value={email}
           />
-        </label>
-        <label className="block space-y-2">
-          <span className="text-sm font-bold text-slate-700">Password</span>
-          <input
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
             autoComplete={
               mode === "sign-up" ? "new-password" : "current-password webauthn"
             }
-            className="field"
             disabled={pending}
+            id="password"
             minLength={8}
             onChange={(e) => setPassword(e.target.value)}
             required
             type="password"
             value={password}
           />
-        </label>
+        </div>
         {error ? (
-          <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-800">
+          <p className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {error}
           </p>
         ) : null}
-        <button className="primary-button w-full" disabled={pending} type="submit">
+        <Button className="w-full" disabled={pending} type="submit">
           {mode === "sign-up" ? "Create account" : "Sign in"}
-        </button>
+        </Button>
         {mode === "sign-in" ? (
-          <button
-            className="secondary-button w-full"
+          <Button
+            className="w-full"
             disabled={pending}
             onClick={onPasskey}
             type="button"
+            variant="secondary"
           >
             Sign in with passkey
-          </button>
+          </Button>
         ) : null}
       </form>
       <p className="text-center text-sm text-slate-600">

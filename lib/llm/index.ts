@@ -7,7 +7,6 @@ export {
 } from "./config";
 export {
   generateFlashcardsFromContent,
-  generateFlashcardsFromImage,
   generateFlashcardsFromTopic,
   TOPIC_SOURCE_MIME,
 } from "./generate-flashcards";

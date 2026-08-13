@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     default: "Study A · AI Flashcards",
     template: "%s · Study A",
   },
-  description: "Turn notes, documents, and photos into interactive flashcards.",
+  description: "Turn notes and documents into interactive flashcards.",
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {

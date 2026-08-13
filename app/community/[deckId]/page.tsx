@@ -5,6 +5,8 @@ import { getTranslations } from "next-intl/server";
 import { CommunityCopyButton } from "@/components/community-copy-button";
 import { CommunitySocial } from "@/components/community-social";
 import { StudyPlayer } from "@/components/study-player";
+import { Button } from "@/components/ui/button";
+import { adminAttachCommunityImagesAction } from "@/lib/actions/admin";
 import { requireSession } from "@/lib/auth-server";
 import {
   formatGradeLabel,
@@ -60,6 +62,18 @@ export default async function CommunityDeckPage({
         </div>
         <CommunityCopyButton deckId={deck.id} />
       </div>
+      {session.provider === "better-auth" && session.user.role === "admin" ? (
+        <form action={adminAttachCommunityImagesAction} className="flex flex-wrap gap-3">
+          <input name="deckId" type="hidden" value={deck.id} />
+          <label className="flex items-center gap-2 text-sm">
+            <input name="replace" type="checkbox" />
+            Replace existing pictures
+          </label>
+          <Button type="submit" variant="secondary">
+            {t("attachImages")}
+          </Button>
+        </form>
+      ) : null}
       <CommunitySocial
         comments={comments}
         deckId={deck.id}

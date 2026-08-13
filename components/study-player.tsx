@@ -68,6 +68,34 @@ export function StudyPlayer({
   const isMcq = card?.cardType === "mcq" && Boolean(card.options?.length);
   const mcqReady = !isMcq || selectedOption != null;
 
+  const canBrowseBack = viewIndex > 0;
+  const canAdvanceWithoutRating = readOnly || !initialSession;
+  const canGoNext =
+    viewIndex < index ||
+    (canAdvanceWithoutRating && index < orderedCards.length);
+
+  function goPrev() {
+    if (!canBrowseBack) return;
+    setViewIndex((value) => value - 1);
+    setFlipped(false);
+    setSelectedOption(null);
+  }
+
+  function goNext() {
+    if (viewIndex < index) {
+      setViewIndex((value) => value + 1);
+      setFlipped(false);
+      setSelectedOption(null);
+      return;
+    }
+    if (!canAdvanceWithoutRating) return;
+    const next = Math.min(orderedCards.length, index + 1);
+    setIndex(next);
+    setViewIndex(next);
+    setFlipped(false);
+    setSelectedOption(null);
+  }
+
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       setMuted(localStorage.getItem("study-a-muted") === "true");
@@ -83,14 +111,12 @@ export function StudyPlayer({
         setFlipped((value) => !value);
       }
       if (event.key === "ArrowLeft") {
-        setViewIndex((value) => Math.max(0, value - 1));
-        setFlipped(false);
-        setSelectedOption(null);
+        event.preventDefault();
+        goPrev();
       }
       if (event.key === "ArrowRight") {
-        setViewIndex((value) => Math.min(index, value + 1));
-        setFlipped(false);
-        setSelectedOption(null);
+        event.preventDefault();
+        goNext();
       }
       if (
         isMcq &&
@@ -109,7 +135,7 @@ export function StudyPlayer({
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [index, isMcq, selectedOption, card, muted]);
+  }, [index, viewIndex, isMcq, selectedOption, card, muted, readOnly, initialSession, orderedCards.length]);
 
   function toggleMute() {
     const next = !muted;
@@ -160,20 +186,8 @@ export function StudyPlayer({
   }
 
   const swipe = useSwipe({
-    onSwipeLeft: () => {
-      if (viewIndex < index) {
-        setViewIndex((value) => value + 1);
-        setFlipped(false);
-        setSelectedOption(null);
-      }
-    },
-    onSwipeRight: () => {
-      if (viewIndex > 0) {
-        setViewIndex((value) => value - 1);
-        setFlipped(false);
-        setSelectedOption(null);
-      }
-    },
+    onSwipeLeft: goNext,
+    onSwipeRight: goPrev,
   });
 
   if (!orderedCards.length) {
@@ -232,6 +246,8 @@ export function StudyPlayer({
         flipped={flipped}
         front={card.front}
         hint={card.hint}
+        imageUrl={card.imageUrl}
+        imageAttribution={card.imageAttribution}
         index={viewIndex + 1}
         onFlip={() => {
           if (isMcq && !selectedOption) return;
@@ -246,27 +262,19 @@ export function StudyPlayer({
       <div className="study-nav-controls flex flex-wrap items-center justify-center gap-3">
         <button
           className="secondary-button min-w-28"
-          disabled={viewIndex === 0}
-          onClick={() => {
-            setViewIndex((value) => value - 1);
-            setFlipped(false);
-            setSelectedOption(null);
-          }}
+          disabled={!canBrowseBack}
+          onClick={goPrev}
           type="button"
         >
-          Previous
+          {t("previous")}
         </button>
         <button
-          className="secondary-button min-w-28"
-          disabled={viewIndex >= index}
-          onClick={() => {
-            setViewIndex((value) => value + 1);
-            setFlipped(false);
-            setSelectedOption(null);
-          }}
+          className="primary-button min-w-28"
+          disabled={!canGoNext}
+          onClick={goNext}
           type="button"
         >
-          Next
+          {t("next")}
         </button>
       </div>
       {!readOnly && initialSession ? (
@@ -287,21 +295,7 @@ export function StudyPlayer({
             </button>
           ))}
         </div>
-      ) : (
-        <button
-          className="primary-button mx-auto block"
-          onClick={() => {
-            const next = Math.min(orderedCards.length, index + 1);
-            setIndex(next);
-            setViewIndex(next);
-            setFlipped(false);
-            setSelectedOption(null);
-          }}
-          type="button"
-        >
-          {t("nextCard")}
-        </button>
-      )}
+      ) : null}
       <div className="flex justify-center gap-3">
         <button
           className="text-button"

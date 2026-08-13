@@ -10,8 +10,22 @@ function appUrl() {
   return (
     process.env.BETTER_AUTH_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "") ||
     "http://localhost:3000"
   );
+}
+
+function trustedOrigins() {
+  const origins = new Set<string>();
+  for (const value of [
+    appUrl(),
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.BETTER_AUTH_URL,
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "",
+  ]) {
+    if (value?.startsWith("http")) origins.add(value.replace(/\/$/, ""));
+  }
+  return [...origins];
 }
 
 function rpID() {
@@ -25,10 +39,11 @@ function rpID() {
 export const auth = betterAuth({
   database: new Pool({
     connectionString: process.env.DATABASE_URL,
-    max: 5,
+    max: process.env.VERCEL ? 1 : 5,
   }),
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: appUrl(),
+  trustedOrigins: trustedOrigins(),
   emailAndPassword: {
     enabled: true,
     disableSignUp: false,

@@ -10,6 +10,9 @@ import { requireAdminSession } from "@/lib/auth-server";
 import { listUsersWithCredits } from "@/lib/data/credits";
 import { pool } from "@/lib/db";
 import { PasskeySetup } from "@/components/passkey-setup";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default async function AdminPage() {
   await requireAdminSession();
@@ -65,29 +68,33 @@ export default async function AdminPage() {
       <section className="space-y-4 rounded-3xl border border-slate-200 bg-white p-6">
         <h2 className="text-xl font-bold">Create user</h2>
         <form action={adminCreateUserAction} className="grid gap-3 sm:grid-cols-2">
-          <label className="block space-y-1 sm:col-span-2">
-            <span className="text-sm font-bold">Email</span>
-            <input className="field" name="email" required type="email" />
-          </label>
-          <label className="block space-y-1">
-            <span className="text-sm font-bold">Name</span>
-            <input className="field" defaultValue="Learner" name="name" />
-          </label>
-          <label className="block space-y-1">
-            <span className="text-sm font-bold">Temp password</span>
-            <input className="field" minLength={8} name="password" required type="text" />
-          </label>
-          <label className="block space-y-1">
-            <span className="text-sm font-bold">Weekly energy grant</span>
-            <input className="field" defaultValue={100} min={0} name="periodGrant" type="number" />
-          </label>
+          <div className="space-y-1 sm:col-span-2">
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" name="email" required type="email" />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="name">Name</Label>
+            <Input defaultValue="Learner" id="name" name="name" />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="password">Temp password</Label>
+            <Input id="password" minLength={8} name="password" required type="text" />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="periodGrant">Weekly text energy</Label>
+            <Input defaultValue={600} id="periodGrant" min={0} name="periodGrant" type="number" />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="imagePeriodGrant">Weekly image energy</Label>
+            <Input defaultValue={0} id="imagePeriodGrant" min={0} name="imagePeriodGrant" type="number" />
+          </div>
           <label className="flex items-center gap-2 pt-6 text-sm font-semibold">
             <input name="isUnlimited" type="checkbox" />
             Unlimited energy
           </label>
-          <button className="primary-button sm:col-span-2" type="submit">
+          <Button className="sm:col-span-2" type="submit">
             Create account
-          </button>
+          </Button>
         </form>
       </section>
 
@@ -103,31 +110,31 @@ export default async function AdminPage() {
                 <div>
                   <p className="font-bold">{user.email}</p>
                   <p className="text-sm text-slate-500">
-                    {user.name} · {user.role ?? "user"} · balance{" "}
-                    {user.is_unlimited ? "unlimited" : (user.balance ?? 0)}
+                    {user.name} · {user.role ?? "user"} · text{" "}
+                    {user.is_unlimited ? "unlimited" : (user.balance ?? 0)} ·
+                    images{" "}
+                    {user.is_unlimited ? "unlimited" : (user.image_balance ?? 0)}
                   </p>
                 </div>
               </div>
               <form
                 action={adminUpdateEnergyAction}
-                className="mt-3 grid gap-2 sm:grid-cols-4"
+                className="mt-3 grid gap-2 sm:grid-cols-3"
               >
                 <input name="userId" type="hidden" value={user.id} />
                 <label className="block space-y-1">
-                  <span className="text-xs font-bold">Weekly grant</span>
-                  <input
-                    className="field"
-                    defaultValue={user.period_grant ?? 100}
+                  <span className="text-xs font-bold">Text grant</span>
+                  <Input
+                    defaultValue={user.period_grant ?? 600}
                     name="periodGrant"
                     type="number"
                   />
                 </label>
                 <label className="block space-y-1">
-                  <span className="text-xs font-bold">Set balance</span>
-                  <input
-                    className="field"
-                    defaultValue={user.balance ?? 100}
-                    name="balance"
+                  <span className="text-xs font-bold">Image grant</span>
+                  <Input
+                    defaultValue={user.image_period_grant ?? 0}
+                    name="imagePeriodGrant"
                     type="number"
                   />
                 </label>
@@ -139,9 +146,25 @@ export default async function AdminPage() {
                   />
                   Unlimited
                 </label>
-                <button className="secondary-button mt-5" type="submit">
+                <label className="block space-y-1">
+                  <span className="text-xs font-bold">Text balance</span>
+                  <Input
+                    defaultValue={user.balance ?? 600}
+                    name="balance"
+                    type="number"
+                  />
+                </label>
+                <label className="block space-y-1">
+                  <span className="text-xs font-bold">Image balance</span>
+                  <Input
+                    defaultValue={user.image_balance ?? 0}
+                    name="imageBalance"
+                    type="number"
+                  />
+                </label>
+                <Button className="mt-5" type="submit" variant="secondary">
                   Save
-                </button>
+                </Button>
               </form>
             </li>
           ))}
@@ -168,16 +191,16 @@ export default async function AdminPage() {
                   <form action={adminResolveReportAction}>
                     <input name="reportId" type="hidden" value={report.id} />
                     <input name="status" type="hidden" value="resolved" />
-                    <button className="secondary-button" type="submit">
+                    <Button type="submit" variant="secondary">
                       Resolve
-                    </button>
+                    </Button>
                   </form>
                   <form action={adminResolveReportAction}>
                     <input name="reportId" type="hidden" value={report.id} />
                     <input name="status" type="hidden" value="dismissed" />
-                    <button className="text-button" type="submit">
+                    <Button type="submit" variant="ghost">
                       Dismiss
-                    </button>
+                    </Button>
                   </form>
                 </div>
               </li>
@@ -202,9 +225,9 @@ export default async function AdminPage() {
                   type="hidden"
                   value={deck.is_featured ? "false" : "true"}
                 />
-                <button className="secondary-button" type="submit">
+                <Button type="submit" variant="secondary">
                   {deck.is_featured ? "Unfeature" : "Feature"}
-                </button>
+                </Button>
               </form>
             </li>
           ))}

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { pool } from "@/lib/db";
+import type { ImageAttribution } from "@/lib/images/license";
 import type {
   CardType,
   Deck,
@@ -16,6 +17,7 @@ import type {
   SourceRetention,
   SourceType,
 } from "@/lib/types/flashcard";
+import { normalizeLLMProvider } from "@/lib/types/flashcard";
 
 type DeckRow = {
   id: string;
@@ -28,7 +30,7 @@ type DeckRow = {
   source_mime_type: string | null;
   source_size_bytes: string | null;
   generation_status: Deck["generationStatus"];
-  generation_provider: LLMProvider | null;
+  generation_provider: string | null;
   generation_model: string | null;
   generation_error: string | null;
   is_shared: boolean;
@@ -55,6 +57,7 @@ type CardRow = {
   card_type: CardType;
   options: unknown;
   image_url: string | null;
+  image_attribution: ImageAttribution | null;
   sort_order: number;
   created_at: Date;
   updated_at: Date;
@@ -80,8 +83,12 @@ export function mapDeck(row: DeckRow): Deck {
     sourceMimeType: row.source_mime_type,
     sourceSizeBytes: row.source_size_bytes ? Number(row.source_size_bytes) : null,
     generationStatus: row.generation_status,
-    generationProvider: row.generation_provider,
-    generationModel: row.generation_model,
+    generationProvider: normalizeLLMProvider(row.generation_provider),
+    generationModel:
+      row.generation_model &&
+      ["openai", "anthropic", "google"].includes(row.generation_provider ?? "")
+        ? "deepseek/deepseek-v4-flash"
+        : row.generation_model,
     generationError: row.generation_error,
     isShared: row.is_shared,
     visibility: row.visibility ?? "private",
@@ -109,6 +116,7 @@ export function mapCard(card: CardRow): Flashcard {
     cardType: card.card_type ?? "qa",
     options: mapOptions(card.options),
     imageUrl: card.image_url,
+    imageAttribution: card.image_attribution ?? null,
     sortOrder: card.sort_order,
     createdAt: card.created_at,
     updatedAt: card.updated_at,
@@ -160,6 +168,13 @@ export async function listDecks(
 ): Promise<DeckSummary[]> {
   const filter = options?.filter ?? "active";
   const sort = options?.sort ?? "recent";
+  const discarded = await purgeFailedGenerations(userId);
+  if (discarded.length) {
+    const { cleanupDiscardedGenerations } = await import(
+      "@/lib/supabase/storage"
+    );
+    void cleanupDiscardedGenerations(discarded);
+  }
   const clauses = [`d.user_id = $1`];
   const values: unknown[] = [userId];
 
@@ -291,9 +306,9 @@ export async function duplicateDeck(
 
     await client.query(
       `insert into cards (
-         deck_id, front, back, hint, category, card_type, options, image_url, sort_order
+         deck_id, front, back, hint, category, card_type, options, image_url, image_attribution, sort_order
        )
-       select $2, front, back, hint, category, card_type, options, image_url, sort_order
+       select $2, front, back, hint, category, card_type, options, image_url, image_attribution, sort_order
        from cards
        where deck_id = $1
        order by sort_order, created_at`,
@@ -378,8 +393,8 @@ export async function completeDeckGeneration(
     for (const [index, card] of cards.entries()) {
       await client.query(
         `insert into cards (
-          deck_id, front, back, hint, category, sort_order, card_type, options
-        ) values ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          deck_id, front, back, hint, category, sort_order, card_type, options, image_url, image_attribution
+        ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
         [
           deckId,
           card.front,
@@ -389,6 +404,8 @@ export async function completeDeckGeneration(
           index,
           card.type ?? "qa",
           card.options ? JSON.stringify(card.options) : null,
+          card.imageUrl ?? null,
+          card.imageAttribution ? JSON.stringify(card.imageAttribution) : null,
         ],
       );
     }
@@ -409,17 +426,54 @@ export async function completeDeckGeneration(
   }
 }
 
+type DiscardedGeneration = {
+  id: string;
+  userId: string;
+  storagePath: string | null;
+};
+
+/** Delete a failed/incomplete generation so it never stays in the user's library. */
 export async function failDeckGeneration(
   deckId: string,
   userId: string,
-  message: string,
-): Promise<void> {
-  await pool.query(
-    `update decks
-     set generation_status = 'failed', generation_error = $3
-     where id = $1 and user_id = $2`,
-    [deckId, userId, message.slice(0, 500)],
+  message?: string,
+): Promise<DiscardedGeneration | null> {
+  void message;
+  const result = await pool.query<{ id: string; storage_path: string | null }>(
+    `delete from decks
+     where id = $1
+       and user_id = $2
+       and coalesce(is_seed, false) = false
+       and generation_status in ('pending', 'processing', 'failed')
+     returning id, storage_path`,
+    [deckId, userId],
   );
+  const row = result.rows[0];
+  if (!row) return null;
+  return { id: row.id, userId, storagePath: row.storage_path };
+}
+
+/** Remove leftover failed generations from Supabase and user libraries. */
+export async function purgeFailedGenerations(
+  userId?: string,
+): Promise<DiscardedGeneration[]> {
+  const result = await pool.query<{
+    id: string;
+    user_id: string;
+    storage_path: string | null;
+  }>(
+    `delete from decks
+     where generation_status = 'failed'
+       and coalesce(is_seed, false) = false
+       ${userId ? "and user_id = $1" : ""}
+     returning id, user_id, storage_path`,
+    userId ? [userId] : [],
+  );
+  return result.rows.map((row) => ({
+    id: row.id,
+    userId: row.user_id,
+    storagePath: row.storage_path,
+  }));
 }
 
 /** Apply retention after cards are saved. Returns storage path to delete when cleared. */

@@ -27,10 +27,10 @@ async function upsertSeedCommunityDeck(
         `insert into decks (
           user_id, title, source_type, source_content,
           generation_status, share_token, is_shared, visibility,
-          subject_tag, grade_tag, moderation_status, listed_at, is_seed
+          subject_tag, grade_tag, moderation_status, listed_at, is_seed, is_featured
         ) values (
           $1, $2, 'text', $3, 'complete', null, true, 'public',
-          $4, $5, 'approved', now(), true
+          $4, $5, 'approved', now(), true, $6
         ) returning id`,
         [
           COMMUNITY_SEED_OWNER,
@@ -38,6 +38,7 @@ async function upsertSeedCommunityDeck(
           `seed:${input.slug}`,
           input.subjectTag,
           input.gradeTag ?? null,
+          Boolean(input.featured),
         ],
       );
       deckId = created.rows[0].id;
@@ -47,18 +48,42 @@ async function upsertSeedCommunityDeck(
          set title = $2, subject_tag = $3, grade_tag = $4,
              visibility = 'public',
              moderation_status = 'approved', is_shared = true,
+             is_featured = $5,
              listed_at = coalesce(listed_at, now())
          where id = $1`,
-        [deckId, input.title, input.subjectTag, input.gradeTag ?? null],
+        [
+          deckId,
+          input.title,
+          input.subjectTag,
+          input.gradeTag ?? null,
+          Boolean(input.featured),
+        ],
       );
-      await client.query("delete from cards where deck_id = $1", [deckId]);
     }
 
+    const previous = await client.query<{
+      sort_order: number;
+      image_url: string | null;
+      image_attribution: unknown;
+    }>(
+      `select sort_order, image_url, image_attribution from cards where deck_id = $1`,
+      [deckId],
+    );
+    const artByOrder = new Map(
+      previous.rows.map((row) => [Number(row.sort_order), row]),
+    );
+    await client.query("delete from cards where deck_id = $1", [deckId]);
+
     for (const [index, card] of input.cards.entries()) {
+      const kept = artByOrder.get(index);
+      const imageUrl = card.imageUrl ?? kept?.image_url ?? null;
+      const attribution =
+        card.imageAttribution ?? kept?.image_attribution ?? null;
       await client.query(
         `insert into cards (
-          deck_id, front, back, hint, category, sort_order, card_type, options
-        ) values ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          deck_id, front, back, hint, category, sort_order, card_type, options,
+          image_url, image_attribution
+        ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
         [
           deckId,
           card.front,
@@ -68,6 +93,8 @@ async function upsertSeedCommunityDeck(
           index,
           card.type ?? "qa",
           card.options ? JSON.stringify(card.options) : null,
+          imageUrl,
+          attribution ? JSON.stringify(attribution) : null,
         ],
       );
     }

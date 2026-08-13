@@ -10,7 +10,7 @@ export const pool =
   globalForDb.pool ??
   new Pool({
     connectionString: env.DATABASE_URL,
-    max: 5,
+    max: process.env.VERCEL ? 1 : 5,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 10_000,
   });

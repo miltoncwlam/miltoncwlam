@@ -21,7 +21,7 @@
   "landing": {
     "eyebrow": "Apprendre de tout",
     "title": "Vos notes deviennent un paquet à collectionner.",
-    "subtitle": "Importez texte, PDF ou photos. Study A crée des flashcards interactives avec l’IA.",
+    "subtitle": "Importez texte ou PDF. Study A crée des flashcards interactives avec l’IA.",
     "continue": "Continuer avec Google / e-mail",
     "createAccount": "Créer un compte",
     "agree": "En continuant, vous acceptez les <terms>Conditions</terms> et la <privacy>Politique de confidentialité</privacy>.",
@@ -51,11 +51,10 @@
   },
   "create": {
     "title": "Transformez tout en flashcards",
-    "subtitle": "Collez du texte ou importez PDF, TXT, Markdown, JPG ou PNG.",
+    "subtitle": "Collez du texte ou importez PDF, TXT ou Markdown.",
     "topic": "sujet",
     "text": "texte",
     "file": "fichier",
-    "photo": "photo",
     "topicLabel": "Sujet ou matière",
     "topicPlaceholder": "ex. Photosynthèse, Seconde Guerre mondiale, Fractions",
     "topicHint": "L’IA crée des flashcards éducatives à partir du sujet seul.",
@@ -66,7 +65,6 @@
     "material": "Matériel d’étude",
     "materialPlaceholder": "Collez des notes ou un article…",
     "fileLabel": "PDF, TXT ou Markdown",
-    "photoLabel": "JPG ou PNG",
     "fileHint": "Max 10 Mo ; texte max 2 Mo.",
     "provider": "Fournisseur IA",
     "cardCount": "Nombre de cartes",
@@ -80,6 +78,16 @@
     "chooseFile": "Choisissez un fichier",
     "uploadSecretError": "Ajoutez SUPABASE_SECRET_KEY pour importer",
     "ollamaModel": "Modèle Ollama",
+    "model": "Modèle",
+    "modelFree": "Moins d'énergie",
+    "modelBudget": "Économique",
+    "modelStandard": "Standard",
+    "energyShort": "Pas assez d'énergie texte. Il faut {need}, vous avez {have}.",
+    "energyImageShort": "Pas assez d'énergie image. Il faut {need}, vous avez {have}.",
+    "illustrations": "Ajouter des illustrations",
+    "illustrationsHint": "Les illustrations utilisent un solde d'énergie image séparé. FLUX.2 Klein est le plus économique.",
+    "imageModel": "Modèle d'illustration",
+    "energyEach": "énergie image / carte",
     "questionStyle": "Style de question",
     "styleMixed": "Types mixtes",
     "styleQa": "Q&R uniquement",
@@ -88,7 +96,8 @@
     "styleMcq": "Choix multiple",
     "modeFlashcards": "Flashcards",
     "modeQuiz": "Paquet quiz",
-    "energyCost": "Utilise {cost} d'énergie ({per} par carte). L'énergie se recharge chaque semaine.",
+    "energyCost": "Énergie texte : ~{cost}",
+    "energyImageCost": "Énergie image : ~{cost}",
     "quizModeNote": "Les paquets quiz génèrent des QCM pour le mode bataille.",
     "url": "URL",
     "urlLabel": "URL",
@@ -145,7 +154,8 @@
     "exit": "Quitter",
     "empty": "Aucune carte pour l’instant.",
     "finished": "Vous avez révisé {count} cartes.",
-    "nextCard": "Carte suivante"
+    "previous": "Précédent",
+    "next": "Suivant"
   },
   "share": {
     "title": "Partage en lecture seule",
@@ -161,7 +171,8 @@
     "privacyTitle": "Politique de confidentialité",
     "termsTitle": "Conditions d’utilisation",
     "cookiesTitle": "Avis sur les cookies",
-    "notLegalAdvice": "Décrit le produit actuel ; ce n’est pas un conseil juridique."
+    "notLegalAdvice": "Décrit le produit actuel ; ce n’est pas un conseil juridique.",
+    "governingLanguage": "La version anglaise fait foi. Les autres langues concernent uniquement l’interface."
   },
   "privacy": {
     "intro": "Cette politique explique comment {operator} (« nous ») traite les informations sur {product}.",
@@ -242,8 +253,12 @@
     "filter": "Filter",
     "allGrades": "All grades",
     "primary": "Primary",
+    "junior": "Junior",
+    "senior": "Senior",
     "secondary": "Secondary",
     "featured": "Featured",
+    "illustratedTopics": "Illustrated topics",
+    "attachImages": "Add licensed pictures",
     "study": "Study"
   }
 }

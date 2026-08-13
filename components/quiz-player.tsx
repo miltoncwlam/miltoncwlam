@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 
 import { answerQuizAction } from "@/lib/actions/quizzes";
 import { useSwipe } from "@/lib/hooks/use-swipe";
-import { buildQuizChoices } from "@/lib/quiz/choices";
+import {
+  answersMatch,
+  buildQuizChoices,
+  quizExplanation,
+  resolveCorrectChoice,
+} from "@/lib/quiz/choices";
 import type { Flashcard, QuizSession } from "@/lib/types/flashcard";
 
 export function QuizPlayer({
@@ -22,6 +27,7 @@ export function QuizPlayer({
   const router = useRouter();
   const [session, setSession] = useState(initialSession);
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
+  const [pendingSession, setPendingSession] = useState<QuizSession | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const byId = useMemo(
@@ -35,11 +41,19 @@ export function QuizPlayer({
     () => (card ? buildQuizChoices(card, cards) : []),
     [card, cards],
   );
+  const explanation = card ? quizExplanation(card) : null;
 
   const completed =
     Boolean(session.completedAt) || session.currentIndex >= session.total;
 
   const swipe = useSwipe({});
+
+  function continueQuiz() {
+    if (!pendingSession) return;
+    setSession(pendingSession);
+    setPendingSession(null);
+    setFeedback(null);
+  }
 
   if (completed) {
     const pct = session.total
@@ -119,22 +133,19 @@ export function QuizPlayer({
             key={choice}
             onClick={() =>
               startTransition(async () => {
+                const correctChoice = resolveCorrectChoice(card);
                 if (readOnly) {
-                  const correct =
-                    choice.trim().toLowerCase() === card.back.trim().toLowerCase();
+                  const correct = answersMatch(choice, correctChoice);
                   const nextIndex = session.currentIndex + 1;
                   const nextScore = session.score + (correct ? 1 : 0);
                   setFeedback(correct ? "correct" : "wrong");
-                  window.setTimeout(() => {
-                    setSession({
-                      ...session,
-                      currentIndex: nextIndex,
-                      score: nextScore,
-                      completedAt:
-                        nextIndex >= session.total ? new Date() : null,
-                    });
-                    setFeedback(null);
-                  }, 700);
+                  setPendingSession({
+                    ...session,
+                    currentIndex: nextIndex,
+                    score: nextScore,
+                    completedAt:
+                      nextIndex >= session.total ? new Date() : null,
+                  });
                   return;
                 }
                 const result = await answerQuizAction({
@@ -144,10 +155,7 @@ export function QuizPlayer({
                   selectedOption: choice,
                 });
                 setFeedback(result.isCorrect ? "correct" : "wrong");
-                window.setTimeout(() => {
-                  setSession(result.session);
-                  setFeedback(null);
-                }, 700);
+                setPendingSession(result.session);
               })
             }
             type="button"
@@ -158,13 +166,21 @@ export function QuizPlayer({
       </div>
 
       {feedback ? (
-        <p
-          className={`text-center text-sm font-black ${
-            feedback === "correct" ? "text-emerald-700" : "text-rose-700"
-          }`}
-        >
-          {feedback === "correct" ? "Correct! +10 XP" : "Not quite — keep going"}
-        </p>
+        <div className="space-y-3 text-center">
+          <p
+            className={`text-sm font-black ${
+              feedback === "correct" ? "text-emerald-700" : "text-rose-700"
+            }`}
+          >
+            {feedback === "correct" ? "Correct! +10 XP" : "Not quite — keep going"}
+          </p>
+          {explanation ? (
+            <p className="text-sm leading-relaxed text-slate-700">{explanation}</p>
+          ) : null}
+          <button className="primary-button" onClick={continueQuiz} type="button">
+            Continue
+          </button>
+        </div>
       ) : null}
     </section>
   );

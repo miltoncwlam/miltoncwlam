@@ -1,10 +1,28 @@
+import type { ImageAttribution } from "@/lib/images/license";
+
 export type SourceType = "text" | "file" | "photo" | "url";
 
 export type SourceRetention = "none" | "24h" | "keep";
 
 export type CardRating = "easy" | "ok" | "hard";
 
-export type LLMProvider = "openai" | "anthropic" | "google" | "ollama";
+export type LLMProvider = "openrouter" | "ollama";
+
+export const LEGACY_CLOUD_PROVIDERS = [
+  "openai",
+  "anthropic",
+  "google",
+] as const;
+
+export function normalizeLLMProvider(
+  value: string | null | undefined,
+): LLMProvider | null {
+  if (value === "openrouter" || value === "ollama") return value;
+  if (value && LEGACY_CLOUD_PROVIDERS.includes(value as (typeof LEGACY_CLOUD_PROVIDERS)[number])) {
+    return "openrouter";
+  }
+  return null;
+}
 
 export type OllamaModelId = "gemma4:e4b" | "gemma4:e2b";
 
@@ -56,6 +74,7 @@ export type Flashcard = {
   cardType: CardType;
   options: string[] | null;
   imageUrl: string | null;
+  imageAttribution: ImageAttribution | null;
   sortOrder: number;
   createdAt: Date;
   updatedAt: Date;
@@ -78,11 +97,17 @@ export type GeneratedFlashcard = {
   category?: string;
   type?: CardType;
   options?: string[];
+  imagePrompt?: string;
+  imageSearchQuery?: string;
+  imageUrl?: string;
+  imageAttribution?: ImageAttribution;
+  artKey?: string;
 };
 
 export type GeneratedDeck = {
   title: string;
   cards: GeneratedFlashcard[];
+  usage?: { inputTokens: number; outputTokens: number };
 };
 
 export type DeckWithCards = Deck & {

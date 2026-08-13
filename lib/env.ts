@@ -24,15 +24,16 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
   SUPABASE_SECRET_KEY: optionalSecret,
   SUPABASE_STORAGE_BUCKET: z.string().min(1).default("flashcard-media"),
-  LLM_DEFAULT_PROVIDER: z
-    .enum(["openai", "anthropic", "google", "ollama"])
-    .default("openai"),
-  OPENAI_API_KEY: optionalSecret,
-  ANTHROPIC_API_KEY: optionalSecret,
-  GOOGLE_GENERATIVE_AI_API_KEY: optionalSecret,
-  OPENAI_MODEL: z.string().min(1).default("gpt-4o-mini"),
-  ANTHROPIC_MODEL: z.string().min(1).default("claude-3-5-haiku-latest"),
-  GOOGLE_MODEL: z.string().min(1).default("gemini-2.5-flash"),
+  LLM_DEFAULT_PROVIDER: z.preprocess((value) => {
+    const raw = String(value ?? "openrouter");
+    if (raw === "openai" || raw === "anthropic" || raw === "google") {
+      return "openrouter";
+    }
+    return raw;
+  }, z.enum(["openrouter", "ollama"]).default("openrouter")),
+  OPENROUTER_API_KEY: optionalSecret,
+  OPENROUTER_MODEL: z.string().min(1).default("deepseek/deepseek-v4-flash"),
+  OPENROUTER_FREE_MODEL_BLOCKLIST: z.string().optional(),
   OLLAMA_ENABLED: booleanFlag.default(false),
   OLLAMA_BASE_URL: z.string().url().default("http://127.0.0.1:11434"),
   OLLAMA_MODEL: z.preprocess((value) => {

@@ -2,6 +2,10 @@ import "server-only";
 
 import { pool } from "@/lib/db";
 import { mapCard, mapDeck } from "@/lib/data/decks";
+import {
+  encyclopediaAnchorGrade,
+  encyclopediaBandForGrade,
+} from "@/lib/community/hk-curriculum";
 import type {
   DeckSummary,
   DeckWithCards,
@@ -14,6 +18,7 @@ export type CommunityDeckSummary = DeckSummary & {
   isSeed: boolean;
   isFeatured: boolean;
   likeCount: number;
+  coverImageUrl: string | null;
 };
 
 export async function listPublicCommunityDecks(input?: {
@@ -34,8 +39,18 @@ export async function listPublicCommunityDecks(input?: {
   }
 
   if (input?.grade?.trim()) {
-    values.push(input.grade.trim().toLowerCase());
-    clauses.push(`lower(coalesce(d.grade_tag, '')) = $${values.length}`);
+    const grade = input.grade.trim().toLowerCase();
+    const band = encyclopediaBandForGrade(grade);
+    const anchor = band ? encyclopediaAnchorGrade(band) : grade;
+    values.push(grade);
+    const gradeIdx = values.length;
+    values.push(anchor);
+    const anchorIdx = values.length;
+    clauses.push(
+      `(d.grade_tag is null
+        or lower(d.grade_tag) = $${gradeIdx}
+        or (d.is_featured and lower(d.grade_tag) = $${anchorIdx}))`,
+    );
   }
 
   if (input?.query?.trim()) {
@@ -52,9 +67,13 @@ export async function listPublicCommunityDecks(input?: {
       card_count: string;
       is_featured: boolean;
       like_count: number;
+      cover_image_url: string | null;
     }
   >(
-    `select d.*, count(c.id)::text as card_count
+    `select d.*, count(c.id)::text as card_count,
+            (select c2.image_url from cards c2
+             where c2.deck_id = d.id and c2.image_url is not null
+             order by c2.sort_order limit 1) as cover_image_url
      from decks d
      left join cards c on c.deck_id = d.id
      where ${clauses.join(" and ")}
@@ -85,6 +104,7 @@ export async function listPublicCommunityDecks(input?: {
       isSeed: deck.isSeed,
       isFeatured: Boolean(row.is_featured),
       likeCount: Number(row.like_count ?? 0),
+      coverImageUrl: row.cover_image_url ?? null,
     };
   });
 }
@@ -190,8 +210,8 @@ async function insertDeckCopy(
     for (const [index, card] of source.cards.entries()) {
       await client.query(
         `insert into cards (
-          deck_id, front, back, hint, category, sort_order, card_type, options
-        ) values ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          deck_id, front, back, hint, category, sort_order, card_type, options, image_url, image_attribution
+        ) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
         [
           deckId,
           card.front,
@@ -201,6 +221,8 @@ async function insertDeckCopy(
           index,
           card.cardType,
           card.options ? JSON.stringify(card.options) : null,
+          card.imageUrl,
+          card.imageAttribution ? JSON.stringify(card.imageAttribution) : null,
         ],
       );
     }

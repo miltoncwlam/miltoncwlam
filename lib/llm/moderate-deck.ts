@@ -1,3 +1,4 @@
+import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { z } from "zod";
 
@@ -6,14 +7,12 @@ import {
   assertOllamaReachable,
   getConfiguredProviders,
   getLLMConfig,
+  getOpenRouterClient,
   resolveOllamaModel,
 } from "@/lib/llm/config";
+import { resolveOpenRouterModerationModel } from "@/lib/llm/openrouter-models";
 import { extractJsonObject } from "@/lib/llm/parse-deck-json";
 import type { Flashcard, LLMProvider } from "@/lib/types/flashcard";
-import { createOpenAI } from "@ai-sdk/openai";
-import { anthropic } from "@ai-sdk/anthropic";
-import { google } from "@ai-sdk/google";
-import { openai } from "@ai-sdk/openai";
 
 const resultSchema = z.object({
   ok: z.boolean(),
@@ -23,30 +22,25 @@ const resultSchema = z.object({
 
 export type ModerationResult = z.infer<typeof resultSchema>;
 
-function getModel(provider: LLMProvider) {
+async function getModel(provider: LLMProvider) {
   const config = getLLMConfig();
-  switch (provider) {
-    case "openai":
-      return openai(config.openai.model);
-    case "anthropic":
-      return anthropic(config.anthropic.model);
-    case "google":
-      return google(config.google.model);
-    case "ollama": {
-      const ollama = createOpenAI({
-        baseURL: `${config.ollama.baseUrl}/v1`,
-        apiKey: "ollama",
-        name: "ollama",
-      });
-      return ollama(resolveOllamaModel());
-    }
+  if (provider === "openrouter") {
+    const client = getOpenRouterClient();
+    const modelId = await resolveOpenRouterModerationModel();
+    return client(modelId);
   }
+  const ollama = createOpenAI({
+    baseURL: `${config.ollama.baseUrl}/v1`,
+    apiKey: "ollama",
+    name: "ollama",
+  });
+  return ollama(resolveOllamaModel());
 }
 
 function pickProvider(): LLMProvider {
   const configured = getConfiguredProviders();
   if (configured.includes("ollama")) return "ollama";
-  if (configured[0]) return configured[0];
+  if (configured.includes("openrouter")) return "openrouter";
   throw new Error("No LLM provider available to review this deck");
 }
 
@@ -134,7 +128,7 @@ ${JSON.stringify(sample, null, 2)}`;
 
   try {
     const result = await generateText({
-      model: getModel(provider),
+      model: await getModel(provider),
       abortSignal: AbortSignal.timeout(60_000),
       prompt,
     });
@@ -145,7 +139,6 @@ ${JSON.stringify(sample, null, 2)}`;
       reasons: parsed.reasons.slice(0, 5),
     };
   } catch {
-    // If the model fails but heuristics passed, allow with a note
     return {
       ok: true,
       score: 72,

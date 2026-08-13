@@ -3,13 +3,65 @@ import { getTranslations } from "next-intl/server";
 
 import { CommunityCopyButton } from "@/components/community-copy-button";
 import {
+  encyclopediaBandFromTitle,
+  encyclopediaTopicTitle,
   formatGradeLabel,
   formatTagLabel,
   HK_GRADES,
   HK_SUBJECTS,
 } from "@/lib/community/hk-curriculum";
 import { requireSession } from "@/lib/auth-server";
-import { listPublicCommunityDecks } from "@/lib/data/community";
+import {
+  listPublicCommunityDecks,
+  type CommunityDeckSummary,
+} from "@/lib/data/community";
+
+function DeckCard({
+  deck,
+  t,
+}: {
+  deck: CommunityDeckSummary;
+  t: (key: string, values?: Record<string, string | number>) => string;
+}) {
+  const band = encyclopediaBandFromTitle(deck.title);
+  return (
+    <li className="deck-card flex flex-col p-5">
+      {deck.coverImageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          alt=""
+          className="mb-3 h-28 w-full rounded-xl object-cover"
+          src={deck.coverImageUrl}
+        />
+      ) : null}
+      <p className="text-xs font-bold tracking-wide text-[var(--accent)]">
+        {deck.isFeatured ? `${t("featured")} · ` : null}
+        {formatTagLabel(deck.subjectTag)}
+        {band
+          ? ` · ${band === "primary" ? t("primary") : band === "junior" ? t("junior") : t("senior")}`
+          : deck.gradeTag
+            ? ` · ${formatGradeLabel(deck.gradeTag)}`
+            : null}
+      </p>
+      <h2 className="mt-2 font-display text-lg font-bold text-[var(--ink)]">
+        <Link className="hover:text-[var(--accent)]" href={`/community/${deck.id}`}>
+          {deck.title}
+        </Link>
+      </h2>
+      <p className="mt-1 text-sm text-[var(--muted)]">
+        {t("cards", { count: deck.cardCount })}
+        {deck.isSeed ? ` · ${t("bySeed")}` : null}
+        {` · ♥ ${deck.likeCount}`}
+      </p>
+      <div className="mt-auto flex gap-2 pt-5">
+        <Link className="secondary-button" href={`/community/${deck.id}`}>
+          {t("study")}
+        </Link>
+        <CommunityCopyButton deckId={deck.id} />
+      </div>
+    </li>
+  );
+}
 
 export default async function CommunityPage({
   searchParams,
@@ -24,6 +76,23 @@ export default async function CommunityPage({
     subject: params.subject,
     grade: params.grade,
   });
+
+  const featured = decks.filter((deck) => deck.isFeatured);
+  const rest = decks.filter((deck) => !deck.isFeatured);
+  const featuredTopics = new Map<string, CommunityDeckSummary[]>();
+  for (const deck of featured) {
+    const topic = encyclopediaTopicTitle(deck.title);
+    const list = featuredTopics.get(topic) ?? [];
+    list.push(deck);
+    featuredTopics.set(topic, list);
+  }
+  const bySubject = new Map<string, CommunityDeckSummary[]>();
+  for (const deck of rest) {
+    const subject = formatTagLabel(deck.subjectTag);
+    const list = bySubject.get(subject) ?? [];
+    list.push(deck);
+    bySubject.set(subject, list);
+  }
 
   return (
     <main className="mx-auto max-w-6xl space-y-8 px-5 py-10">
@@ -84,39 +153,35 @@ export default async function CommunityPage({
           {t("empty")}
         </p>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {decks.map((deck) => (
-            <li className="deck-card flex flex-col p-5" key={deck.id}>
-              <p className="text-xs font-bold tracking-wide text-[var(--accent)]">
-                {deck.isFeatured ? `${t("featured")} · ` : null}
-                {formatTagLabel(deck.subjectTag)}
-                {deck.gradeTag ? ` · ${formatGradeLabel(deck.gradeTag)}` : null}
-              </p>
-              <h2 className="mt-2 font-display text-lg font-bold text-[var(--ink)]">
-                <Link
-                  className="hover:text-[var(--accent)]"
-                  href={`/community/${deck.id}`}
-                >
-                  {deck.title}
-                </Link>
-              </h2>
-              <p className="mt-1 text-sm text-[var(--muted)]">
-                {t("cards", { count: deck.cardCount })}
-                {deck.isSeed ? ` · ${t("bySeed")}` : null}
-                {` · ♥ ${deck.likeCount}`}
-              </p>
-              <div className="mt-auto flex gap-2 pt-5">
-                <Link
-                  className="secondary-button"
-                  href={`/community/${deck.id}`}
-                >
-                  {t("study")}
-                </Link>
-                <CommunityCopyButton deckId={deck.id} />
-              </div>
-            </li>
+        <div className="space-y-10">
+          {featuredTopics.size ? (
+            <section className="space-y-6">
+              <h2 className="font-display text-xl font-bold">{t("illustratedTopics")}</h2>
+              {[...featuredTopics.entries()].map(([topic, packs]) => (
+                <div className="space-y-3" key={topic}>
+                  <h3 className="text-sm font-bold tracking-wide text-[var(--muted)]">
+                    {topic}
+                  </h3>
+                  <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {packs.map((deck) => (
+                      <DeckCard deck={deck} key={deck.id} t={t} />
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </section>
+          ) : null}
+          {[...bySubject.entries()].map(([subject, packs]) => (
+            <section className="space-y-3" key={subject}>
+              <h2 className="font-display text-xl font-bold">{subject}</h2>
+              <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {packs.map((deck) => (
+                  <DeckCard deck={deck} key={deck.id} t={t} />
+                ))}
+              </ul>
+            </section>
           ))}
-        </ul>
+        </div>
       )}
     </main>
   );

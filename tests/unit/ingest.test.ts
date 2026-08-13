@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import { extractStudyText } from "@/lib/ingest/extract-text";
 import {
   assertOwnedStoragePath,
-  validateFileSignature,
   validateUpload,
 } from "@/lib/ingest/validate-upload";
 
@@ -20,7 +19,7 @@ describe("source ingestion", () => {
 
   it("rejects extension and MIME mismatches", () => {
     expect(() =>
-      validateUpload({ name: "notes.pdf", type: "image/png", size: 200 }),
+      validateUpload({ name: "notes.pdf", type: "text/plain", size: 200 }),
     ).toThrow(/extension/i);
   });
 
@@ -29,14 +28,6 @@ describe("source ingestion", () => {
     expect(() => assertOwnedStoragePath("user/file.pdf", "user")).not.toThrow();
   });
 
-  it("checks image signatures", () => {
-    expect(() =>
-      validateFileSignature(new Uint8Array([0x89, 0x50, 0x4e, 0x47]), "image/png"),
-    ).not.toThrow();
-    expect(() =>
-      validateFileSignature(new Uint8Array([1, 2, 3]), "image/png"),
-    ).toThrow(/valid PNG/);
-  });
 
   it("extracts and normalizes plain text", async () => {
     const data = new TextEncoder().encode("  Useful notes \n\n ");

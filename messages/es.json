@@ -21,7 +21,7 @@
   "landing": {
     "eyebrow": "Aprende de cualquier cosa",
     "title": "Tus apuntes se convierten en un mazo coleccionable.",
-    "subtitle": "Sube texto, PDF o fotos. Study A crea flashcards interactivas con IA.",
+    "subtitle": "Sube texto o PDF. Study A crea flashcards interactivas con IA.",
     "continue": "Continuar con Google / email",
     "createAccount": "Crear cuenta",
     "agree": "Al continuar, aceptas los <terms>Términos</terms> y la <privacy>Política de privacidad</privacy>.",
@@ -51,11 +51,10 @@
   },
   "create": {
     "title": "Convierte cualquier cosa en flashcards",
-    "subtitle": "Pega texto o sube PDF, TXT, Markdown, JPG o PNG.",
+    "subtitle": "Pega texto o sube PDF, TXT o Markdown.",
     "topic": "tema",
     "text": "texto",
     "file": "archivo",
-    "photo": "foto",
     "topicLabel": "Tema o asignatura",
     "topicPlaceholder": "p. ej. Fotosíntesis, Segunda Guerra Mundial, Fracciones",
     "topicHint": "La IA crea flashcards educativas solo a partir del tema.",
@@ -66,7 +65,6 @@
     "material": "Material de estudio",
     "materialPlaceholder": "Pega apuntes o un artículo…",
     "fileLabel": "PDF, TXT o Markdown",
-    "photoLabel": "JPG o PNG",
     "fileHint": "Máx. 10 MB; texto máx. 2 MB.",
     "provider": "Proveedor de IA",
     "cardCount": "Número de tarjetas",
@@ -80,6 +78,16 @@
     "chooseFile": "Elige un archivo",
     "uploadSecretError": "Añade SUPABASE_SECRET_KEY para subir archivos",
     "ollamaModel": "Modelo de Ollama",
+    "model": "Modelo",
+    "modelFree": "Menor energía",
+    "modelBudget": "Económico",
+    "modelStandard": "Estándar",
+    "energyShort": "Energía de texto insuficiente. Necesitas {need}, tienes {have}.",
+    "energyImageShort": "Energía de imagen insuficiente. Necesitas {need}, tienes {have}.",
+    "illustrations": "Añadir ilustraciones",
+    "illustrationsHint": "Las ilustraciones usan un saldo de energía de imagen aparte. FLUX.2 Klein es la opción más baja.",
+    "imageModel": "Modelo de ilustración",
+    "energyEach": "energía de imagen / carta",
     "questionStyle": "Estilo de pregunta",
     "styleMixed": "Tipos mixtos",
     "styleQa": "Solo preguntas y respuestas",
@@ -88,7 +96,8 @@
     "styleMcq": "Opción múltiple",
     "modeFlashcards": "Tarjetas",
     "modeQuiz": "Mazo de quiz",
-    "energyCost": "Usa {cost} de energía ({per} por tarjeta). La energía se recarga cada semana.",
+    "energyCost": "Energía de texto: ~{cost}",
+    "energyImageCost": "Energía de imagen: ~{cost}",
     "quizModeNote": "Los mazos de quiz generan preguntas de opción múltiple para el modo batalla.",
     "url": "URL",
     "urlLabel": "URL",
@@ -145,7 +154,8 @@
     "exit": "Salir",
     "empty": "Este mazo aún no tiene tarjetas.",
     "finished": "Repasaste las {count} tarjetas.",
-    "nextCard": "Siguiente tarjeta"
+    "previous": "Anterior",
+    "next": "Siguiente"
   },
   "share": {
     "title": "Compartir solo lectura",
@@ -161,7 +171,8 @@
     "privacyTitle": "Política de privacidad",
     "termsTitle": "Términos del servicio",
     "cookiesTitle": "Aviso de cookies",
-    "notLegalAdvice": "Describe el producto actual; no es asesoramiento legal."
+    "notLegalAdvice": "Describe el producto actual; no es asesoramiento legal.",
+    "governingLanguage": "La versión en inglés es la oficial. Los demás idiomas son solo de la interfaz."
   },
   "privacy": {
     "intro": "Esta política explica cómo {operator} («nosotros») trata la información en {product}.",
@@ -242,8 +253,12 @@
     "filter": "Filter",
     "allGrades": "All grades",
     "primary": "Primary",
+    "junior": "Junior",
+    "senior": "Senior",
     "secondary": "Secondary",
     "featured": "Featured",
+    "illustratedTopics": "Illustrated topics",
+    "attachImages": "Add licensed pictures",
     "study": "Study"
   }
 }

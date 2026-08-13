@@ -1,6 +1,13 @@
 import { cookies } from "next/headers";
 import { getRequestConfig } from "next-intl/server";
 
+import en from "../messages/en.json";
+import es from "../messages/es.json";
+import fr from "../messages/fr.json";
+import ja from "../messages/ja.json";
+import ko from "../messages/ko.json";
+import zhHans from "../messages/zh-Hans.json";
+import zhHant from "../messages/zh-Hant.json";
 import {
   DEFAULT_LOCALE,
   LOCALE_COOKIE,
@@ -8,13 +15,15 @@ import {
   type AppLocale,
 } from "@/lib/i18n/locales";
 
-async function loadMessages(locale: AppLocale) {
-  try {
-    return (await import(`../messages/${locale}.json`)).default;
-  } catch {
-    return (await import(`../messages/${DEFAULT_LOCALE}.json`)).default;
-  }
-}
+const catalogs: Record<AppLocale, typeof en> = {
+  en,
+  es,
+  fr,
+  ja,
+  ko,
+  "zh-Hans": zhHans,
+  "zh-Hant": zhHant,
+};
 
 export default getRequestConfig(async () => {
   const jar = await cookies();
@@ -22,6 +31,6 @@ export default getRequestConfig(async () => {
 
   return {
     locale,
-    messages: await loadMessages(locale),
+    messages: catalogs[locale] ?? catalogs[DEFAULT_LOCALE],
   };
 });

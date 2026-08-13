@@ -5,6 +5,7 @@ import { EnergyBadge } from "@/components/energy-badge";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
 import type { AppSession } from "@/lib/auth-server";
 import { clerkAuthConfigured } from "@/lib/auth-server";
 
@@ -30,23 +31,23 @@ export async function AppHeader({ session }: { session: AppSession | null }) {
           {signedIn && session ? (
             <>
               <EnergyBadge userId={session.user.id} />
-              <Link className="nav-link" href="/decks">
-                {t("myDecks")}
-              </Link>
-              <Link className="nav-link" href="/account">
-                Account
-              </Link>
-              <Link className="nav-link" href="/community">
-                {t("community")}
-              </Link>
+              <Button asChild variant="ghost">
+                <Link href="/decks">{t("myDecks")}</Link>
+              </Button>
+              <Button asChild variant="ghost">
+                <Link href="/account">Account</Link>
+              </Button>
+              <Button asChild variant="ghost">
+                <Link href="/community">{t("community")}</Link>
+              </Button>
               {isAdmin ? (
-                <Link className="nav-link" href="/admin">
-                  Admin
-                </Link>
+                <Button asChild variant="ghost">
+                  <Link href="/admin">Admin</Link>
+                </Button>
               ) : null}
-              <Link className="nav-cta" href="/decks/new">
-                {t("createDeck")}
-              </Link>
+              <Button asChild>
+                <Link href="/decks/new">{t("createDeck")}</Link>
+              </Button>
               <SignOutButton
                 clerkEnabled={clerkEnabled}
                 provider={session.provider}
@@ -54,12 +55,12 @@ export async function AppHeader({ session }: { session: AppSession | null }) {
             </>
           ) : (
             <>
-              <Link className="nav-link" href="/sign-in">
-                {t("signIn")}
-              </Link>
-              <Link className="nav-cta" href="/sign-up">
-                {t("signUp")}
-              </Link>
+              <Button asChild variant="ghost">
+                <Link href="/sign-in">{t("signIn")}</Link>
+              </Button>
+              <Button asChild>
+                <Link href="/sign-up">{t("signUp")}</Link>
+              </Button>
             </>
           )}
         </nav>

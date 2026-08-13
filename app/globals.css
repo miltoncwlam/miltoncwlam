@@ -1,5 +1,30 @@
 @import "tailwindcss";
 
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
 :root,
 html[data-theme="light"] {
   --background: #f3f8fc;
@@ -13,6 +38,20 @@ html[data-theme="light"] {
   --sun: #f59e0b;
   --ink: #16324f;
   --paper: #fffdf8;
+  --card: #ffffff;
+  --card-foreground: #16324f;
+  --popover: #ffffff;
+  --popover-foreground: #16324f;
+  --primary: #0f766e;
+  --primary-foreground: #f0fdfa;
+  --secondary: #e0f2fe;
+  --secondary-foreground: #0c4a6e;
+  --muted-foreground: #5b738b;
+  --accent-foreground: #f0fdfa;
+  --destructive: #dc2626;
+  --input: #d5e3ef;
+  --ring: #0d9488;
+  --radius: 0.75rem;
 }
 
 html[data-theme="dark"] {
@@ -28,6 +67,19 @@ html[data-theme="dark"] {
   --sun: #fbbf24;
   --ink: #e8f1f8;
   --paper: #152536;
+  --card: #132033;
+  --card-foreground: #e8f1f8;
+  --popover: #132033;
+  --popover-foreground: #e8f1f8;
+  --primary: #2dd4bf;
+  --primary-foreground: #042f2e;
+  --secondary: #1e3a4c;
+  --secondary-foreground: #e8f1f8;
+  --muted-foreground: #9db0c3;
+  --accent-foreground: #042f2e;
+  --destructive: #f87171;
+  --input: #243447;
+  --ring: #5eead4;
 }
 
 html[data-theme="dark"] body {
@@ -652,6 +704,15 @@ html[data-theme="dark"] .secondary-button {
     radial-gradient(circle at 30% 20%, rgb(255 255 255 / 70%), transparent 45%),
     linear-gradient(145deg, rgb(15 23 42 / 8%), rgb(255 255 255 / 35%));
   box-shadow: inset 0 0 0 2px rgb(255 255 255 / 45%);
+  overflow: hidden;
+}
+
+.tcg-art img {
+  display: block;
+  height: 100%;
+  min-height: 7.5rem;
+  width: 100%;
+  object-fit: cover;
 }
 
 .tcg-art-answer {
