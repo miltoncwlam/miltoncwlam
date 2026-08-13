@@ -1,22 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { z } from "zod";
 
-import { auth } from "@/lib/auth";
 import { requireAdminSession } from "@/lib/auth-server";
 import { setUserEnergySettings } from "@/lib/data/credits";
 import { pool } from "@/lib/db";
-
-const createUserSchema = z.object({
-  email: z.string().email(),
-  name: z.string().trim().min(1).max(80).default("Learner"),
-  password: z.string().min(8).max(128),
-  periodGrant: z.coerce.number().int().min(0).max(10_000).default(600),
-  imagePeriodGrant: z.coerce.number().int().min(0).max(10_000).default(0),
-  isUnlimited: z.coerce.boolean().default(false),
-});
 
 const energySchema = z.object({
   userId: z.string().min(1),
@@ -26,43 +15,6 @@ const energySchema = z.object({
   balance: z.coerce.number().int().min(0).max(100_000).optional(),
   imageBalance: z.coerce.number().int().min(0).max(100_000).optional(),
 });
-
-export async function adminCreateUserAction(formData: FormData) {
-  await requireAdminSession();
-  const input = createUserSchema.parse({
-    email: formData.get("email"),
-    name: formData.get("name") || "Learner",
-    password: formData.get("password"),
-    periodGrant: formData.get("periodGrant") || 600,
-    imagePeriodGrant: formData.get("imagePeriodGrant") || 0,
-    isUnlimited: formData.get("isUnlimited") === "on",
-  });
-
-  const created = await auth.api.createUser({
-    body: {
-      email: input.email,
-      password: input.password,
-      name: input.name,
-      role: "user",
-    },
-    headers: await headers(),
-  });
-
-  const userId = created.user.id;
-  await setUserEnergySettings({
-    userId,
-    periodGrant: input.periodGrant,
-    imagePeriodGrant: input.imagePeriodGrant,
-    isUnlimited: input.isUnlimited,
-    balance: input.isUnlimited ? input.periodGrant : input.periodGrant,
-    imageBalance: input.isUnlimited
-      ? input.imagePeriodGrant
-      : input.imagePeriodGrant,
-  });
-
-  revalidatePath("/admin");
-  void userId;
-}
 
 export async function adminUpdateEnergyAction(formData: FormData) {
   await requireAdminSession();

@@ -6,9 +6,21 @@ import { ENCYCLOPEDIA_GENERAL_PACKS } from "@/lib/data/community-packs/encyclope
 
 describe("encyclopedia community packs", () => {
   it("adds about 40 topic packs plus featured band variants", () => {
-    expect(ENCYCLOPEDIA_FEATURED_PACKS).toHaveLength(15);
-    expect(ENCYCLOPEDIA_GENERAL_PACKS.length).toBeGreaterThanOrEqual(20);
-    expect(COMMUNITY_SEED_PACKS.length).toBeGreaterThanOrEqual(80);
+    expect(ENCYCLOPEDIA_FEATURED_PACKS).toHaveLength(24);
+    expect(ENCYCLOPEDIA_GENERAL_PACKS.length).toBeGreaterThanOrEqual(35);
+    expect(COMMUNITY_SEED_PACKS.length).toBeGreaterThanOrEqual(95);
+  });
+
+  it("covers new illustrated series for games (animals, earth, matter)", () => {
+    const slugs = ENCYCLOPEDIA_FEATURED_PACKS.map((pack) => pack.slug);
+    expect(slugs.some((slug) => slug.startsWith("ency-animals-"))).toBe(true);
+    expect(slugs.some((slug) => slug.startsWith("ency-earth-"))).toBe(true);
+    expect(slugs.some((slug) => slug.startsWith("ency-matter-"))).toBe(true);
+    expect(
+      ENCYCLOPEDIA_FEATURED_PACKS.filter((pack) =>
+        pack.slug.startsWith("ency-solar-"),
+      )[0]?.cards.length,
+    ).toBeGreaterThanOrEqual(14);
   });
 
   it("gives featured topics three bands and shared art keys", () => {

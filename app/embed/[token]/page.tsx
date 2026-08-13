@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
 
+import { PlayDispatcher } from "@/components/play/play-dispatcher";
 import { QuizPlayer } from "@/components/quiz-player";
 import { StudyPlayer } from "@/components/study-player";
 import { getSharedDeck } from "@/lib/data/shares";
+import { activityFromQuery } from "@/lib/play/activity";
+import { templateReason } from "@/lib/play/eligibility";
 import { shuffleIds } from "@/lib/study/shuffle";
 import type { QuizSession } from "@/lib/types/flashcard";
 
@@ -11,14 +14,15 @@ export default async function EmbedDeckPage({
   searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ mode?: string }>;
+  searchParams: Promise<{ mode?: string; activity?: string; t?: string }>;
 }) {
   const { token } = await params;
-  const { mode } = await searchParams;
+  const { mode, activity: activityParam, t } = await searchParams;
   const deck = await getSharedDeck(token);
   if (!deck || deck.generationStatus !== "complete") notFound();
 
-  const quizMode = mode === "quiz";
+  const activity = activityFromQuery(activityParam) ?? activityFromQuery(mode);
+  const quizMode = mode === "quiz" && !activity;
   const questionOrder = shuffleIds(deck.cards.map((card) => card.id));
   const quizSession: QuizSession = {
     id: "embed",
@@ -31,6 +35,7 @@ export default async function EmbedDeckPage({
     startedAt: new Date(),
     completedAt: null,
   };
+  const home = `/embed/${token}`;
 
   return (
     <main className="mx-auto max-w-3xl px-3 py-4">
@@ -38,7 +43,23 @@ export default async function EmbedDeckPage({
         HK Study A embed
       </p>
       <h1 className="mt-1 text-xl font-black text-slate-950">{deck.title}</h1>
-      {quizMode ? (
+      {activity ? (
+        <div className="mt-4">
+          {templateReason(activity, deck.cards) ? (
+            <p className="empty-state">{templateReason(activity, deck.cards)}</p>
+          ) : (
+            <PlayDispatcher
+              cards={deck.cards}
+              deckId={deck.id}
+              homeHref={`${home}${mode === "quiz" ? "?mode=quiz" : ""}`}
+              key={t ?? activity}
+              readOnly
+              replayHref={`${home}?mode=${activity}`}
+              template={activity}
+            />
+          )}
+        </div>
+      ) : quizMode ? (
         <div className="mt-4">
           <QuizPlayer
             cards={deck.cards}

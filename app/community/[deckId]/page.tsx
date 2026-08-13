@@ -7,7 +7,7 @@ import { CommunitySocial } from "@/components/community-social";
 import { StudyPlayer } from "@/components/study-player";
 import { Button } from "@/components/ui/button";
 import { adminAttachCommunityImagesAction } from "@/lib/actions/admin";
-import { requireSession } from "@/lib/auth-server";
+import { isAdminUser, requireSession } from "@/lib/auth-server";
 import {
   formatGradeLabel,
   formatTagLabel,
@@ -62,7 +62,7 @@ export default async function CommunityDeckPage({
         </div>
         <CommunityCopyButton deckId={deck.id} />
       </div>
-      {session.provider === "better-auth" && session.user.role === "admin" ? (
+      {isAdminUser(session.user) ? (
         <form action={adminAttachCommunityImagesAction} className="flex flex-wrap gap-3">
           <input name="deckId" type="hidden" value={deck.id} />
           <label className="flex items-center gap-2 text-sm">

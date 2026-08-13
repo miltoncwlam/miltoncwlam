@@ -2,18 +2,9 @@ import "server-only";
 
 import { auth, currentUser } from "@clerk/nextjs/server";
 
-import { env } from "@/lib/env";
-import type { SessionUser } from "@/lib/auth";
-
-export function isClerkEnabled(): boolean {
-  return Boolean(
-    env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && env.CLERK_SECRET_KEY,
-  );
-}
+import type { SessionUser } from "@/lib/types/auth";
 
 export async function getClerkSessionUser(): Promise<SessionUser | null> {
-  if (!isClerkEnabled()) return null;
-
   const { userId } = await auth();
   if (!userId) return null;
 

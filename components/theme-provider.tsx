@@ -22,13 +22,11 @@ function detectTheme(): Theme {
   if (typeof window === "undefined") return "light";
   const stored = window.localStorage.getItem("study-a-theme");
   if (stored === "dark" || stored === "light") return stored;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+  return "dark";
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>("dark");
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -65,7 +63,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 export function useTheme() {
   const ctx = useContext(ThemeContext);
   if (!ctx) {
-    return { theme: "light" as const, ready: false, toggleTheme: () => undefined };
+    return { theme: "dark" as const, ready: false, toggleTheme: () => undefined };
   }
   return ctx;
 }

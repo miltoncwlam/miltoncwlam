@@ -13,10 +13,14 @@ import {
 import { getDeckWithCards } from "@/lib/data/decks";
 import { env } from "@/lib/env";
 import { createShareToken } from "@/lib/security/share-token";
+import { activityFromQuery } from "@/lib/play/activity";
 
 const idSchema = z.string().uuid();
 
-export async function createClassLinkAction(deckIdValue: string) {
+export async function createClassLinkAction(
+  deckIdValue: string,
+  activity?: string,
+) {
   const session = await requireSession();
   const deckId = idSchema.parse(deckIdValue);
   const deck = await getDeckWithCards(deckId, session.user.id);
@@ -27,7 +31,9 @@ export async function createClassLinkAction(deckIdValue: string) {
   const id = await createClassLink(deckId, session.user.id, token);
   if (!id) throw new Error("Could not create class link");
   revalidatePath(`/decks/${deckId}`);
-  return `${env.NEXT_PUBLIC_APP_URL}/class/${token}`;
+  const assigned = activityFromQuery(activity);
+  const suffix = assigned ? `?activity=${assigned}` : "";
+  return `${env.NEXT_PUBLIC_APP_URL}/class/${token}${suffix}`;
 }
 
 export async function revokeClassLinkAction(formData: FormData) {
@@ -41,7 +47,16 @@ export async function revokeClassLinkAction(formData: FormData) {
 export async function joinClassAction(formData: FormData) {
   const session = await requireSession();
   const token = z.string().min(10).parse(formData.get("token"));
+  const activity = activityFromQuery(
+    typeof formData.get("activity") === "string"
+      ? String(formData.get("activity"))
+      : null,
+  );
   const result = await joinClassLink(token, session.user.id);
   revalidatePath("/decks");
-  redirect(`/decks/${result.deckId}`);
+  redirect(
+    activity
+      ? `/decks/${result.deckId}/play/${activity}`
+      : `/decks/${result.deckId}`,
+  );
 }

@@ -3,16 +3,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { ReactNode } from "react";
 
-export function AuthProviders({
-  children,
-  clerkEnabled,
-}: {
-  children: ReactNode;
-  clerkEnabled: boolean;
-}) {
-  if (!clerkEnabled) {
-    return children;
-  }
-
+export function AuthProviders({ children }: { children: ReactNode }) {
   return <ClerkProvider>{children}</ClerkProvider>;
 }

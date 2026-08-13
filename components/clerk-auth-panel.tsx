@@ -9,7 +9,7 @@ export function ClerkSignInPanel() {
         appearance={{
           elements: {
             rootBox: "mx-auto w-full",
-            card: "shadow-none border border-slate-200 rounded-2xl",
+            card: "shadow-none border-2 border-[#16324f] rounded-3xl bg-white",
           },
         }}
         routing="path"
@@ -27,7 +27,7 @@ export function ClerkSignUpPanel() {
         appearance={{
           elements: {
             rootBox: "mx-auto w-full",
-            card: "shadow-none border border-slate-200 rounded-2xl",
+            card: "shadow-none border-2 border-[#16324f] rounded-3xl bg-white",
           },
         }}
         routing="path"

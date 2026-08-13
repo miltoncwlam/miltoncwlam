@@ -19,21 +19,21 @@
     "rights": "Study tool for learning. AI cards can be wrong — verify before exams."
   },
   "landing": {
-    "eyebrow": "Learn from anything",
-    "title": "Your notes become a deck worth collecting.",
+    "eyebrow": "Built for Hong Kong classrooms",
+    "title": "Your notes become a deck <hl>worth collecting.</hl>",
     "subtitle": "Upload text or PDFs. HK Study A creates beautiful, interactive flashcards with AI so you can flip, rate, shuffle, and share.",
     "continue": "Sign in",
-    "createAccount": "Request account",
+    "createAccount": "Create account",
     "agree": "By continuing, you agree to our <terms>Terms</terms> and <privacy>Privacy Policy</privacy>.",
-    "authNote": "Sign in with email/password or a passkey. You can create an account yourself, or an admin can provision one."
+    "authNote": "Sign in with email through Clerk. You can create an account yourself."
   },
   "auth": {
     "signInEyebrow": "Welcome back",
     "signInTitle": "Sign in",
-    "signInSubtitle": "Email and password or a passkey (Better Auth).",
+    "signInSubtitle": "Email sign-in with Clerk.",
     "signUpEyebrow": "Get started",
     "signUpTitle": "Sign up",
-    "signUpSubtitle": "Create an account with email and password — or ask an admin to set one up for you."
+    "signUpSubtitle": "Create an account with email through Clerk."
   },
   "decks": {
     "eyebrow": "Your library",
@@ -172,7 +172,7 @@
     "s1": "1. Who we are",
     "s1b": "We operate {product}. For privacy questions, email {email}.",
     "s2": "2. Information we collect",
-    "s2a": "Account data: when you sign in with email/password or a passkey through Better Auth, we receive identifiers such as your user ID, email address, and basic profile information needed to keep you signed in.",
+    "s2a": "Account data: when you sign in through Clerk, we receive identifiers such as your user ID, email address, and basic profile information needed to keep you signed in.",
     "s2b": "Study data: decks, flashcards, study sessions, ratings, and share settings you create are stored in our database (Supabase Postgres).",
     "s2c": "Uploads: if you upload a file, it is stored temporarily in private Supabase Storage so we can generate cards. After a successful generation we clear retained source text and delete the upload when possible.",
     "s2d": "Technical data: standard server logs and essential cookies for authentication and preferences (including language).",
@@ -185,7 +185,7 @@
     "s6": "6. Retention",
     "s6b": "Account and deck data remain until you delete the deck or ask us to delete your data. Source uploads and source text are removed after successful generation for privacy.",
     "s7": "7. Processors",
-    "s7b": "We use Better Auth (authentication), Supabase (database and storage), and optionally cloud AI providers you configure. We do not sell your personal data and do not use advertising cookies.",
+    "s7b": "We use Clerk (authentication), Supabase (database and storage), and optionally cloud AI providers you configure. We do not sell your personal data and do not use advertising cookies.",
     "s8": "8. Your choices",
     "s8b": "You can sign out, delete decks you own, disable share links, and contact us at {email} to request access or deletion of your account data. Full self-serve account deletion may be added later.",
     "s9": "9. Governing law",
@@ -215,11 +215,11 @@
   "cookies": {
     "intro": "{product} uses essential cookies and similar technologies to run the app.",
     "s1": "1. Essential cookies",
-    "s1b": "Authentication and session cookies from Better Auth keep you signed in. We may also store a language preference cookie ({localeCookie}) so the interface stays in your chosen language.",
+    "s1b": "Authentication and session cookies from Clerk keep you signed in. We may also store a language preference cookie ({localeCookie}) so the interface stays in your chosen language.",
     "s2": "2. What we do not use",
     "s2b": "We do not use third-party advertising cookies or sell browsing data for ads.",
     "s3": "3. Managing cookies",
-    "s3b": "You can clear cookies in your browser. Signing out ends your Better Auth session. Blocking all cookies may prevent sign-in from working.",
+    "s3b": "You can clear cookies in your browser. Signing out ends your Clerk session. Blocking all cookies may prevent sign-in from working.",
     "s4": "4. More information",
     "s4b": "See also our Privacy Policy for how authentication cookies work. Contact: {email}."
   },

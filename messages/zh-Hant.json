@@ -25,12 +25,12 @@
     "continue": "使用 Google / 電子郵件繼續",
     "createAccount": "建立帳號",
     "agree": "繼續即表示你同意我們的 <terms>服務條款</terms> 與 <privacy>隱私權政策</privacy>。",
-    "authNote": "使用電子郵件/密碼或通行金鑰登入。可自行註冊，也可由管理員開通。"
+    "authNote": "透過 Clerk 以電子郵件登入。可自行註冊。"
   },
   "auth": {
     "signInEyebrow": "歡迎回來",
     "signInTitle": "登入",
-    "signInSubtitle": "Email/password or passkey.",
+    "signInSubtitle": "Email sign-in with Clerk.",
     "signUpEyebrow": "開始使用",
     "signUpTitle": "註冊",
     "signUpSubtitle": "用電子郵件和密碼建立帳戶，也可請管理員為你開通。"
@@ -173,7 +173,7 @@
     "s1": "1. 我們是誰",
     "s1b": "我們營運 {product}。隱私問題請寄至 {email}。",
     "s2": "2. 我們收集的資訊",
-    "s2a": "帳號資料：透過 Better Auth 以電子郵件/密碼或通行金鑰登入時，我們會取得使用者 ID、電子郵件及維持登入所需的基本資料。",
+    "s2a": "帳號資料：透過 Clerk 以電子郵件/密碼或通行金鑰登入時，我們會取得使用者 ID、電子郵件及維持登入所需的基本資料。",
     "s2b": "學習資料：你建立的牌組、閃卡、學習進度、評分與分享設定儲存在資料庫（Supabase Postgres）。",
     "s2c": "上傳：上傳的檔案或照片會暫存在私人 Supabase Storage 以供生成。成功生成後我們會清除來源文字並盡力刪除上傳檔。",
     "s2d": "技術資料：伺服器日誌，以及登入與偏好（含語言）所需的必要 Cookie。",
@@ -186,7 +186,7 @@
     "s6": "6. 保存期限",
     "s6b": "帳號與牌組資料會保留至你刪除牌組或要求刪除。來源上傳與來源文字在成功生成後會移除。",
     "s7": "7. 處理者",
-    "s7b": "我們使用 Better Auth（驗證）、Supabase（資料庫與儲存）以及你設定的雲端 AI。我們不出售個人資料，也不使用廣告 Cookie。",
+    "s7b": "我們使用 Clerk（驗證）、Supabase（資料庫與儲存）以及你設定的雲端 AI。我們不出售個人資料，也不使用廣告 Cookie。",
     "s8": "8. 你的選擇",
     "s8b": "你可以登出、刪除自己的牌組、關閉分享，並透過 {email} 要求查閱或刪除資料。完整自助刪除帳號功能可能稍後推出。",
     "s9": "9. 準據法",
@@ -216,11 +216,11 @@
   "cookies": {
     "intro": "{product} 使用必要 Cookie 與類似技術以運作應用程式。",
     "s1": "1. 必要 Cookie",
-    "s1b": "Better Auth 的驗證／工作階段 Cookie 維持登入。我們也可能儲存語言偏好 Cookie（{localeCookie}）。",
+    "s1b": "Clerk 的驗證／工作階段 Cookie 維持登入。我們也可能儲存語言偏好 Cookie（{localeCookie}）。",
     "s2": "2. 我們不使用的項目",
     "s2b": "我們不使用第三方廣告 Cookie，也不出售瀏覽資料作廣告。",
     "s3": "3. 管理 Cookie",
-    "s3b": "可在瀏覽器清除 Cookie。登出會結束 Better Auth 工作階段。封鎖所有 Cookie 可能導致無法登入。",
+    "s3b": "可在瀏覽器清除 Cookie。登出會結束 Clerk 工作階段。封鎖所有 Cookie 可能導致無法登入。",
     "s4": "4. 更多資訊",
     "s4b": "請參閱隱私權政策。聯絡：{email}。"
   },

@@ -108,6 +108,10 @@ async function orderCardsForStudy(
   return shuffled ? shuffleIds(ids) : ids;
 }
 
+export async function listDueCardIds(deckId: string, userId: string) {
+  return orderCardsForStudy(deckId, userId, "due", false);
+}
+
 export async function countDueCards(
   deckId: string,
   userId: string,

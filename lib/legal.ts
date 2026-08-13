@@ -74,7 +74,7 @@ export function privacyBlocks(v: LegalValues): LegalBlock[] {
     block("2. Information we collect", [
       "We collect only what we need to run accounts, generate study materials, and keep the service secure.",
     ], [
-      "Account data: email address, password hash (we do not store your raw password), display name, user ID, role (learner or admin), and passkey credentials if you add one. If optional Clerk sign-in is enabled, Clerk may also hold your sign-in identifiers under its own terms.",
+      "Account data: Clerk user ID, email address, and display name used to keep you signed in. Clerk stores sign-in credentials (including email/password if you use them) under its own terms. We may treat an allowlisted email as admin.",
       "Study data: decks, cards (front, back, hints, quiz options), ratings, spaced-repetition state, quiz answers and scores, share/visibility settings, subject and grade tags, and weekly energy (study allowance) balances. Energy is an in-app limit, not money.",
       "Uploads and sources: text you paste, topics, fetched URL/YouTube study text, and files (PDF, images, Markdown, TXT) stored in private Supabase Storage when you upload. You can choose to drop source files immediately, keep them about 24 hours, or keep them with the deck.",
       "Community data: public or unlisted decks you submit, copies you make of library packs, likes, and moderation reports. Seed encyclopedia packs are published by us, not by learners.",
@@ -114,8 +114,7 @@ export function privacyBlocks(v: LegalValues): LegalBlock[] {
     ], [
       "{hosting}: hosts the website and API (including preview deployments).",
       "Supabase: Postgres database and private file storage.",
-      "Better Auth: email/password and passkey sign-in (session cookies on our domain).",
-      "Clerk (optional): hosted/social sign-in if those keys are configured.",
+      "Clerk: email and hosted sign-in (session cookies on our domain).",
       "OpenRouter and the model provider you select: generation prompts and outputs.",
       "Wikimedia Commons / Openverse: image search and download of licensed files.",
     ], v),
@@ -133,7 +132,7 @@ export function privacyBlocks(v: LegalValues): LegalBlock[] {
       "You can block cookies in your browser; essential cookies are required to stay signed in. See the Cookie Notice.",
     ], undefined, v),
     block("14. Security", [
-      "We use HTTPS, hashed passwords, private storage buckets, and role checks for admin tools. No method is perfectly secure. Tell us at {email} if you think an account or the service was misused.",
+      "We use HTTPS, private storage buckets, and role checks for admin tools. Sign-in secrets are handled by Clerk. No method is perfectly secure. Tell us at {email} if you think an account or the service was misused.",
     ], undefined, v),
     block("15. Changes", [
       "If we change this policy in a material way, we will update the “Last updated” date. Continued use after that date means you accept the updated policy.",
@@ -157,7 +156,7 @@ export function termsBlocks(v: LegalValues): LegalBlock[] {
       "You must be able to form a contract under the laws of {jurisdiction}. If you are under 18, a parent, guardian, or school must agree to these Terms for you. Do not use the service if you are under 13.",
     ], undefined, v),
     block("4. Accounts", [
-      "Keep your password and passkeys secret. You are responsible for activity on your account. Admins may create learner accounts and set weekly energy. Do not share an account in a way that breaks these Terms or school rules.",
+      "Keep your sign-in details secret. You are responsible for activity on your account. Admins may set weekly energy. Do not share an account in a way that breaks these Terms or school rules.",
       "We may suspend or close accounts that look compromised, abusive, or created to bypass limits.",
     ], undefined, v),
     block("5. Energy and limits", [
@@ -216,19 +215,14 @@ export type CookieRow = {
 export function cookieRows(v: LegalValues): CookieRow[] {
   return [
     {
-      name: "better-auth.session_token (and related Better Auth cookies)",
-      purpose: "Keep you signed in with email/password or a passkey.",
-      duration: "Session / as set by Better Auth (typically weeks).",
+      name: "Clerk cookies (__session, __client_uat, and similar)",
+      purpose: "Keep you signed in with Clerk (email or other methods you enabled in Clerk).",
+      duration: "As described in Clerk’s cookie documentation.",
     },
     {
       name: v.localeCookie,
       purpose: "Remember the interface language you picked.",
       duration: "About 1 year.",
-    },
-    {
-      name: "Clerk cookies (__session, __client_uat, and similar), if Clerk is enabled",
-      purpose: "Optional hosted or social sign-in.",
-      duration: "As described in Clerk’s cookie documentation.",
     },
   ];
 }
@@ -250,7 +244,7 @@ export function cookiesBlocks(v: LegalValues): LegalBlock[] {
       "If you generate cards, your study text goes to OpenRouter (cloud) as a server-side API call, not as a cookie. Wikimedia Commons and Openverse see a server-side image search, not your login cookie.",
     ], undefined, v),
     block("5. Managing cookies", [
-      "You can delete cookies in your browser. Signing out clears the Better Auth session. Blocking all cookies will usually stop sign-in from working. Language may reset to English if {localeCookie} is blocked.",
+      "You can delete cookies in your browser. Signing out clears your Clerk session. Blocking all cookies will usually stop sign-in from working. Language may reset to English if {localeCookie} is blocked.",
     ], undefined, v),
     block("6. More information", [
       "See the Privacy Policy for how account and study data are used. Contact: {email}.",

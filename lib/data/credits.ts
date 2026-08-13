@@ -504,11 +504,10 @@ export async function listUsersWithCredits() {
     image_period_grant: number | null;
     is_unlimited: boolean | null;
   }>(
-    `select u.id, u.email, u.name, u.role,
+    `select c.user_id as id, c.user_id as email, c.user_id as name, null::text as role,
             c.balance, c.image_balance, c.period_grant, c.image_period_grant, c.is_unlimited
-     from "user" u
-     left join user_credits c on c.user_id = u.id
-     order by u."createdAt" desc
+     from user_credits c
+     order by c.updated_at desc
      limit 200`,
   );
   return result.rows;

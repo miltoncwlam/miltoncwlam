@@ -7,19 +7,18 @@ import { SignOutButton } from "@/components/sign-out-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import type { AppSession } from "@/lib/auth-server";
-import { clerkAuthConfigured } from "@/lib/auth-server";
+import { isAdminUser } from "@/lib/auth-server";
 
 export async function AppHeader({ session }: { session: AppSession | null }) {
   const t = await getTranslations("nav");
   const signedIn = Boolean(session);
-  const isAdmin =
-    session?.provider === "better-auth" && session.user.role === "admin";
-  const clerkEnabled = clerkAuthConfigured();
+  const isAdmin = session ? isAdminUser(session.user) : false;
 
   return (
     <header className="app-header">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-4">
         <Link className="app-brand" href="/">
+          <span className="brand-mark">S</span>
           HK Study A
         </Link>
         <nav
@@ -48,17 +47,14 @@ export async function AppHeader({ session }: { session: AppSession | null }) {
               <Button asChild>
                 <Link href="/decks/new">{t("createDeck")}</Link>
               </Button>
-              <SignOutButton
-                clerkEnabled={clerkEnabled}
-                provider={session.provider}
-              />
+              <SignOutButton />
             </>
           ) : (
             <>
               <Button asChild variant="ghost">
                 <Link href="/sign-in">{t("signIn")}</Link>
               </Button>
-              <Button asChild>
+              <Button asChild className="rounded-full bg-[var(--accent)] px-4 text-[var(--primary-foreground)] hover:opacity-90">
                 <Link href="/sign-up">{t("signUp")}</Link>
               </Button>
             </>

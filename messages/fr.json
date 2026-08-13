@@ -25,12 +25,12 @@
     "continue": "Continuer avec Google / e-mail",
     "createAccount": "Créer un compte",
     "agree": "En continuant, vous acceptez les <terms>Conditions</terms> et la <privacy>Politique de confidentialité</privacy>.",
-    "authNote": "Connexion email/mot de passe ou passkey. Créez votre compte ou un admin peut le provisionner."
+    "authNote": "Connectez-vous par e-mail avec Clerk. Vous pouvez créer votre compte."
   },
   "auth": {
     "signInEyebrow": "Bon retour",
     "signInTitle": "Connexion",
-    "signInSubtitle": "Email/password or passkey.",
+    "signInSubtitle": "Email sign-in with Clerk.",
     "signUpEyebrow": "Commencer",
     "signUpTitle": "Inscription",
     "signUpSubtitle": "Créez un compte avec email et mot de passe, ou demandez à un admin."
@@ -173,7 +173,7 @@
     "s1": "1. Qui nous sommes",
     "s1b": "Nous exploitons {product}. Contact : {email}.",
     "s2": "2. Données collectées",
-    "s2a": "Compte : identifiants via Better Auth (e-mail/mot de passe ou passkey).",
+    "s2a": "Compte : identifiants via Clerk (e-mail).",
     "s2b": "Données d’étude : paquets, cartes, progression, partages (Supabase).",
     "s2c": "Imports : stockage privé temporaire, suppression après génération réussie.",
     "s2d": "Données techniques : journaux et cookies essentiels (langue incluse).",
@@ -186,7 +186,7 @@
     "s6": "6. Conservation",
     "s6b": "Jusqu’à suppression du paquet ou demande. Sources effacées après génération.",
     "s7": "7. Sous-traitants",
-    "s7b": "Better Auth, Supabase et IA cloud configurée. Pas de vente de données ni cookies pub.",
+    "s7b": "Clerk, Supabase et IA cloud configurée. Pas de vente de données ni cookies pub.",
     "s8": "8. Vos choix",
     "s8b": "Déconnexion, suppression de paquets, désactivation des liens, contact {email}.",
     "s9": "9. Droit applicable",
@@ -216,11 +216,11 @@
   "cookies": {
     "intro": "{product} utilise des cookies essentiels.",
     "s1": "1. Cookies essentiels",
-    "s1b": "Session Better Auth et préférence de langue ({localeCookie}).",
+    "s1b": "Session Clerk et préférence de langue ({localeCookie}).",
     "s2": "2. Ce que nous n’utilisons pas",
     "s2b": "Pas de cookies publicitaires tiers.",
     "s3": "3. Gestion",
-    "s3b": "Vous pouvez effacer les cookies. La déconnexion termine la session Better Auth.",
+    "s3b": "Vous pouvez effacer les cookies. La déconnexion termine la session Clerk.",
     "s4": "4. Plus d’infos",
     "s4b": "Voir la Politique de confidentialité. Contact : {email}."
   },

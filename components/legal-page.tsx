@@ -8,9 +8,11 @@ export function LegalBlocks({ blocks }: { blocks: LegalBlock[] }) {
     <>
       {blocks.map((block) => (
         <section key={block.heading}>
-          <h2 className="text-xl font-black text-slate-950">{block.heading}</h2>
+          <h2 className="font-[family-name:var(--font-instrument)] text-[length:clamp(1.35rem,2.4vw,1.6rem)] font-normal text-[var(--ink)]">
+            {block.heading}
+          </h2>
           {block.paragraphs.map((paragraph) => (
-            <p className="mt-2" key={paragraph.slice(0, 48)}>
+            <p className="mt-3" key={paragraph.slice(0, 48)}>
               {paragraph}
             </p>
           ))}
@@ -38,18 +40,19 @@ export async function LegalPageShell({
 
   return (
     <main className="page-shell max-w-3xl">
-      <h1 className="page-title text-4xl">{t(titleKey)}</h1>
-      <p className="mt-2 text-sm text-slate-500">
+      <p className="eyebrow">HK Study A</p>
+      <h1 className="page-title">{t(titleKey)}</h1>
+      <p className="mt-3 text-base text-[var(--muted)]">
         {t("lastUpdated", { date: LEGAL.lastUpdated })}
       </p>
-      <p className="mt-2 text-sm text-amber-800">{t("notLegalAdvice")}</p>
-      <p className="mt-2 text-sm text-slate-600">{t("governingLanguage")}</p>
-      <article className="legal-prose mt-8 space-y-6 text-slate-700 leading-7">
+      <p className="mt-3 text-base text-[var(--muted)]">{t("notLegalAdvice")}</p>
+      <p className="mt-2 text-base text-[var(--muted)]">{t("governingLanguage")}</p>
+      <article className="legal-prose mt-10 max-w-prose space-y-8 text-[length:clamp(1.12rem,1.4vw,1.22rem)] leading-8 text-[var(--ink)]">
         {children}
       </article>
-      <p className="mt-10 text-sm text-slate-600">
+      <p className="mt-12 text-base text-[var(--muted)]">
         {t("contact")}:{" "}
-        <a className="font-semibold text-indigo-700 underline" href={`mailto:${LEGAL.contactEmail}`}>
+        <a className="font-semibold text-[var(--accent-strong)] underline" href={`mailto:${LEGAL.contactEmail}`}>
           {LEGAL.contactEmail}
         </a>
       </p>

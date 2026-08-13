@@ -77,6 +77,9 @@ export default async function DeckDetailPage({
               <Link className="secondary-button" href={`/decks/${deck.id}/quiz`}>
                 Quiz battle
               </Link>
+              <Link className="secondary-button" href={`/decks/${deck.id}/play`}>
+                Play activities
+              </Link>
             </>
           ) : (
             <p className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-500">

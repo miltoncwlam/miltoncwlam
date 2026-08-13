@@ -25,12 +25,12 @@
     "continue": "Google / メールで続ける",
     "createAccount": "アカウント作成",
     "agree": "続行すると <terms>利用規約</terms> と <privacy>プライバシーポリシー</privacy> に同意したことになります。",
-    "authNote": "メール/パスワードまたはパスキーでサインイン。自分で登録するか、管理者が作成できます。"
+    "authNote": "Clerk のメールでサインイン。自分で登録できます。"
   },
   "auth": {
     "signInEyebrow": "おかえりなさい",
     "signInTitle": "ログイン",
-    "signInSubtitle": "Email/password or passkey.",
+    "signInSubtitle": "Email sign-in with Clerk.",
     "signUpEyebrow": "はじめよう",
     "signUpTitle": "登録",
     "signUpSubtitle": "メールとパスワードでアカウント作成。管理者による作成も可能です。"
@@ -173,7 +173,7 @@
     "s1": "1. 運営者",
     "s1b": "{product} を運営しています。問い合わせ: {email}",
     "s2": "2. 収集する情報",
-    "s2a": "アカウント: Better Auth 経由のメール/パスワードまたはパスキーでユーザーID・メール等を受け取ります。",
+    "s2a": "アカウント: Clerk 経由のメール/パスワードまたはパスキーでユーザーID・メール等を受け取ります。",
     "s2b": "学習データ: デッキ・カード・進捗・共有設定を Supabase Postgres に保存します。",
     "s2c": "アップロード: 生成のため一時保存し、成功後にソース本文とファイルを削除するよう努めます。",
     "s2d": "技術データ: ログと認証・言語設定のための必須Cookie。",
@@ -186,7 +186,7 @@
     "s6": "6. 保持",
     "s6b": "デッキ削除または削除依頼まで保持。ソースは生成成功後に削除。",
     "s7": "7. 処理者",
-    "s7b": "Better Auth、Supabase、設定したクラウドAI。個人データの販売や広告Cookieは行いません。",
+    "s7b": "Clerk、Supabase、設定したクラウドAI。個人データの販売や広告Cookieは行いません。",
     "s8": "8. あなたの選択",
     "s8b": "ログアウト、デッキ削除、共有無効化、{email} への照会/削除依頼が可能です。",
     "s9": "9. 準拠法",
@@ -216,11 +216,11 @@
   "cookies": {
     "intro": "{product} は必須Cookie等を使用します。",
     "s1": "1. 必須Cookie",
-    "s1b": "Better AuthのセッションCookieと言語Cookie（{localeCookie}）など。",
+    "s1b": "ClerkのセッションCookieと言語Cookie（{localeCookie}）など。",
     "s2": "2. 使わないもの",
     "s2b": "広告用サードパーティCookieは使用しません。",
     "s3": "3. 管理",
-    "s3b": "ブラウザでCookieを削除できます。サインアウトでBetter Authセッションが終了します。",
+    "s3b": "ブラウザでCookieを削除できます。サインアウトでClerkセッションが終了します。",
     "s4": "4. 詳細",
     "s4b": "プライバシーポリシーを参照。連絡: {email}"
   },

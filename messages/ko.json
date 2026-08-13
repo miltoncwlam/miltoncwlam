@@ -25,12 +25,12 @@
     "continue": "Google / 이메일로 계속",
     "createAccount": "계정 만들기",
     "agree": "계속하면 <terms>이용약관</terms> 및 <privacy>개인정보 처리방침</privacy>에 동의하게 됩니다.",
-    "authNote": "이메일/비밀번호 또는 패스키로 로그인. 직접 가입하거나 관리자가 계정을 만들 수 있습니다."
+    "authNote": "Clerk 이메일로 로그인. 직접 가입할 수 있습니다."
   },
   "auth": {
     "signInEyebrow": "다시 오신 것을 환영합니다",
     "signInTitle": "로그인",
-    "signInSubtitle": "Email/password or passkey.",
+    "signInSubtitle": "Email sign-in with Clerk.",
     "signUpEyebrow": "시작하기",
     "signUpTitle": "가입",
     "signUpSubtitle": "이메일과 비밀번호로 가입하거나 관리자에게 계정 생성을 요청하세요."
@@ -173,7 +173,7 @@
     "s1": "1. 운영자",
     "s1b": "{product}를 운영합니다. 문의: {email}",
     "s2": "2. 수집 정보",
-    "s2a": "계정: Better Auth를 통한 이메일/비밀번호 또는 패스키 로그인 식별자.",
+    "s2a": "계정: Clerk를 통한 이메일/비밀번호 또는 패스키 로그인 식별자.",
     "s2b": "학습 데이터: 덱·카드·진행·공유 설정(Supabase Postgres).",
     "s2c": "업로드: 생성용 임시 저장 후 성공 시 원본 삭제 노력.",
     "s2d": "기술 데이터: 로그 및 필수 쿠키(언어 포함).",
@@ -186,7 +186,7 @@
     "s6": "6. 보관",
     "s6b": "덱 삭제 또는 삭제 요청까지 보관. 원본은 생성 후 제거.",
     "s7": "7. 처리자",
-    "s7b": "Better Auth, Supabase, 설정한 클라우드 AI. 개인정보 판매/광고 쿠키 없음.",
+    "s7b": "Clerk, Supabase, 설정한 클라우드 AI. 개인정보 판매/광고 쿠키 없음.",
     "s8": "8. 선택권",
     "s8b": "로그아웃, 덱 삭제, 공유 해제, {email}로 요청 가능.",
     "s9": "9. 준거법",
@@ -216,11 +216,11 @@
   "cookies": {
     "intro": "{product}는 필수 쿠키를 사용합니다.",
     "s1": "1. 필수 쿠키",
-    "s1b": "Better Auth 세션 및 언어 쿠키({localeCookie}).",
+    "s1b": "Clerk 세션 및 언어 쿠키({localeCookie}).",
     "s2": "2. 사용하지 않음",
     "s2b": "광고 쿠키를 사용하지 않습니다.",
     "s3": "3. 관리",
-    "s3b": "브라우저에서 쿠키를 지울 수 있습니다. 로그아웃하면 Better Auth 세션이 종료됩니다.",
+    "s3b": "브라우저에서 쿠키를 지울 수 있습니다. 로그아웃하면 Clerk 세션이 종료됩니다.",
     "s4": "4. 더보기",
     "s4b": "개인정보 방침을 참고하세요. {email}"
   },

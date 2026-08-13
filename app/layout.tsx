@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fredoka, Nunito } from "next/font/google";
+import { DM_Sans, Instrument_Serif } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 
@@ -8,19 +8,20 @@ import { AuthProviders } from "@/components/auth-providers";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToastProvider } from "@/components/toast-provider";
-import { clerkAuthConfigured, getSession } from "@/lib/auth-server";
+import { getSession } from "@/lib/auth-server";
 import "./globals.css";
 
-const display = Fredoka({
-  variable: "--font-fredoka",
+const display = Instrument_Serif({
+  variable: "--font-instrument",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: "400",
+  style: ["normal", "italic"],
 });
 
-const sans = Nunito({
-  variable: "--font-nunito",
+const sans = DM_Sans({
+  variable: "--font-dm",
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -28,14 +29,13 @@ export const metadata: Metadata = {
     default: "HK Study A · AI Flashcards",
     template: "%s · HK Study A",
   },
-  description: "Turn notes and documents into interactive flashcards.",
+  description: "A Sayo Academy study tool. Turn notes and documents into interactive flashcards.",
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const session = await getSession();
   const locale = await getLocale();
   const messages = await getMessages();
-  const clerkEnabled = clerkAuthConfigured();
 
   return (
     <html
@@ -46,13 +46,13 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("study-a-theme");if(t!=="dark"&&t!=="light"){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.dataset.theme=t;}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem("study-a-theme");if(t!=="dark"&&t!=="light"){t="dark";}document.documentElement.dataset.theme=t;}catch(e){}})();`,
           }}
         />
       </head>
       <body className="flex min-h-full flex-col bg-[var(--background)] text-[var(--foreground)]">
         <ThemeProvider>
-          <AuthProviders clerkEnabled={clerkEnabled}>
+          <AuthProviders>
             <NextIntlClientProvider locale={locale} messages={messages}>
               <ToastProvider>
                 <AppHeader session={session} />

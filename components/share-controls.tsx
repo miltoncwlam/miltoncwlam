@@ -6,6 +6,7 @@ import {
   disableSharingAction,
   enableSharingAction,
 } from "@/lib/actions/sharing";
+import { PLAY_TEMPLATES } from "@/lib/play/templates";
 
 export function ShareControls({
   deckId,
@@ -20,9 +21,13 @@ export function ShareControls({
   const [shared, setShared] = useState(isShared);
   const [pending, startTransition] = useTransition();
 
+  const [activity, setActivity] = useState("match-up");
   const token = link?.split("/share/")[1] ?? null;
+  const activityLink = token
+    ? `${appUrl}/share/${token}?activity=${activity}`
+    : null;
   const embedSnippet = token
-    ? `<iframe src="${appUrl}/embed/${token}" title="HK Study A" width="100%" height="520" style="border:0;border-radius:16px;" loading="lazy" referrerpolicy="no-referrer"></iframe>`
+    ? `<iframe src="${appUrl}/embed/${token}?mode=${activity}" title="HK Study A" width="100%" height="520" style="border:0;border-radius:16px;" loading="lazy" referrerpolicy="no-referrer"></iframe>`
     : null;
 
   function createOrRotate() {
@@ -67,6 +72,28 @@ export function ShareControls({
         </p>
       ) : null}
 
+      {activityLink ? (
+        <div className="mt-4 space-y-2">
+          <label className="block text-sm font-bold text-slate-900">
+            Assign one activity
+            <select
+              className="field mt-1"
+              onChange={(event) => setActivity(event.target.value)}
+              value={activity}
+            >
+              {PLAY_TEMPLATES.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <p className="break-all rounded-lg bg-white p-3 text-xs text-indigo-700">
+            {activityLink}
+          </p>
+        </div>
+      ) : null}
+
       {embedSnippet ? (
         <div className="mt-4 space-y-2">
           <p className="text-sm font-bold text-slate-900">Embed snippet</p>
@@ -76,7 +103,9 @@ export function ShareControls({
             value={embedSnippet}
           />
           <p className="text-xs text-slate-500">
-            Add <code>?mode=quiz</code> to the embed URL for quiz mode.
+            Use <code>?mode=quiz</code> for quiz battle, or{" "}
+            <code>?mode=match-up</code> (or any activity id) for a classroom
+            template.
           </p>
         </div>
       ) : null}

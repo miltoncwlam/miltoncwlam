@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import {
-  adminCreateUserAction,
   adminResolveReportAction,
   adminSetFeaturedAction,
   adminUpdateEnergyAction,
@@ -9,10 +8,8 @@ import {
 import { requireAdminSession } from "@/lib/auth-server";
 import { listUsersWithCredits } from "@/lib/data/credits";
 import { pool } from "@/lib/db";
-import { PasskeySetup } from "@/components/passkey-setup";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 export default async function AdminPage() {
   await requireAdminSession();
@@ -48,7 +45,7 @@ export default async function AdminPage() {
       <header className="space-y-2">
         <h1 className="text-3xl font-black tracking-tight">Admin</h1>
         <p className="text-slate-600">
-          Create accounts, set energy limits, and moderate community.
+          Set energy limits and moderate community. Learners sign up with Clerk.
         </p>
         <div className="flex flex-wrap gap-3 text-sm font-semibold">
           <Link className="text-indigo-700 underline" href="/admin/energy">
@@ -63,41 +60,6 @@ export default async function AdminPage() {
         </div>
       </header>
 
-      <PasskeySetup />
-
-      <section className="space-y-4 rounded-3xl border border-slate-200 bg-white p-6">
-        <h2 className="text-xl font-bold">Create user</h2>
-        <form action={adminCreateUserAction} className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1 sm:col-span-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" required type="email" />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="name">Name</Label>
-            <Input defaultValue="Learner" id="name" name="name" />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="password">Temp password</Label>
-            <Input id="password" minLength={8} name="password" required type="text" />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="periodGrant">Weekly text energy</Label>
-            <Input defaultValue={600} id="periodGrant" min={0} name="periodGrant" type="number" />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="imagePeriodGrant">Weekly image energy</Label>
-            <Input defaultValue={0} id="imagePeriodGrant" min={0} name="imagePeriodGrant" type="number" />
-          </div>
-          <label className="flex items-center gap-2 pt-6 text-sm font-semibold">
-            <input name="isUnlimited" type="checkbox" />
-            Unlimited energy
-          </label>
-          <Button className="sm:col-span-2" type="submit">
-            Create account
-          </Button>
-        </form>
-      </section>
-
       <section className="space-y-4">
         <h2 className="text-xl font-bold">Users</h2>
         <ul className="space-y-3">
@@ -108,9 +70,9 @@ export default async function AdminPage() {
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <div>
-                  <p className="font-bold">{user.email}</p>
+                  <p className="font-bold break-all">{user.id}</p>
                   <p className="text-sm text-slate-500">
-                    {user.name} · {user.role ?? "user"} · text{" "}
+                    text{" "}
                     {user.is_unlimited ? "unlimited" : (user.balance ?? 0)} ·
                     images{" "}
                     {user.is_unlimited ? "unlimited" : (user.image_balance ?? 0)}

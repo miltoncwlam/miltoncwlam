@@ -7,8 +7,8 @@ export function LandingAuthCta() {
   const t = useTranslations("landing");
 
   return (
-    <div className="mt-9 max-w-sm space-y-4">
-      <div className="flex flex-wrap gap-3">
+    <div className="landing-cta mt-10 space-y-4">
+      <div className="flex flex-wrap justify-center gap-3 xl:justify-start">
         <Link className="primary-button" href="/sign-in">
           {t("continue")}
         </Link>
@@ -16,8 +16,8 @@ export function LandingAuthCta() {
           {t("createAccount")}
         </Link>
       </div>
-      <p className="text-sm font-semibold text-[var(--muted)]">{t("authNote")}</p>
-      <p className="text-xs font-semibold leading-5 text-[var(--muted)]">
+      <p className="text-center text-base text-[var(--muted)] xl:text-left">{t("authNote")}</p>
+      <p className="text-center text-sm leading-6 text-[var(--muted)] xl:text-left">
         {t.rich("agree", {
           terms: (chunks) => (
             <Link className="link-accent underline" href="/terms">
