@@ -35,7 +35,7 @@ export default async function EmbedDeckPage({
   return (
     <main className="mx-auto max-w-3xl px-3 py-4">
       <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
-        Study A embed
+        HK Study A embed
       </p>
       <h1 className="mt-1 text-xl font-black text-slate-950">{deck.title}</h1>
       {quizMode ? (

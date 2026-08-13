@@ -1,6 +1,6 @@
 {
   "meta": {
-    "product": "Study A"
+    "product": "HK Study A"
   },
   "nav": {
     "myDecks": "Mis mazos",
@@ -21,7 +21,7 @@
   "landing": {
     "eyebrow": "Aprende de cualquier cosa",
     "title": "Tus apuntes se convierten en un mazo coleccionable.",
-    "subtitle": "Sube texto o PDF. Study A crea flashcards interactivas con IA.",
+    "subtitle": "Sube texto o PDF. HK Study A crea flashcards interactivas con IA.",
     "continue": "Continuar con Google / email",
     "createAccount": "Crear cuenta",
     "agree": "Al continuar, aceptas los <terms>Términos</terms> y la <privacy>Política de privacidad</privacy>.",
@@ -233,7 +233,7 @@
     "copied": "Copied!",
     "empty": "No public decks match these filters.",
     "cards": "{count} cards",
-    "bySeed": "Study A pack",
+    "bySeed": "HK Study A pack",
     "visibility": "Visibility",
     "private": "Private",
     "unlisted": "Unlisted (link only)",

@@ -5,10 +5,10 @@ function publicEnv(name: string, fallback: string) {
 }
 
 export const LEGAL = {
-  productName: "Study A",
+  productName: "HK Study A",
   operatorName: publicEnv(
     "NEXT_PUBLIC_LEGAL_OPERATOR",
-    "the operator of Study A",
+    "the operator of HK Study A",
   ),
   contactEmail: publicEnv("NEXT_PUBLIC_LEGAL_EMAIL", "privacy@example.com"),
   jurisdiction: publicEnv("NEXT_PUBLIC_LEGAL_JURISDICTION", "Hong Kong"),

@@ -1,4 +1,4 @@
-# Study A — AI Flashcard Generator
+# HK Study A — AI Flashcard Generator
 
 Turn notes, PDFs, and photos into interactive flashcards. Built with **Next.js 16**, **Better Auth**, **Supabase** (Postgres + Storage), and **OpenRouter** LLM generation.
 

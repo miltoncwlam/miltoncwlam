@@ -25,8 +25,8 @@ const sans = Nunito({
 
 export const metadata: Metadata = {
   title: {
-    default: "Study A · AI Flashcards",
-    template: "%s · Study A",
+    default: "HK Study A · AI Flashcards",
+    template: "%s · HK Study A",
   },
   description: "Turn notes and documents into interactive flashcards.",
 };

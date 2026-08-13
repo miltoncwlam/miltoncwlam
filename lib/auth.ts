@@ -65,7 +65,7 @@ export const auth = betterAuth({
     }),
     passkey({
       rpID: rpID(),
-      rpName: "Study A",
+      rpName: "HK Study A",
       origin: appUrl(),
     }),
     nextCookies(),

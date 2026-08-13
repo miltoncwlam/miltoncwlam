@@ -22,13 +22,13 @@ export const SAMPLE_CARDS: GeneratedFlashcard[] = [
     front: "Why rate cards Hard / OK / Easy?",
     back: "Ratings help you track which ideas need another pass.",
     hint: "Feedback loop",
-    category: "Study A",
+    category: "HK Study A",
   },
   {
     front: "What does Shuffle do?",
     back: "It randomizes card order so you do not memorize position.",
     hint: "Order",
-    category: "Study A",
+    category: "HK Study A",
   },
   {
     front: "Who can open a share link?",
@@ -75,7 +75,7 @@ export async function createSampleDeck(userId: string): Promise<string> {
       [
         userId,
         SAMPLE_DECK_TITLE,
-        "Hardcoded sample material for Study A smoke testing.",
+        "Hardcoded sample material for HK Study A smoke testing.",
       ],
     );
     const deckId = deckResult.rows[0].id;

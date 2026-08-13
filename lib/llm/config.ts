@@ -32,7 +32,7 @@ export function getConfiguredProviders(): LLMProvider[] {
 export function openRouterHeaders(): Record<string, string> {
   return {
     "HTTP-Referer": env.NEXT_PUBLIC_APP_URL,
-    "X-Title": "FlashCard Generator",
+    "X-Title": "HK Study A",
   };
 }
 

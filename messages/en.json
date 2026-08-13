@@ -1,6 +1,6 @@
 {
   "meta": {
-    "product": "Study A"
+    "product": "HK Study A"
   },
   "nav": {
     "myDecks": "My decks",
@@ -21,7 +21,7 @@
   "landing": {
     "eyebrow": "Learn from anything",
     "title": "Your notes become a deck worth collecting.",
-    "subtitle": "Upload text or PDFs. Study A creates beautiful, interactive flashcards with AI so you can flip, rate, shuffle, and share.",
+    "subtitle": "Upload text or PDFs. HK Study A creates beautiful, interactive flashcards with AI so you can flip, rate, shuffle, and share.",
     "continue": "Sign in",
     "createAccount": "Request account",
     "agree": "By continuing, you agree to our <terms>Terms</terms> and <privacy>Privacy Policy</privacy>.",
@@ -164,7 +164,7 @@
     "privacyTitle": "Privacy Policy",
     "termsTitle": "Terms of Service",
     "cookiesTitle": "Cookie Notice",
-    "notLegalAdvice": "This page describes how Study A works today. It is not legal advice.",
+    "notLegalAdvice": "This page describes how HK Study A works today. It is not legal advice.",
     "governingLanguage": "The English text of these policies is the official version. Other UI languages are for the interface only."
   },
   "privacy": {
@@ -241,7 +241,7 @@
     "copied": "Copied!",
     "empty": "No public decks match these filters.",
     "cards": "{count} cards",
-    "bySeed": "Study A pack",
+    "bySeed": "HK Study A pack",
     "visibility": "Visibility",
     "private": "Private",
     "unlisted": "Unlisted (link only)",

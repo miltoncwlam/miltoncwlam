@@ -14,7 +14,7 @@ export async function generateMetadata({
   const { token } = await params;
   const deck = await getSharedDeck(token);
   return {
-    title: deck ? `${deck.title} · Study A` : "Shared deck · Study A",
+    title: deck ? `${deck.title} · HK Study A` : "Shared deck · HK Study A",
     description: "Study a read-only AI-generated flashcard deck.",
   };
 }

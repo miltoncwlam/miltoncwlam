@@ -15,7 +15,7 @@ export default async function Home() {
       <section className="landing-hero relative min-h-[calc(100vh-73px)]">
         <div className="landing-hero-glow" aria-hidden />
         <div className="relative z-10 mx-auto flex min-h-[calc(100vh-73px)] max-w-6xl flex-col justify-end px-5 pb-16 pt-24 sm:justify-center sm:pb-24">
-          <p className="landing-brand motion-fade-up">Study A</p>
+          <p className="landing-brand motion-fade-up">HK Study A</p>
           <h1 className="landing-title motion-fade-up motion-delay-1">
             {t("title")}
           </h1>
@@ -27,7 +27,7 @@ export default async function Home() {
           </div>
         </div>
         <div className="landing-hero-card motion-float" aria-hidden="true">
-          <span className="card-rarity">STUDY A · RARE</span>
+          <span className="card-rarity">HK STUDY A · RARE</span>
           <span className="text-sm font-extrabold uppercase tracking-widest text-amber-800">
             Biology
           </span>

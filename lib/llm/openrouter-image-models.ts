@@ -95,7 +95,7 @@ async function fetchOutputUsd(
         headers: {
           Authorization: `Bearer ${apiKey}`,
           "HTTP-Referer": env.NEXT_PUBLIC_APP_URL,
-          "X-Title": "FlashCard Generator",
+          "X-Title": "HK Study A",
         },
         signal: AbortSignal.timeout(8_000),
       },

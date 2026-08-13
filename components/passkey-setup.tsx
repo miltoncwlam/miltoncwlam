@@ -13,7 +13,7 @@ export function PasskeySetup() {
     setMessage(null);
     try {
       const result = await authClient.passkey.addPasskey({
-        name: "Study A passkey",
+        name: "HK Study A passkey",
       });
       if (result.error) {
         setMessage(result.error.message || "Could not add passkey");

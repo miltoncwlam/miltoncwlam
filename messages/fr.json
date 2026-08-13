@@ -1,6 +1,6 @@
 {
   "meta": {
-    "product": "Study A"
+    "product": "HK Study A"
   },
   "nav": {
     "myDecks": "Mes paquets",
@@ -21,7 +21,7 @@
   "landing": {
     "eyebrow": "Apprendre de tout",
     "title": "Vos notes deviennent un paquet à collectionner.",
-    "subtitle": "Importez texte ou PDF. Study A crée des flashcards interactives avec l’IA.",
+    "subtitle": "Importez texte ou PDF. HK Study A crée des flashcards interactives avec l’IA.",
     "continue": "Continuer avec Google / e-mail",
     "createAccount": "Créer un compte",
     "agree": "En continuant, vous acceptez les <terms>Conditions</terms> et la <privacy>Politique de confidentialité</privacy>.",
@@ -233,7 +233,7 @@
     "copied": "Copied!",
     "empty": "No public decks match these filters.",
     "cards": "{count} cards",
-    "bySeed": "Study A pack",
+    "bySeed": "HK Study A pack",
     "visibility": "Visibility",
     "private": "Private",
     "unlisted": "Unlisted (link only)",

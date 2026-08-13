@@ -22,7 +22,7 @@ export function ShareControls({
 
   const token = link?.split("/share/")[1] ?? null;
   const embedSnippet = token
-    ? `<iframe src="${appUrl}/embed/${token}" title="Study A" width="100%" height="520" style="border:0;border-radius:16px;" loading="lazy" referrerpolicy="no-referrer"></iframe>`
+    ? `<iframe src="${appUrl}/embed/${token}" title="HK Study A" width="100%" height="520" style="border:0;border-radius:16px;" loading="lazy" referrerpolicy="no-referrer"></iframe>`
     : null;
 
   function createOrRotate() {

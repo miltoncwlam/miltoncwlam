@@ -20,7 +20,7 @@ export async function AppHeader({ session }: { session: AppSession | null }) {
     <header className="app-header">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-4">
         <Link className="app-brand" href="/">
-          Study A
+          HK Study A
         </Link>
         <nav
           className="flex flex-wrap items-center justify-end gap-3"

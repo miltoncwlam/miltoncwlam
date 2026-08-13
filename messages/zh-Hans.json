@@ -1,6 +1,6 @@
 {
   "meta": {
-    "product": "Study A"
+    "product": "HK Study A"
   },
   "nav": {
     "myDecks": "我的牌组",
@@ -21,7 +21,7 @@
   "landing": {
     "eyebrow": "從任何內容學習",
     "title": "把筆記變成值得收藏的牌組。",
-    "subtitle": "上传文字或 PDF。Study A 用 AI 做成可翻面、评分、洗牌与分享的闪卡。",
+    "subtitle": "上传文字或 PDF。HK Study A 用 AI 做成可翻面、评分、洗牌与分享的闪卡。",
     "continue": "使用 Google / 電子郵件繼續",
     "createAccount": "建立帳號",
     "agree": "继续即表示你同意我们的 <terms>服务条款</terms> 与 <privacy>隐私权政策</privacy>。",
@@ -165,7 +165,7 @@
     "privacyTitle": "隐私权政策",
     "termsTitle": "服务条款",
     "cookiesTitle": "Cookie 說明",
-    "notLegalAdvice": "本頁說明 Study A 目前如何運作，並非法律意見。",
+    "notLegalAdvice": "本頁說明 HK Study A 目前如何運作，並非法律意見。",
     "governingLanguage": "本政策以英文版本为准。应用内其他语言仅用于界面。"
   },
   "privacy": {
@@ -233,7 +233,7 @@
     "copied": "Copied!",
     "empty": "No public decks match these filters.",
     "cards": "{count} cards",
-    "bySeed": "Study A pack",
+    "bySeed": "HK Study A pack",
     "visibility": "Visibility",
     "private": "Private",
     "unlisted": "Unlisted (link only)",

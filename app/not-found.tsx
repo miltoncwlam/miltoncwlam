@@ -6,7 +6,7 @@ export default function NotFound() {
       <section className="empty-state">
         <h1 className="text-2xl font-black">Page not found</h1>
         <p className="mt-2 text-slate-600">
-          That link does not match any page in Study A.
+          That link does not match any page in HK Study A.
         </p>
         <Link className="primary-button mt-6 inline-block" href="/">
           Back home
