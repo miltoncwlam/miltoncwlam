@@ -200,7 +200,9 @@ export function MazeChaseGame({
       <div className="play-maze-board">
         <div
           className="play-maze-grid"
-          style={{ gridTemplateColumns: `repeat(${MAZE[0]!.length}, 1.55rem)` }}
+          style={{
+            gridTemplateColumns: `repeat(${MAZE[0]!.length}, var(--maze-cell, 1.55rem))`,
+          }}
         >
           {MAZE.flatMap((row, r) =>
             row.split("").map((cell, c) => {

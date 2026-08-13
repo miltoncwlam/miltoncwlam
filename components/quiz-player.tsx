@@ -2,7 +2,9 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
+import { WhyBox } from "@/components/play/play-shell";
 import { answerQuizAction } from "@/lib/actions/quizzes";
 import { useSwipe } from "@/lib/hooks/use-swipe";
 import {
@@ -24,6 +26,7 @@ export function QuizPlayer({
   initialSession: QuizSession;
   readOnly?: boolean;
 }) {
+  const t = useTranslations("quiz");
   const router = useRouter();
   const [session, setSession] = useState(initialSession);
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
@@ -60,16 +63,15 @@ export function QuizPlayer({
       ? Math.round((session.score / session.total) * 100)
       : 0;
     return (
-      <section className="mx-auto max-w-lg rounded-3xl border-4 border-amber-300 bg-gradient-to-b from-amber-50 to-orange-100 p-8 text-center shadow-xl">
-        <p className="text-xs font-black uppercase tracking-[0.25em] text-amber-800">
-          Quiz clear
-        </p>
-        <h2 className="mt-3 text-3xl font-black text-slate-950">
-          {session.score}/{session.total} correct
+      <section className="play-finish mx-auto max-w-lg">
+        <div className="play-finish-cup" aria-hidden>
+          {pct >= 50 ? "🏆" : "💀"}
+        </div>
+        <p className="eyebrow mt-2">{t("clear")}</p>
+        <h2 className="page-title mt-2">
+          {session.score}/{session.total}
         </h2>
-        <p className="mt-2 text-slate-700">
-          {pct}% accuracy · +{session.score * 10} XP
-        </p>
+        <p className="page-subtitle">{t("accuracy", { pct })}</p>
         {!readOnly ? (
           <div className="mt-8 flex justify-center gap-3">
             <button
@@ -77,14 +79,14 @@ export function QuizPlayer({
               onClick={() => router.push(`/decks/${deckId}`)}
               type="button"
             >
-              Back to deck
+              {t("backToDeck")}
             </button>
             <button
               className="primary-button"
               onClick={() => router.push(`/decks/${deckId}/study`)}
               type="button"
             >
-              Study cards
+              {t("studyCards")}
             </button>
           </div>
         ) : null}
@@ -93,42 +95,23 @@ export function QuizPlayer({
   }
 
   if (!card) {
-    return <p className="empty-state">Quiz card missing.</p>;
+    return <p className="empty-state">{t("missing")}</p>;
   }
 
   return (
-    <section className="study-mobile mx-auto max-w-xl space-y-5" {...swipe}>
-      <div className="flex items-center justify-between text-sm font-bold text-slate-600">
-        <span>
-          Question {session.currentIndex + 1} / {session.total}
+    <section className="play-stage play-stage--arena study-mobile mx-auto max-w-xl" {...swipe}>
+      <div className="play-hud">
+        <h2 className="play-hud-title">{t("title")}</h2>
+        <span className="play-hud-score">
+          {session.score}/{session.total}
+          {` · ${session.currentIndex + 1}/${session.total}`}
         </span>
-        <span className="rounded-full bg-amber-100 px-3 py-1 text-amber-900">
-          Score {session.score}
-        </span>
       </div>
-      <p className="text-center text-xs text-slate-500 sm:hidden">
-        Large tap targets · landscape-friendly quiz layout
-      </p>
-      <div className="h-2 overflow-hidden rounded-full bg-slate-200">
-        <div
-          className="h-full bg-amber-500 transition-all"
-          style={{
-            width: `${(session.currentIndex / Math.max(session.total, 1)) * 100}%`,
-          }}
-        />
-      </div>
-
-      <div className="tcg-quiz-shell">
-        <p className="tcg-quiz-label">Trainer Challenge</p>
-        <h2 className="mt-3 text-2xl font-black leading-snug text-slate-950">
-          {card.front.replace(/\{\{blank\}\}/gi, "____")}
-        </h2>
-      </div>
-
-      <div className="grid gap-3">
-        {choices.map((choice) => (
+      <p className="play-prompt">{card.front.replace(/\{\{blank\}\}/gi, "____")}</p>
+      <div className="grid gap-2">
+        {choices.map((choice, i) => (
           <button
-            className="tcg-choice"
+            className="play-choice"
             disabled={isPending || Boolean(feedback)}
             key={choice}
             onClick={() =>
@@ -160,27 +143,20 @@ export function QuizPlayer({
             }
             type="button"
           >
+            <span className="play-choice-letter">
+              {String.fromCharCode(65 + i)}
+            </span>
             {choice}
           </button>
         ))}
       </div>
 
       {feedback ? (
-        <div className="space-y-3 text-center">
-          <p
-            className={`text-sm font-black ${
-              feedback === "correct" ? "text-emerald-700" : "text-rose-700"
-            }`}
-          >
-            {feedback === "correct" ? "Correct! +10 XP" : "Not quite — keep going"}
-          </p>
-          {explanation ? (
-            <p className="text-sm leading-relaxed text-slate-700">{explanation}</p>
-          ) : null}
-          <button className="primary-button" onClick={continueQuiz} type="button">
-            Continue
-          </button>
-        </div>
+        <WhyBox
+          ok={feedback === "correct"}
+          onContinue={continueQuiz}
+          why={explanation}
+        />
       ) : null}
     </section>
   );

@@ -149,7 +149,23 @@
     "empty": "此牌組尚無卡片。",
     "finished": "你已複習完全部 {count} 張卡。",
     "previous": "上一張",
-    "next": "下一張"
+    "next": "下一張",
+    "dueEmpty": "今天沒有到期卡片",
+    "dueEmptyBody": "可以玩到期卡片、進行測驗，或複習整副牌組。",
+    "playDue": "玩到期卡片",
+    "quizInstead": "測驗對戰",
+    "studyAll": "複習全部卡片",
+    "session": "學習進度",
+    "sessionDue": "今日到期",
+    "dueCount": "{count} 張到期",
+    "continuing": "從第 {current} / {total} 張繼續。",
+    "startOver": "重新開始",
+    "soundOn": "音效開",
+    "soundOff": "音效關",
+    "swipeHint": "滑動可換卡",
+    "cardOf": "第 {current} / {total} 張",
+    "speakPrompt": "朗讀題目",
+    "speakAnswer": "朗讀答案"
   },
   "share": {
     "title": "唯讀分享",
@@ -254,5 +270,169 @@
     "approved": "Listed in community",
     "makeUnlisted": "Share unlisted link",
     "makePrivate": "Make private"
+  },
+  "quiz": {
+    "title": "測驗對戰",
+    "subtitle": "選出正確答案，累積連勝。",
+    "clear": "測驗完成",
+    "accuracy": "正確率 {pct}%",
+    "backToDeck": "返回牌組",
+    "studyCards": "學習卡片",
+    "missing": "找不到這題。"
+  },
+  "account": {
+    "back": "返回牌組",
+    "eyebrow": "帳戶",
+    "title": "設定",
+    "signedIn": "已登入為 {email}。密碼與電郵登入在下方管理。",
+    "deleteTitle": "刪除帳戶",
+    "deleteBody": "刪除帳戶只能以電郵申請。請寫信至 {email}，我們會刪除你的帳戶資料。"
+  },
+  "play": {
+    "backToDeck": "返回牌組",
+    "eyebrow": "課堂活動",
+    "title": "遊戲 · {deck}",
+    "subtitle": "同一副卡片，二十六個遊戲房。每局先扣能量；勝率 50% 以上可取回，全對可獲雙倍。",
+    "dueCards": "使用到期卡片（{count}）· 顯示全部",
+    "dueToday": "只顯示今日到期",
+    "youWon": "你贏了",
+    "roundOver": "本局結束",
+    "playAgain": "再玩一次",
+    "moreActivities": "更多活動",
+    "continue": "繼續",
+    "anteing": "正在下注 {stake} 能量…",
+    "quitWarning": "中途離開此頁，{stake} 能量不會退回。",
+    "needEnergy": "能量不足",
+    "slowDown": "請稍候",
+    "anteHelp": "每局先扣 {stake} 能量。未完成就離開則下注作廢。勝率 50% 以上可取回；80% 以上得 30；全對得 40。",
+    "timeUp": "時間到！",
+    "stakeReturned": "下注已退回 — 打得漂亮。",
+    "anteKept": "下注留在獎池。",
+    "payoutProfit": "+{payout} 能量退回 · 淨賺 {net}",
+    "payoutEven": "+{payout} 能量退回 · 下注已還",
+    "payoutLoss": "已扣 {stake} 能量 · 下注未退",
+    "exactMatch": "完全相符",
+    "aiAccepted": "AI 判定正確",
+    "niceHit": "答對了",
+    "miss": "未答中",
+    "speak": "朗讀",
+    "sayAloud": "先大聲說出答案，再揭曉。",
+    "reveal": "揭曉",
+    "gotIt": "我答對了",
+    "groups": {
+      "pairing": "配對",
+      "recall": "回憶",
+      "classify": "分類",
+      "picture": "圖片",
+      "quiz": "測驗",
+      "puzzle": "解謎",
+      "arcade": "快攻"
+    },
+    "templates": {
+      "match-up": {
+        "name": "配對",
+        "blurb": "先點詞語，再點定義。"
+      },
+      "matching-pairs": {
+        "name": "翻牌配對",
+        "blurb": "翻兩張牌，把題目與答案配對。"
+      },
+      "find-the-match": {
+        "name": "找出配對",
+        "blurb": "點選對應答案，直到全部配完。"
+      },
+      "type-the-answer": {
+        "name": "輸入答案",
+        "blurb": "看題目，輸入答案。"
+      },
+      "spell-the-word": {
+        "name": "拼字",
+        "blurb": "用字母磚拼出短答案。"
+      },
+      "unjumble": {
+        "name": "重組字母",
+        "blurb": "把打亂的字母排回正確順序。"
+      },
+      "hangman": {
+        "name": "猜字母",
+        "blurb": "猜短答案的字母，最多錯六次。"
+      },
+      "complete-the-sentence": {
+        "name": "完成句子",
+        "blurb": "從詞卡中選出缺漏的字。"
+      },
+      "true-or-false": {
+        "name": "是非題",
+        "blurb": "這組配對是真的，還是從別張卡換過來的？"
+      },
+      "open-the-box": {
+        "name": "開寶箱",
+        "blurb": "選一個箱子，再回答裡面的卡片。"
+      },
+      "group-sort": {
+        "name": "分類",
+        "blurb": "把每張卡放到所屬類別。"
+      },
+      "odd-one-out": {
+        "name": "找出異類",
+        "blurb": "三個同類，點出那個不同的。"
+      },
+      "rank-order": {
+        "name": "排序",
+        "blurb": "依牌組學習順序排列卡片。"
+      },
+      "image-quiz": {
+        "name": "看圖選擇",
+        "blurb": "看圖片，選出對應名稱。"
+      },
+      "crossword": {
+        "name": "填字",
+        "blurb": "依提示填入短答案。"
+      },
+      "wordsearch": {
+        "name": "找字",
+        "blurb": "在格子中找出隱藏的短答案。"
+      },
+      "gameshow-quiz": {
+        "name": "益智問答",
+        "blurb": "選擇題，100 / 200 / 300 分。"
+      },
+      "win-or-lose": {
+        "name": "三條命問答",
+        "blurb": "三條命。錯三次就結束。"
+      },
+      "speaking-cards": {
+        "name": "朗讀卡",
+        "blurb": "大聲說出答案，再自行核對。"
+      },
+      "whack-a-mole": {
+        "name": "打地鼠",
+        "blurb": "點擊帶有正確答案的地鼠。"
+      },
+      "balloon-pop": {
+        "name": "氣球爆破",
+        "blurb": "爆破對應題目的氣球。"
+      },
+      "speed-sort": {
+        "name": "限時分類",
+        "blurb": "六十秒內完成分類。"
+      },
+      "maze-chase": {
+        "name": "迷宮追逐",
+        "blurb": "走向正確出口，避開追兵。"
+      },
+      "airplane": {
+        "name": "飛機",
+        "blurb": "飛進寫有正確答案的雲。"
+      },
+      "labelled-diagram": {
+        "name": "圖解標籤",
+        "blurb": "把圖上的圖片配上標籤。"
+      },
+      "label-match": {
+        "name": "標籤配對",
+        "blurb": "點選標籤放到對應圖片上。"
+      }
+    }
   }
 }

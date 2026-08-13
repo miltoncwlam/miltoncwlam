@@ -149,7 +149,23 @@
     "empty": "카드가 없습니다.",
     "finished": "{count}장을 모두 복습했습니다.",
     "previous": "이전",
-    "next": "다음"
+    "next": "다음",
+    "dueEmpty": "오늘 복습할 카드가 없습니다",
+    "dueEmptyBody": "기한 카드로 놀거나 퀴즈를 보거나 전체 덱을 공부하세요.",
+    "playDue": "기한 카드로 플레이",
+    "quizInstead": "퀴즈 배틀",
+    "studyAll": "모든 카드 공부",
+    "session": "학습 세션",
+    "sessionDue": "오늘 기한",
+    "dueCount": "기한 {count}장",
+    "continuing": "{current} / {total}번째 카드부터 이어갑니다.",
+    "startOver": "처음부터",
+    "soundOn": "소리 켜짐",
+    "soundOff": "소리 꺼짐",
+    "swipeHint": "밀어 카드를 바꾸세요",
+    "cardOf": "{current} / {total}번째 카드",
+    "speakPrompt": "문제 읽기",
+    "speakAnswer": "답 읽기"
   },
   "share": {
     "title": "읽기 전용 공유",
@@ -254,5 +270,169 @@
     "illustratedTopics": "Illustrated topics",
     "attachImages": "Add licensed pictures",
     "study": "Study"
+  },
+  "quiz": {
+    "title": "퀴즈 배틀",
+    "subtitle": "정답을 고르고 연속을 이어 가세요.",
+    "clear": "퀴즈 완료",
+    "accuracy": "정답률 {pct}%",
+    "backToDeck": "덱으로",
+    "studyCards": "카드 공부",
+    "missing": "이 문항을 찾을 수 없습니다."
+  },
+  "account": {
+    "back": "덱으로",
+    "eyebrow": "계정",
+    "title": "설정",
+    "signedIn": "{email}(으)로 로그인됨. 비밀번호와 이메일 로그인은 아래에서 관리합니다.",
+    "deleteTitle": "계정 삭제",
+    "deleteBody": "계정 삭제는 이메일로만 요청할 수 있습니다. {email}로 연락하면 계정 데이터를 삭제합니다."
+  },
+  "play": {
+    "backToDeck": "덱으로",
+    "eyebrow": "수업 활동",
+    "title": "플레이 · {deck}",
+    "subtitle": "같은 카드, 26개 게임. 라운드마다 에너지를 먼저 씁니다. 50% 이상이면 돌려받고, 만점은 두 배입니다.",
+    "dueCards": "기한 카드 사용({count}) · 전체 보기",
+    "dueToday": "오늘 기한만",
+    "youWon": "승리",
+    "roundOver": "라운드 종료",
+    "playAgain": "다시 하기",
+    "moreActivities": "다른 활동",
+    "continue": "계속",
+    "anteing": "{stake} 에너지 베팅 중…",
+    "quitWarning": "이 페이지를 떠나면 {stake}은 돌려받지 못합니다.",
+    "needEnergy": "에너지 부족",
+    "slowDown": "잠시만요",
+    "anteHelp": "한 판에 {stake} 에너지. 중간에 나가면 베팅은 사라집니다. 50% 이상이면 반환, 80% 이상은 30, 만점은 40.",
+    "timeUp": "시간 종료!",
+    "stakeReturned": "베팅이 돌아왔습니다.",
+    "anteKept": "베팅은 팟에 남습니다.",
+    "payoutProfit": "+{payout} 에너지 반환 · 이익 {net}",
+    "payoutEven": "+{payout} 에너지 반환 · 베팅 반환",
+    "payoutLoss": "{stake} 사용 · 베팅 미반환",
+    "exactMatch": "정확히 일치",
+    "aiAccepted": "AI가 정답으로 인정",
+    "niceHit": "정답",
+    "miss": "틀림",
+    "speak": "읽기",
+    "sayAloud": "답을 소리 내 말한 뒤 확인하세요.",
+    "reveal": "정답 보기",
+    "gotIt": "맞혔어요",
+    "groups": {
+      "pairing": "짝 맞추기",
+      "recall": "회상",
+      "classify": "분류",
+      "picture": "그림",
+      "quiz": "퀴즈",
+      "puzzle": "퍼즐",
+      "arcade": "스피드"
+    },
+    "templates": {
+      "match-up": {
+        "name": "짝 맞추기",
+        "blurb": "용어를 누른 뒤 정의를 고르세요."
+      },
+      "matching-pairs": {
+        "name": "카드 뒤집기",
+        "blurb": "두 장을 뒤집어 문제와 답을 짝지으세요."
+      },
+      "find-the-match": {
+        "name": "짝 찾기",
+        "blurb": "맞는 답을 눌러 모두 비우세요."
+      },
+      "type-the-answer": {
+        "name": "답 입력",
+        "blurb": "문제를 읽고 답을 입력하세요."
+      },
+      "spell-the-word": {
+        "name": "철자",
+        "blurb": "글자 타일로 짧은 답을 만드세요."
+      },
+      "unjumble": {
+        "name": "글자 맞추기",
+        "blurb": "섞인 글자를 바로 잡으세요."
+      },
+      "hangman": {
+        "name": "행맨",
+        "blurb": "짧은 답의 글자를 맞히세요. 여섯 번까지."
+      },
+      "complete-the-sentence": {
+        "name": "문장 완성",
+        "blurb": "빠진 단어를 칩에서 고르세요."
+      },
+      "true-or-false": {
+        "name": "참/거짓",
+        "blurb": "이 짝이 진짜인가요, 다른 카드에서 바뀌었나요?"
+      },
+      "open-the-box": {
+        "name": "상자 열기",
+        "blurb": "상자를 고른 뒤 안의 카드에 답하세요."
+      },
+      "group-sort": {
+        "name": "분류하기",
+        "blurb": "각 카드를 범주 통에 넣으세요."
+      },
+      "odd-one-out": {
+        "name": "다른 하나",
+        "blurb": "셋은 같고 다른 하나를 누르세요."
+      },
+      "rank-order": {
+        "name": "순서 맞추기",
+        "blurb": "덱 학습 순서로 카드를 놓으세요."
+      },
+      "image-quiz": {
+        "name": "그림 퀴즈",
+        "blurb": "그림을 보고 맞는 이름을 고르세요."
+      },
+      "crossword": {
+        "name": "십자말풀이",
+        "blurb": "힌트로 짧은 답을 채우세요."
+      },
+      "wordsearch": {
+        "name": "단어 찾기",
+        "blurb": "격자에서 숨은 짧은 답을 찾으세요."
+      },
+      "gameshow-quiz": {
+        "name": "퀴즈쇼",
+        "blurb": "객관식 100 / 200 / 300점."
+      },
+      "win-or-lose": {
+        "name": "목숨 세 개",
+        "blurb": "목숨 세 개. 세 번 틀리면 끝."
+      },
+      "speaking-cards": {
+        "name": "말하기 카드",
+        "blurb": "답을 말한 뒤 스스로 확인하세요."
+      },
+      "whack-a-mole": {
+        "name": "두더지 잡기",
+        "blurb": "정답이 적힌 두더지를 누르세요."
+      },
+      "balloon-pop": {
+        "name": "풍선 터뜨리기",
+        "blurb": "문제에 맞는 풍선을 터뜨리세요."
+      },
+      "speed-sort": {
+        "name": "스피드 분류",
+        "blurb": "60초 안에 분류하세요."
+      },
+      "maze-chase": {
+        "name": "미로 추격",
+        "blurb": "맞는 출구로 가고 추격자를 피하세요."
+      },
+      "airplane": {
+        "name": "비행기",
+        "blurb": "정답이 적힌 구름으로 날아가세요."
+      },
+      "labelled-diagram": {
+        "name": "그림 라벨",
+        "blurb": "도감 그림과 라벨을 맞추세요."
+      },
+      "label-match": {
+        "name": "라벨 맞추기",
+        "blurb": "라벨을 해당 그림에 놓으세요."
+      }
+    }
   }
 }

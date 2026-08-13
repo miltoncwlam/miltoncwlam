@@ -10,6 +10,14 @@ import { PLAY_TEMPLATE_IDS } from "@/lib/play/templates";
 import type { CommunitySeedPack } from "@/lib/data/community-packs/types";
 import type { Flashcard } from "@/lib/types/flashcard";
 
+import en from "../../messages/en.json";
+import es from "../../messages/es.json";
+import fr from "../../messages/fr.json";
+import ja from "../../messages/ja.json";
+import ko from "../../messages/ko.json";
+import zhHans from "../../messages/zh-Hans.json";
+import zhHant from "../../messages/zh-Hant.json";
+
 function asCards(pack: CommunitySeedPack, withImages = false): Flashcard[] {
   return pack.cards.map((card, index) => ({
     id: `${pack.slug}-${index}`,
@@ -78,5 +86,30 @@ describe("play templates", () => {
     )!;
     const list = asCards(matter);
     expect(templateReason("group-sort", list)).toBeNull();
+  });
+});
+
+function messageKeys(value: unknown, prefix = ""): string[] {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return prefix ? [prefix] : [];
+  }
+  return Object.entries(value).flatMap(([key, child]) =>
+    messageKeys(child, prefix ? `${prefix}.${key}` : key),
+  );
+}
+
+describe("locale catalogs", () => {
+  it("keeps the same keys in every locale file", () => {
+    const expected = messageKeys(en).sort();
+    for (const catalog of [es, fr, ja, ko, zhHans, zhHant]) {
+      expect(messageKeys(catalog).sort()).toEqual(expected);
+    }
+  });
+
+  it("names every play template", () => {
+    for (const id of PLAY_TEMPLATE_IDS) {
+      expect(en.play.templates[id].name.length).toBeGreaterThan(0);
+      expect(en.play.templates[id].blurb.length).toBeGreaterThan(0);
+    }
   });
 });

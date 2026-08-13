@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   disableSharingAction,
@@ -17,6 +18,7 @@ export function ShareControls({
   isShared: boolean;
   appUrl: string;
 }) {
+  const t = useTranslations("play");
   const [link, setLink] = useState<string | null>(null);
   const [shared, setShared] = useState(isShared);
   const [pending, startTransition] = useTransition();
@@ -83,7 +85,7 @@ export function ShareControls({
             >
               {PLAY_TEMPLATES.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.name}
+                  {t(`templates.${item.id}.name`)}
                 </option>
               ))}
             </select>

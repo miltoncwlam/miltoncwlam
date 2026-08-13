@@ -2,6 +2,7 @@
 
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PlayDispatcher } from "@/components/play/play-dispatcher";
@@ -11,6 +12,8 @@ import { PLAY_TEMPLATE_IDS, type PlayTemplateId } from "@/lib/play/templates";
 import { templateReason } from "@/lib/play/eligibility";
 import type { CommunitySeedPack } from "@/lib/data/community-packs/types";
 import type { Flashcard } from "@/lib/types/flashcard";
+
+import en from "../../messages/en.json";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
@@ -90,7 +93,9 @@ async function mount(template: PlayTemplateId) {
   live.push({ root, node });
   await act(async () => {
     root.render(
-      <PlayDispatcher cards={cards} deckId={cards[0]!.deckId} template={template} />,
+      <NextIntlClientProvider locale="en" messages={en}>
+        <PlayDispatcher cards={cards} deckId={cards[0]!.deckId} template={template} />
+      </NextIntlClientProvider>,
     );
   });
   for (let i = 0; i < 12; i += 1) {

@@ -15,6 +15,7 @@ import { PLAY_TEMPLATES } from "@/lib/play/templates";
 import { PLAY_SKIN_EMOJI, PLAY_SKINS } from "@/lib/play/worlds";
 import { shuffleIds } from "@/lib/study/shuffle";
 import type { QuizSession } from "@/lib/types/flashcard";
+import { getTranslations } from "next-intl/server";
 
 export async function generateMetadata({
   params,
@@ -36,6 +37,7 @@ export default async function SharedDeckPage({
 }) {
   const { token } = await params;
   const query = await searchParams;
+  const t = await getTranslations("play");
   const [deck, session] = await Promise.all([getSharedDeck(token), getSession()]);
   if (!deck) notFound();
 
@@ -111,7 +113,7 @@ export default async function SharedDeckPage({
           />
           <section className="mt-10">
             <h2 className="text-sm font-black uppercase tracking-[0.2em] text-[var(--muted)]">
-              Classroom activities
+              {t("eyebrow")}
             </h2>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               {PLAY_TEMPLATES.map((item) => (
@@ -120,8 +122,8 @@ export default async function SharedDeckPage({
                   href={`${home}?activity=${item.id}`}
                   key={item.id}
                 >
-                  <p className="font-bold">{item.name}</p>
-                  <p className="mt-1 text-sm">{item.blurb}</p>
+                  <p className="font-bold">{t(`templates.${item.id}.name`)}</p>
+                  <p className="mt-1 text-sm">{t(`templates.${item.id}.blurb`)}</p>
                   <span className="play-pick-emoji" aria-hidden>
                     {PLAY_SKIN_EMOJI[PLAY_SKINS[item.id]]}
                   </span>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { requireSession } from "@/lib/auth-server";
 import { getDeckWithCards } from "@/lib/data/decks";
@@ -8,15 +9,15 @@ import { classAssignFromQuery, classJoinPath, playAssignSearch } from "@/lib/pla
 import { templatesForDeck } from "@/lib/play/eligibility";
 import { PLAY_SKIN_EMOJI, PLAY_SKINS } from "@/lib/play/worlds";
 
-const GROUPS: { id: string; label: string }[] = [
-  { id: "pairing", label: "Match" },
-  { id: "recall", label: "Recall" },
-  { id: "classify", label: "Sort" },
-  { id: "picture", label: "Pictures" },
-  { id: "quiz", label: "Quiz" },
-  { id: "puzzle", label: "Puzzles" },
-  { id: "arcade", label: "Quick fire" },
-];
+const GROUPS = [
+  "pairing",
+  "recall",
+  "classify",
+  "picture",
+  "quiz",
+  "puzzle",
+  "arcade",
+] as const;
 
 export default async function DeckPlayPage({
   params,
@@ -26,6 +27,7 @@ export default async function DeckPlayPage({
   searchParams: Promise<{ due?: string; lock?: string; class?: string; activity?: string }>;
 }) {
   const session = await requireSession();
+  const t = await getTranslations("play");
   const { deckId } = await params;
   const query = await searchParams;
   const deck = await getDeckWithCards(deckId, session.user.id);
@@ -50,37 +52,34 @@ export default async function DeckPlayPage({
   return (
     <main className="page-shell">
       <Link className="text-button" href={`/decks/${deck.id}`}>
-        ← Back to deck
+        ← {t("backToDeck")}
       </Link>
       <div className="mt-6 mb-8">
-        <p className="eyebrow">Classroom activities</p>
-        <h1 className="page-title">Play · {deck.title}</h1>
-        <p className="page-subtitle">
-          Same cards, twenty-six arcade rooms. Each round costs energy; win 50%+
-          to get it back, and a perfect run pays double.
-        </p>
+        <p className="eyebrow">{t("eyebrow")}</p>
+        <h1 className="page-title">{t("title", { deck: deck.title })}</h1>
+        <p className="page-subtitle">{t("subtitle")}</p>
         <p className="mt-3 text-sm">
           {assign.dueOnly ? (
             <Link className="text-button" href={`/decks/${deck.id}/play${playAssignSearch({ ...assign, dueOnly: false })}`}>
-              Using due cards ({cards.length}) · Show all
+              {t("dueCards", { count: cards.length })}
             </Link>
           ) : (
             <Link
               className="text-button"
               href={`/decks/${deck.id}/play${playAssignSearch({ ...assign, dueOnly: true })}`}
             >
-              Due today only
+              {t("dueToday")}
             </Link>
           )}
         </p>
       </div>
       {GROUPS.map((group) => {
-        const items = templates.filter((item) => item.group === group.id);
+        const items = templates.filter((item) => item.group === group);
         if (!items.length) return null;
         return (
-          <section className="mb-8 space-y-3" key={group.id}>
+          <section className="mb-8 space-y-3" key={group}>
             <h2 className="text-sm font-black uppercase tracking-[0.2em] text-[var(--muted)]">
-              {group.label}
+              {t(`groups.${group}`)}
             </h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {items.map((item) =>
@@ -89,7 +88,7 @@ export default async function DeckPlayPage({
                     className={`play-pick is-blocked play-stage--${PLAY_SKINS[item.id]}`}
                     key={item.id}
                   >
-                    <p className="font-bold">{item.name}</p>
+                    <p className="font-bold">{t(`templates.${item.id}.name`)}</p>
                     <p className="mt-1 text-sm">{item.blocked}</p>
                     <span className="play-pick-emoji" aria-hidden>
                       {PLAY_SKIN_EMOJI[PLAY_SKINS[item.id]]}
@@ -101,8 +100,8 @@ export default async function DeckPlayPage({
                     href={`/decks/${deck.id}/play/${item.id}${dueQuery}`}
                     key={item.id}
                   >
-                    <p className="font-bold">{item.name}</p>
-                    <p className="mt-1 text-sm">{item.blurb}</p>
+                    <p className="font-bold">{t(`templates.${item.id}.name`)}</p>
+                    <p className="mt-1 text-sm">{t(`templates.${item.id}.blurb`)}</p>
                     <span className="play-pick-emoji" aria-hidden>
                       {PLAY_SKIN_EMOJI[PLAY_SKINS[item.id]]}
                     </span>

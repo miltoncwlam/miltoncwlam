@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   createClassLinkAction,
@@ -20,6 +21,7 @@ export function ClassLinkControls({
     revoked_at: Date | null;
   }>;
 }) {
+  const t = useTranslations("play");
   const [freshLink, setFreshLink] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [activity, setActivity] = useState("");
@@ -46,7 +48,7 @@ export function ClassLinkControls({
           <option value="">Any play activity</option>
           {PLAY_TEMPLATES.map((item) => (
             <option key={item.id} value={item.id}>
-              {item.name}
+              {t(`templates.${item.id}.name`)}
             </option>
           ))}
         </select>

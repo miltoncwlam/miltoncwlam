@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 
+import { useCardSpeech } from "@/components/flash-card";
 import { gradeTypedAnswerAction } from "@/lib/actions/games";
 import { clozeBlank, promptText, shortTarget, spellingWord } from "@/lib/play/answers";
 import { quizExplanation } from "@/lib/quiz/choices";
@@ -378,6 +380,8 @@ export function SpeakingCardsGame({
   cards: Flashcard[];
   deckId: string;
 }) {
+  const t = useTranslations("play");
+  const speak = useCardSpeech();
   const pool = useMemo(() => shuffleList(cards).slice(0, 12), [cards]);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -397,7 +401,7 @@ export function SpeakingCardsGame({
 
   return (
     <PlayShell maxScore={pool.length} score={score} skin="talk" title="Speaking cards">
-      <p className="play-muted">Say the answer out loud, then reveal.</p>
+      <p className="play-muted">{t("sayAloud")}</p>
       <div className="play-talk-card">
         <MicSvg />
         <p className="play-prompt mb-0">{promptText(card)}</p>
@@ -405,13 +409,20 @@ export function SpeakingCardsGame({
           <p className="mt-4 text-lg font-bold">{shortTarget(card) ?? card.back}</p>
         ) : null}
       </div>
+      <button
+        className="secondary-button mt-4"
+        onClick={() => void speak(promptText(card))}
+        type="button"
+      >
+        {t("speak")}
+      </button>
       {!revealed ? (
         <button
           className="primary-button mt-4"
           onClick={() => setRevealed(true)}
           type="button"
         >
-          Reveal
+          {t("reveal")}
         </button>
       ) : (
         <div className="mt-4 flex justify-center gap-3">
@@ -423,7 +434,7 @@ export function SpeakingCardsGame({
             }}
             type="button"
           >
-            Miss
+            {t("miss")}
           </button>
           <button
             className="primary-button"
@@ -434,7 +445,7 @@ export function SpeakingCardsGame({
             }}
             type="button"
           >
-            I got it
+            {t("gotIt")}
           </button>
         </div>
       )}

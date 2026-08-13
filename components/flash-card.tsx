@@ -1,6 +1,6 @@
 "use client";
 
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRef } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,35 @@ function normalizeAnswer(value: string) {
   return value.trim().toLowerCase();
 }
 
+export function useCardSpeech() {
+  const locale = useLocale() as AppLocale;
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  return async function speak(text: string) {
+    if (typeof window === "undefined" || !text.trim()) return;
+    audioRef.current?.pause();
+    audioRef.current = null;
+
+    try {
+      const response = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, locale }),
+      });
+      if (!response.ok) return;
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => URL.revokeObjectURL(url);
+      await audio.play();
+    } catch {
+      // Ignore playback errors (autoplay blocks, network, etc.)
+    }
+  };
+}
+
 export function FlashCard({
   front,
   back,
@@ -73,9 +102,9 @@ export function FlashCard({
   selectedOption?: string | null;
   onSelectOption?: (option: string) => void;
 }) {
-  const locale = useLocale() as AppLocale;
+  const t = useTranslations("study");
   const credit = formatImageCredit(imageAttribution);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const speak = useCardSpeech();
   const meta = typeMeta(cardType);
   const isMcq = cardType === "mcq" && Boolean(options?.length);
   const answered = selectedOption != null;
@@ -87,30 +116,6 @@ export function FlashCard({
           normalizeAnswer(option) === normalizeAnswer(back) &&
           normalizeAnswer(option) === normalizeAnswer(selectedOption),
       ));
-
-  async function speak(text: string) {
-    if (typeof window === "undefined" || !text.trim()) return;
-    audioRef.current?.pause();
-    audioRef.current = null;
-
-    try {
-      const response = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, locale }),
-      });
-      if (!response.ok) return;
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audioRef.current = audio;
-      audio.onended = () => URL.revokeObjectURL(url);
-      await audio.play();
-    } catch {
-      // Ignore playback errors (autoplay blocks, network, etc.)
-    }
-  }
 
   return (
     <div className="mx-auto w-full max-w-md space-y-3 text-left">
@@ -207,7 +212,7 @@ export function FlashCard({
           type="button"
           variant="secondary"
         >
-          Speak {flipped ? "answer" : "prompt"}
+          {flipped ? t("speakAnswer") : t("speakPrompt")}
         </Button>
       </div>
 

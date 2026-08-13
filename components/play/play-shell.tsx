@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import {
   completeGameRunAction,
@@ -76,6 +77,7 @@ export function PlayStakeGate({
   children: React.ReactNode;
 }) {
   const parent = useContext(PlayOptionsContext);
+  const t = useTranslations("play");
   const [clientKey, setClientKey] = useState("");
   const [stake, setStake] = useState(parent.readOnly ? 0 : PLAY_STAKE);
   const [ready, setReady] = useState(Boolean(parent.readOnly));
@@ -109,14 +111,10 @@ export function PlayStakeGate({
           ⚡
         </p>
         <h2 className="page-title mt-2">
-          {error.includes("Too many") ? "Slow down" : "Need energy"}
+          {error.includes("Too many") ? t("slowDown") : t("needEnergy")}
         </h2>
         <p className="page-subtitle">{error}</p>
-        <p className="play-muted mt-3">
-          A round costs {PLAY_STAKE} energy. Leave before you finish and the
-          ante stays spent. Score 50%+ to win it back; 80%+ pays 30; a perfect
-          run pays 40.
-        </p>
+        <p className="play-muted mt-3">{t("anteHelp", { stake: PLAY_STAKE })}</p>
       </section>
     );
   }
@@ -124,10 +122,8 @@ export function PlayStakeGate({
   if (!ready) {
     return (
       <section className="play-finish mx-auto max-w-lg">
-        <p className="play-muted">Anteing {PLAY_STAKE} energy…</p>
-        <p className="play-muted mt-2">
-          Quit or leave this page and the {PLAY_STAKE} stays spent.
-        </p>
+        <p className="play-muted">{t("anteing", { stake: PLAY_STAKE })}</p>
+        <p className="play-muted mt-2">{t("quitWarning", { stake: PLAY_STAKE })}</p>
       </section>
     );
   }
@@ -161,10 +157,15 @@ export function PlayShell({
   children: React.ReactNode;
 }) {
   const options = useContext(PlayOptionsContext);
+  const t = useTranslations("play");
   const skipCount = prefersReducedMotion();
   const [count, setCount] = useState(skipCount ? 0 : 3);
   const started = count <= 0;
-  const initial = clock === false ? 0 : (clock ?? clockSecondsForSkin(skin, title === "Speed sorting"));
+  const timed = options.template === "speed-sort" || title === "Speed sorting";
+  const initial = clock === false ? 0 : (clock ?? clockSecondsForSkin(skin, timed));
+  const heading = options.template
+    ? t(`templates.${options.template}.name`)
+    : title;
   const [remaining, setRemaining] = useState(initial);
   const comboRef = useRef(combo ?? 0);
   const expired = started && initial > 0 && remaining <= 0;
@@ -210,7 +211,7 @@ export function PlayShell({
       <PlayFinished
         deckId={options.deckId}
         maxScore={maxScore}
-        message="Time!"
+        message={t("timeUp")}
         score={score}
         template={options.template}
       />
@@ -221,7 +222,7 @@ export function PlayShell({
     <PlayJuiceContext.Provider value={juice}>
       <section className={`play-stage play-stage--${skin} study-mobile mx-auto max-w-xl`}>
         <div className="play-hud">
-          <h2 className="play-hud-title">{title}</h2>
+          <h2 className="play-hud-title">{heading}</h2>
           <div className="flex items-center gap-2">
             {combo && combo > 1 ? (
               <span className="play-combo">x{combo}</span>
@@ -266,6 +267,7 @@ export function PlayFinished({
   message?: string;
 }) {
   const router = useRouter();
+  const t = useTranslations("play");
   const options = useContext(PlayOptionsContext);
   const saved = useRef(false);
   const [payout, setPayout] = useState<{
@@ -320,20 +322,20 @@ export function PlayFinished({
       <div className="play-finish-cup" aria-hidden>
         {won ? "🏆" : "💀"}
       </div>
-      <p className="eyebrow mt-2">{won ? "You won" : "Round over"}</p>
+      <p className="eyebrow mt-2">{won ? t("youWon") : t("roundOver")}</p>
       <h2 className="page-title mt-2">
         {score}/{maxScore}
       </h2>
       <p className="page-subtitle">
-        {pct}% · {message ?? (won ? "Stake returned — nice run." : "The ante stays in the pot.")}
+        {pct}% · {message ?? (won ? t("stakeReturned") : t("anteKept"))}
       </p>
       {payout && payout.stake > 0 ? (
         <p className="mt-3 font-black">
           {payout.net > 0
-            ? `+${payout.payout} energy back · profit ${payout.net}`
+            ? t("payoutProfit", { payout: payout.payout, net: payout.net })
             : payout.net === 0
-              ? `+${payout.payout} energy back · ante returned`
-              : `${payout.stake} energy spent · ante kept`}
+              ? t("payoutEven", { payout: payout.payout })
+              : t("payoutLoss", { stake: payout.stake })}
         </p>
       ) : null}
       <div className="mt-8 flex justify-center gap-3">
@@ -342,7 +344,7 @@ export function PlayFinished({
           onClick={() => router.push(home)}
           type="button"
         >
-          More activities
+          {t("moreActivities")}
         </button>
         <button
           className="primary-button"
@@ -353,7 +355,7 @@ export function PlayFinished({
           }
           type="button"
         >
-          Play again
+          {t("playAgain")}
         </button>
       </div>
     </section>
@@ -371,6 +373,7 @@ export function WhyBox({
   source?: "exact" | "ai" | "reject";
   onContinue: () => void;
 }) {
+  const t = useTranslations("play");
   const heard = useRef(false);
   useEffect(() => {
     if (heard.current) return;
@@ -380,19 +383,19 @@ export function WhyBox({
 
   const label =
     source === "exact"
-      ? "Exact match"
+      ? t("exactMatch")
       : source === "ai"
-        ? "AI accepted"
+        ? t("aiAccepted")
         : ok
-          ? "Nice hit"
-          : "Miss";
+          ? t("niceHit")
+          : t("miss");
 
   return (
     <div className="play-why space-y-3">
       <p className={ok ? "play-why-ok" : "play-why-miss"}>{label}</p>
       {why ? <p className="play-muted">{why}</p> : null}
       <button className="primary-button" onClick={onContinue} type="button">
-        Continue
+        {t("continue")}
       </button>
     </div>
   );

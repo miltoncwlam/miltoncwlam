@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { QuizPlayer } from "@/components/quiz-player";
 import { startQuizAction } from "@/lib/actions/quizzes";
@@ -15,6 +16,7 @@ export default async function DeckQuizPage({
   searchParams: Promise<{ session?: string }>;
 }) {
   const auth = await requireSession();
+  const t = await getTranslations("quiz");
   const { deckId } = await params;
   const query = await searchParams;
   const deck = await getDeckWithCards(deckId, auth.user.id);
@@ -34,12 +36,12 @@ export default async function DeckQuizPage({
   return (
     <main className="page-shell">
       <Link className="text-button" href={`/decks/${deckId}`}>
-        ← Back to deck
+        ← {t("backToDeck")}
       </Link>
       <div className="mt-6 mb-8">
-        <p className="eyebrow">Quiz battle</p>
+        <p className="eyebrow">{t("title")}</p>
         <h1 className="page-title">{deck.title}</h1>
-        <p className="page-subtitle">Pick the right answer. Build your streak.</p>
+        <p className="page-subtitle">{t("subtitle")}</p>
       </div>
       <QuizPlayer
         cards={deck.cards}

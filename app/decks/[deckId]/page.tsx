@@ -58,7 +58,7 @@ export default async function DeckDetailPage({
             <>
               <Link
                 className="primary-button"
-                href={`/decks/${deck.id}/study?new=1`}
+                href={`/decks/${deck.id}/study`}
               >
                 Study cards
               </Link>

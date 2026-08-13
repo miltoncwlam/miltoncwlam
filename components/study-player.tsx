@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 
 import { FlashCard } from "@/components/flash-card";
 import {
@@ -74,27 +74,27 @@ export function StudyPlayer({
     viewIndex < index ||
     (canAdvanceWithoutRating && index < orderedCards.length);
 
-  function goPrev() {
-    if (!canBrowseBack) return;
+  const goPrev = useCallback(() => {
+    if (viewIndex <= 0) return;
     setViewIndex((value) => value - 1);
     setFlipped(false);
     setSelectedOption(null);
-  }
+  }, [viewIndex]);
 
-  function goNext() {
+  const goNext = useCallback(() => {
     if (viewIndex < index) {
       setViewIndex((value) => value + 1);
       setFlipped(false);
       setSelectedOption(null);
       return;
     }
-    if (!canAdvanceWithoutRating) return;
+    if (!(readOnly || !initialSession)) return;
     const next = Math.min(orderedCards.length, index + 1);
     setIndex(next);
     setViewIndex(next);
     setFlipped(false);
     setSelectedOption(null);
-  }
+  }, [viewIndex, index, readOnly, initialSession, orderedCards.length]);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -135,7 +135,7 @@ export function StudyPlayer({
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [index, viewIndex, isMcq, selectedOption, card, muted, readOnly, initialSession, orderedCards.length]);
+  }, [goPrev, goNext, isMcq, selectedOption, card, muted]);
 
   function toggleMute() {
     const next = !muted;
@@ -224,14 +224,14 @@ export function StudyPlayer({
     <section className="study-mobile space-y-6" {...swipe}>
       <div className="flex items-center justify-between text-sm font-bold text-slate-600">
         <span>
-          Card {viewIndex + 1} of {orderedCards.length}
+          {t("cardOf", { current: viewIndex + 1, total: orderedCards.length })}
         </span>
         <button onClick={toggleMute} type="button">
-          {muted ? "Sound off" : "Sound on"}
+          {muted ? t("soundOff") : t("soundOn")}
         </button>
       </div>
       <p className="text-center text-xs text-slate-500 sm:hidden">
-        Swipe left/right to browse · tap options or flip to answer
+        {t("swipeHint")}
       </p>
       <div className="h-2 overflow-hidden rounded-full bg-slate-200">
         <div

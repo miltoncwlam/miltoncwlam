@@ -149,7 +149,23 @@
     "empty": "Este mazo aún no tiene tarjetas.",
     "finished": "Repasaste las {count} tarjetas.",
     "previous": "Anterior",
-    "next": "Siguiente"
+    "next": "Siguiente",
+    "dueEmpty": "Nada pendiente hoy",
+    "dueEmptyBody": "Juega las tarjetas pendientes, haz un quiz o estudia todo el mazo.",
+    "playDue": "Jugar pendientes",
+    "quizInstead": "Batalla de quiz",
+    "studyAll": "Estudiar todas",
+    "session": "Sesión de estudio",
+    "sessionDue": "Pendientes de hoy",
+    "dueCount": "{count} pendientes",
+    "continuing": "Sigues en la tarjeta {current} de {total}.",
+    "startOver": "Empezar de nuevo",
+    "soundOn": "Sonido activado",
+    "soundOff": "Sonido desactivado",
+    "swipeHint": "Desliza para cambiar de tarjeta",
+    "cardOf": "Tarjeta {current} de {total}",
+    "speakPrompt": "Leer pregunta",
+    "speakAnswer": "Leer respuesta"
   },
   "share": {
     "title": "Compartir solo lectura",
@@ -254,5 +270,169 @@
     "illustratedTopics": "Illustrated topics",
     "attachImages": "Add licensed pictures",
     "study": "Study"
+  },
+  "quiz": {
+    "title": "Batalla de quiz",
+    "subtitle": "Elige la respuesta correcta y encadena aciertos.",
+    "clear": "Quiz superado",
+    "accuracy": "{pct}% de aciertos",
+    "backToDeck": "Volver al mazo",
+    "studyCards": "Estudiar tarjetas",
+    "missing": "Falta esta pregunta."
+  },
+  "account": {
+    "back": "Volver a los mazos",
+    "eyebrow": "Cuenta",
+    "title": "Ajustes",
+    "signedIn": "Sesión iniciada como {email}. La contraseña y el correo se gestionan abajo.",
+    "deleteTitle": "Eliminar tu cuenta",
+    "deleteBody": "La eliminación de cuenta es solo por correo. Escribe a {email} y borraremos tus datos."
+  },
+  "play": {
+    "backToDeck": "Volver al mazo",
+    "eyebrow": "Actividades de clase",
+    "title": "Jugar · {deck}",
+    "subtitle": "Las mismas tarjetas, veintiséis salas. Cada ronda cuesta energía; con 50%+ la recuperas y un pleno paga el doble.",
+    "dueCards": "Usando pendientes ({count}) · Ver todas",
+    "dueToday": "Solo las de hoy",
+    "youWon": "Has ganado",
+    "roundOver": "Ronda terminada",
+    "playAgain": "Jugar otra vez",
+    "moreActivities": "Más actividades",
+    "continue": "Continuar",
+    "anteing": "Apostando {stake} de energía…",
+    "quitWarning": "Si sales de esta página, los {stake} se quedan gastados.",
+    "needEnergy": "Falta energía",
+    "slowDown": "Ve más despacio",
+    "anteHelp": "Una ronda cuesta {stake} de energía. Si te vas antes, la apuesta se pierde. 50%+ la recuperas; 80%+ paga 30; un pleno paga 40.",
+    "timeUp": "¡Tiempo!",
+    "stakeReturned": "Apuesta devuelta — buena ronda.",
+    "anteKept": "La apuesta se queda en el bote.",
+    "payoutProfit": "+{payout} de energía · beneficio {net}",
+    "payoutEven": "+{payout} de energía · apuesta devuelta",
+    "payoutLoss": "{stake} gastados · apuesta retenida",
+    "exactMatch": "Coincidencia exacta",
+    "aiAccepted": "La IA lo aceptó",
+    "niceHit": "Bien",
+    "miss": "Fallo",
+    "speak": "Hablar",
+    "sayAloud": "Di la respuesta en voz alta y luego comprueba.",
+    "reveal": "Revelar",
+    "gotIt": "Lo acerté",
+    "groups": {
+      "pairing": "Emparejar",
+      "recall": "Recordar",
+      "classify": "Clasificar",
+      "picture": "Imágenes",
+      "quiz": "Quiz",
+      "puzzle": "Puzles",
+      "arcade": "Rápido"
+    },
+    "templates": {
+      "match-up": {
+        "name": "Emparejar",
+        "blurb": "Toca un término y luego su definición."
+      },
+      "matching-pairs": {
+        "name": "Parejas",
+        "blurb": "Gira dos fichas. Une pregunta y respuesta."
+      },
+      "find-the-match": {
+        "name": "Encuentra la pareja",
+        "blurb": "Toca la respuesta hasta vaciar el banco."
+      },
+      "type-the-answer": {
+        "name": "Escribe la respuesta",
+        "blurb": "Lee la pregunta y escribe la respuesta."
+      },
+      "spell-the-word": {
+        "name": "Deletrear",
+        "blurb": "Forma una respuesta corta con letras."
+      },
+      "unjumble": {
+        "name": "Desordenar",
+        "blurb": "Ordena las letras de una respuesta corta."
+      },
+      "hangman": {
+        "name": "Ahorcado",
+        "blurb": "Adivina letras. Seis fallos."
+      },
+      "complete-the-sentence": {
+        "name": "Completa la frase",
+        "blurb": "Elige la palabra que falta."
+      },
+      "true-or-false": {
+        "name": "Verdadero o falso",
+        "blurb": "¿Es real este emparejamiento o viene de otra tarjeta?"
+      },
+      "open-the-box": {
+        "name": "Abre la caja",
+        "blurb": "Elige una caja y responde la tarjeta."
+      },
+      "group-sort": {
+        "name": "Clasificar",
+        "blurb": "Pon cada tarjeta en su categoría."
+      },
+      "odd-one-out": {
+        "name": "El intruso",
+        "blurb": "Tres van juntos. Toca el que no."
+      },
+      "rank-order": {
+        "name": "Ordenar",
+        "blurb": "Pon las tarjetas en el orden de estudio."
+      },
+      "image-quiz": {
+        "name": "Quiz de imagen",
+        "blurb": "Mira la foto y elige el nombre."
+      },
+      "crossword": {
+        "name": "Crucigrama",
+        "blurb": "Rellena respuestas cortas con las pistas."
+      },
+      "wordsearch": {
+        "name": "Sopa de letras",
+        "blurb": "Encuentra respuestas cortas en la cuadrícula."
+      },
+      "gameshow-quiz": {
+        "name": "Concurso",
+        "blurb": "Opción múltiple con 100 / 200 / 300 puntos."
+      },
+      "win-or-lose": {
+        "name": "Tres vidas",
+        "blurb": "Tres vidas. Tres fallos y se acaba."
+      },
+      "speaking-cards": {
+        "name": "Tarjetas orales",
+        "blurb": "Di la respuesta en voz alta y compruébala."
+      },
+      "whack-a-mole": {
+        "name": "Golpea al topo",
+        "blurb": "Toca el topo con la respuesta correcta."
+      },
+      "balloon-pop": {
+        "name": "Revienta globos",
+        "blurb": "Revienta el globo que coincide."
+      },
+      "speed-sort": {
+        "name": "Clasificación rápida",
+        "blurb": "Clasifica contra un reloj de 60 segundos."
+      },
+      "maze-chase": {
+        "name": "Laberinto",
+        "blurb": "Ve a la salida correcta. Evita al perseguidor."
+      },
+      "airplane": {
+        "name": "Avión",
+        "blurb": "Vuela a la nube con la respuesta correcta."
+      },
+      "labelled-diagram": {
+        "name": "Diagrama etiquetado",
+        "blurb": "Une cada imagen con su etiqueta."
+      },
+      "label-match": {
+        "name": "Etiquetas",
+        "blurb": "Coloca las etiquetas en las imágenes."
+      }
+    }
   }
 }

@@ -149,7 +149,23 @@
     "empty": "カードがありません。",
     "finished": "{count} 枚すべて復習しました。",
     "previous": "前へ",
-    "next": "次へ"
+    "next": "次へ",
+    "dueEmpty": "今日の復習はありません",
+    "dueEmptyBody": "期限カードで遊ぶ、クイズ、または全カードの学習ができます。",
+    "playDue": "期限カードで遊ぶ",
+    "quizInstead": "クイズバトル",
+    "studyAll": "すべてのカードを学習",
+    "session": "学習セッション",
+    "sessionDue": "今日の復習",
+    "dueCount": "期限 {count} 枚",
+    "continuing": "{current} / {total} 枚目から再開します。",
+    "startOver": "最初から",
+    "soundOn": "サウンドオン",
+    "soundOff": "サウンドオフ",
+    "swipeHint": "スワイプでカード切替",
+    "cardOf": "{current} / {total} 枚目",
+    "speakPrompt": "問題を読み上げ",
+    "speakAnswer": "答えを読み上げ"
   },
   "share": {
     "title": "読み取り専用共有",
@@ -254,5 +270,169 @@
     "illustratedTopics": "Illustrated topics",
     "attachImages": "Add licensed pictures",
     "study": "Study"
+  },
+  "quiz": {
+    "title": "クイズバトル",
+    "subtitle": "正解を選んで連勝を伸ばそう。",
+    "clear": "クイズクリア",
+    "accuracy": "正答率 {pct}%",
+    "backToDeck": "デッキに戻る",
+    "studyCards": "カードを学習",
+    "missing": "この問題が見つかりません。"
+  },
+  "account": {
+    "back": "デッキに戻る",
+    "eyebrow": "アカウント",
+    "title": "設定",
+    "signedIn": "{email} でログイン中。パスワードとメールログインは下で管理します。",
+    "deleteTitle": "アカウント削除",
+    "deleteBody": "アカウント削除はメール申請のみです。{email} に連絡すればデータを削除します。"
+  },
+  "play": {
+    "backToDeck": "デッキに戻る",
+    "eyebrow": "授業アクティビティ",
+    "title": "プレイ · {deck}",
+    "subtitle": "同じカードで26のゲーム。1回ごとにエネルギーを先払い。50%以上で返還、パーフェクトは2倍。",
+    "dueCards": "期限カードを使用（{count}）· すべて表示",
+    "dueToday": "今日の期限のみ",
+    "youWon": "勝ち",
+    "roundOver": "ラウンド終了",
+    "playAgain": "もう一度",
+    "moreActivities": "ほかのゲーム",
+    "continue": "続ける",
+    "anteing": "{stake} エネルギーを賭けています…",
+    "quitWarning": "このページを離れると {stake} は戻りません。",
+    "needEnergy": "エネルギー不足",
+    "slowDown": "少し待って",
+    "anteHelp": "1回 {stake} エネルギー。途中で離れると賭け金は失われます。50%以上で返還、80%以上で30、パーフェクトで40。",
+    "timeUp": "時間切れ！",
+    "stakeReturned": "賭け金が戻りました。",
+    "anteKept": "賭け金はポットに残ります。",
+    "payoutProfit": "+{payout} エネルギー返還 · 利益 {net}",
+    "payoutEven": "+{payout} エネルギー返還 · 賭け金戻り",
+    "payoutLoss": "{stake} 消費 · 賭け金は戻りません",
+    "exactMatch": "完全一致",
+    "aiAccepted": "AIが正解と判定",
+    "niceHit": "正解",
+    "miss": "ミス",
+    "speak": "読み上げ",
+    "sayAloud": "答えを声に出してから確認。",
+    "reveal": "答えを見る",
+    "gotIt": "できた",
+    "groups": {
+      "pairing": "マッチ",
+      "recall": "想起",
+      "classify": "分類",
+      "picture": "画像",
+      "quiz": "クイズ",
+      "puzzle": "パズル",
+      "arcade": "スピード"
+    },
+    "templates": {
+      "match-up": {
+        "name": "マッチアップ",
+        "blurb": "用語をタップしてから定義を選ぶ。"
+      },
+      "matching-pairs": {
+        "name": "神経衰弱",
+        "blurb": "2枚めくって問題と答えをペアに。"
+      },
+      "find-the-match": {
+        "name": "マッチ探し",
+        "blurb": "対応する答えをタップして空にする。"
+      },
+      "type-the-answer": {
+        "name": "答えを入力",
+        "blurb": "問題を読んで答えを入力。"
+      },
+      "spell-the-word": {
+        "name": "スペル",
+        "blurb": "文字タイルで短い答えを作る。"
+      },
+      "unjumble": {
+        "name": "アナグラム",
+        "blurb": "バラバラの文字を並べ直す。"
+      },
+      "hangman": {
+        "name": "ハングマン",
+        "blurb": "短い答えの文字を当てる。6回まで。"
+      },
+      "complete-the-sentence": {
+        "name": "穴埋め",
+        "blurb": "欠けた語をチップから選ぶ。"
+      },
+      "true-or-false": {
+        "name": "○×",
+        "blurb": "この組み合わせは本物？別のカードから入れ替わっている？"
+      },
+      "open-the-box": {
+        "name": "箱を開ける",
+        "blurb": "箱を選んで中のカードに答える。"
+      },
+      "group-sort": {
+        "name": "グループ分け",
+        "blurb": "カードをカテゴリに分ける。"
+      },
+      "odd-one-out": {
+        "name": "仲間外れ",
+        "blurb": "3つは仲間。違う1つをタップ。"
+      },
+      "rank-order": {
+        "name": "並び替え",
+        "blurb": "デッキの学習順に並べる。"
+      },
+      "image-quiz": {
+        "name": "画像クイズ",
+        "blurb": "絵を見て合う名前を選ぶ。"
+      },
+      "crossword": {
+        "name": "クロスワード",
+        "blurb": "ヒントから短い答えを埋める。"
+      },
+      "wordsearch": {
+        "name": "ワードサーチ",
+        "blurb": "マスの中の短い答えを探す。"
+      },
+      "gameshow-quiz": {
+        "name": "クイズショー",
+        "blurb": "選択問題。100 / 200 / 300点。"
+      },
+      "win-or-lose": {
+        "name": "3ライフクイズ",
+        "blurb": "ライフは3。3回ミスで終了。"
+      },
+      "speaking-cards": {
+        "name": "スピーキング",
+        "blurb": "答えを声に出して自分で確認。"
+      },
+      "whack-a-mole": {
+        "name": "モグラたたき",
+        "blurb": "正解のモグラをタップ。"
+      },
+      "balloon-pop": {
+        "name": "風船割り",
+        "blurb": "問題に合う風船を割る。"
+      },
+      "speed-sort": {
+        "name": "スピード分類",
+        "blurb": "60秒でグループ分け。"
+      },
+      "maze-chase": {
+        "name": "迷路チェイス",
+        "blurb": "正しい出口へ。追跡者を避ける。"
+      },
+      "airplane": {
+        "name": "飛行機",
+        "blurb": "正解の雲へ飛ぶ。"
+      },
+      "labelled-diagram": {
+        "name": "図のラベル",
+        "blurb": "図の画像とラベルを合わせる。"
+      },
+      "label-match": {
+        "name": "ラベル合わせ",
+        "blurb": "ラベルを対応する画像へ。"
+      }
+    }
   }
 }

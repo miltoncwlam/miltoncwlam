@@ -4,7 +4,8 @@ import { joinClassAction } from "@/lib/actions/class-links";
 import { requireSession } from "@/lib/auth-server";
 import { getClassLinkByToken } from "@/lib/data/class-links";
 import { classAssignFromQuery } from "@/lib/play/activity";
-import { PLAY_TEMPLATES } from "@/lib/play/templates";
+import { isPlayTemplateId } from "@/lib/play/templates";
+import { getTranslations } from "next-intl/server";
 
 export default async function ClassJoinPage({
   params,
@@ -14,13 +15,16 @@ export default async function ClassJoinPage({
   searchParams: Promise<{ activity?: string; due?: string; lock?: string }>;
 }) {
   await requireSession();
+  const t = await getTranslations("play");
   const { token } = await params;
   const query = await searchParams;
   const link = await getClassLinkByToken(token);
   if (!link || link.revoked_at) notFound();
   const assign = classAssignFromQuery(query);
-  const assignedName = PLAY_TEMPLATES.find((item) => item.id === assign.activity)
-    ?.name;
+  const assignedName =
+    assign.activity && isPlayTemplateId(assign.activity)
+      ? t(`templates.${assign.activity}.name`)
+      : null;
 
   return (
     <main className="page-shell max-w-lg text-center">

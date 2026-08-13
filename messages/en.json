@@ -73,6 +73,7 @@
     "modelFree": "Lower energy",
     "modelBudget": "Budget",
     "modelStandard": "Standard",
+    "provider": "AI provider",
     "modeFlashcards": "Flashcards",
     "modeQuiz": "Quiz deck",
     "energyCost": "Text energy: ~{cost}",
@@ -118,6 +119,7 @@
     "modelRunning": "Model running",
     "complete": "Complete",
     "stepOf": "Step {current} of {total}",
+    "noFakePercent": "No fake percent — phase and elapsed time only.",
     "phaseAdvances": "Progress advances when each phase finishes.",
     "tipTitle": "Tip while you wait",
     "preparing": "Preparing your deck…",
@@ -148,7 +150,23 @@
     "empty": "This deck has no cards yet.",
     "finished": "You reviewed all {count} cards.",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "dueEmpty": "Nothing due today",
+    "dueEmptyBody": "Play due cards, take a quiz, or study the whole deck.",
+    "playDue": "Play due cards",
+    "quizInstead": "Quiz battle",
+    "studyAll": "Study all cards",
+    "session": "Study session",
+    "sessionDue": "Due today",
+    "dueCount": "{count} due",
+    "continuing": "Continuing from card {current} of {total}.",
+    "startOver": "Start over",
+    "soundOn": "Sound on",
+    "soundOff": "Sound off",
+    "swipeHint": "Swipe to change cards",
+    "cardOf": "Card {current} of {total}",
+    "speakPrompt": "Speak prompt",
+    "speakAnswer": "Speak answer"
   },
   "share": {
     "title": "Read-only sharing",
@@ -253,5 +271,169 @@
     "makeUnlisted": "Share unlisted link",
     "makePrivate": "Make private",
     "attachImages": "Add licensed pictures (Commons, then web, then AI)"
+  },
+  "quiz": {
+    "title": "Quiz battle",
+    "subtitle": "Pick the right answer. Build your streak.",
+    "clear": "Quiz clear",
+    "accuracy": "{pct}% accuracy",
+    "backToDeck": "Back to deck",
+    "studyCards": "Study cards",
+    "missing": "This question is missing."
+  },
+  "account": {
+    "back": "Back to decks",
+    "eyebrow": "Account",
+    "title": "Settings",
+    "signedIn": "Signed in as {email}. Password and email sign-in are managed below.",
+    "deleteTitle": "Delete your account",
+    "deleteBody": "Account deletion is by email only. Write to {email} and we will delete your account data."
+  },
+  "play": {
+    "backToDeck": "Back to deck",
+    "eyebrow": "Classroom activities",
+    "title": "Play · {deck}",
+    "subtitle": "Same cards, twenty-six arcade rooms. Each round costs energy; win 50%+ to get it back, and a perfect run pays double.",
+    "dueCards": "Using due cards ({count}) · Show all",
+    "dueToday": "Due today only",
+    "youWon": "You won",
+    "roundOver": "Round over",
+    "playAgain": "Play again",
+    "moreActivities": "More activities",
+    "continue": "Continue",
+    "anteing": "Anteing {stake} energy…",
+    "quitWarning": "Quit or leave this page and the {stake} stays spent.",
+    "needEnergy": "Need energy",
+    "slowDown": "Slow down",
+    "anteHelp": "A round costs {stake} energy. Leave before you finish and the ante stays spent. Score 50%+ to win it back; 80%+ pays 30; a perfect run pays 40.",
+    "timeUp": "Time!",
+    "stakeReturned": "Stake returned — nice run.",
+    "anteKept": "The ante stays in the pot.",
+    "payoutProfit": "+{payout} energy back · profit {net}",
+    "payoutEven": "+{payout} energy back · ante returned",
+    "payoutLoss": "{stake} energy spent · ante kept",
+    "exactMatch": "Exact match",
+    "aiAccepted": "AI accepted",
+    "niceHit": "Nice hit",
+    "miss": "Miss",
+    "speak": "Speak",
+    "sayAloud": "Say the answer out loud, then reveal.",
+    "reveal": "Reveal",
+    "gotIt": "I got it",
+    "groups": {
+      "pairing": "Match",
+      "recall": "Recall",
+      "classify": "Sort",
+      "picture": "Pictures",
+      "quiz": "Quiz",
+      "puzzle": "Puzzles",
+      "arcade": "Quick fire"
+    },
+    "templates": {
+      "match-up": {
+        "name": "Match up",
+        "blurb": "Tap a term, then its definition."
+      },
+      "matching-pairs": {
+        "name": "Matching pairs",
+        "blurb": "Flip two tiles. Pair prompt with answer."
+      },
+      "find-the-match": {
+        "name": "Find the match",
+        "blurb": "Tap the matching answer until the bank is empty."
+      },
+      "type-the-answer": {
+        "name": "Type the answer",
+        "blurb": "Read the prompt and type the answer."
+      },
+      "spell-the-word": {
+        "name": "Spell the word",
+        "blurb": "Build a short answer from letter tiles."
+      },
+      "unjumble": {
+        "name": "Unjumble",
+        "blurb": "Unscramble the letters of a short answer."
+      },
+      "hangman": {
+        "name": "Hangman",
+        "blurb": "Guess letters of a short answer. Six misses."
+      },
+      "complete-the-sentence": {
+        "name": "Complete the sentence",
+        "blurb": "Pick the missing word from a chip bank."
+      },
+      "true-or-false": {
+        "name": "True or false",
+        "blurb": "Is this pairing real, or swapped from another card?"
+      },
+      "open-the-box": {
+        "name": "Open the box",
+        "blurb": "Pick a box, then answer the card inside."
+      },
+      "group-sort": {
+        "name": "Group sort",
+        "blurb": "Sort each card into its category bin."
+      },
+      "odd-one-out": {
+        "name": "Odd one out",
+        "blurb": "Three belong together. Tap the one that does not."
+      },
+      "rank-order": {
+        "name": "Rank order",
+        "blurb": "Put cards in the deck’s study order."
+      },
+      "image-quiz": {
+        "name": "Image quiz",
+        "blurb": "Look at the picture. Choose the matching name."
+      },
+      "crossword": {
+        "name": "Crossword",
+        "blurb": "Fill short answers from the clues."
+      },
+      "wordsearch": {
+        "name": "Wordsearch",
+        "blurb": "Find short answers hidden in the grid."
+      },
+      "gameshow-quiz": {
+        "name": "Gameshow quiz",
+        "blurb": "Multiple choice with 100 / 200 / 300 points."
+      },
+      "win-or-lose": {
+        "name": "Win or lose quiz",
+        "blurb": "Three lives. Miss three and the run ends."
+      },
+      "speaking-cards": {
+        "name": "Speaking cards",
+        "blurb": "Say the answer aloud, then check yourself."
+      },
+      "whack-a-mole": {
+        "name": "Whack-a-mole",
+        "blurb": "Tap the mole with the correct answer."
+      },
+      "balloon-pop": {
+        "name": "Balloon pop",
+        "blurb": "Pop the balloon that matches the prompt."
+      },
+      "speed-sort": {
+        "name": "Speed sorting",
+        "blurb": "Group sort against a 60-second clock."
+      },
+      "maze-chase": {
+        "name": "Maze chase",
+        "blurb": "Steer to the correct exit. Avoid the chaser."
+      },
+      "airplane": {
+        "name": "Airplane",
+        "blurb": "Fly into the cloud with the right answer."
+      },
+      "labelled-diagram": {
+        "name": "Labelled diagram",
+        "blurb": "Match each picture on the diagram to its label."
+      },
+      "label-match": {
+        "name": "Label match",
+        "blurb": "Drag-tap labels onto the matching pictures."
+      }
+    }
   }
 }

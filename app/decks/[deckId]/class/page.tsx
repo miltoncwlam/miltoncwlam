@@ -1,16 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { ClassLinkControls } from "@/components/class-link-controls";
 import { requireSession } from "@/lib/auth-server";
 import { listClassLinksForDeck } from "@/lib/data/class-links";
 import { getDeckWithCards } from "@/lib/data/decks";
 import { listClassRunsForDeck } from "@/lib/data/games";
-import { PLAY_TEMPLATES } from "@/lib/play/templates";
-
-function templateName(id: string) {
-  return PLAY_TEMPLATES.find((item) => item.id === id)?.name ?? id;
-}
+import { isPlayTemplateId } from "@/lib/play/templates";
 
 function shortUser(id: string) {
   return id.length > 12 ? `${id.slice(0, 6)}…${id.slice(-4)}` : id;
@@ -22,6 +19,7 @@ export default async function DeckClassPage({
   params: Promise<{ deckId: string }>;
 }) {
   const session = await requireSession();
+  const t = await getTranslations("play");
   const { deckId } = await params;
   const deck = await getDeckWithCards(deckId, session.user.id);
   if (!deck) notFound();
@@ -66,7 +64,11 @@ export default async function DeckClassPage({
                       <td className="px-4 py-3 font-mono text-xs">
                         {shortUser(run.userId)}
                       </td>
-                      <td className="px-4 py-3">{templateName(run.template)}</td>
+                      <td className="px-4 py-3">
+                        {isPlayTemplateId(run.template)
+                          ? t(`templates.${run.template}.name`)
+                          : run.template}
+                      </td>
                       <td className="px-4 py-3 font-semibold">
                         {run.score}/{run.maxScore}
                       </td>

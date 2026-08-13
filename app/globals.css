@@ -1658,10 +1658,13 @@ html[data-theme="dark"] .secondary-button {
 .play-maze-board {
   margin: 0 auto;
   width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
   perspective: 920px;
 }
 
 .play-maze-grid {
+  --maze-cell: 1.55rem;
   display: grid;
   gap: 2px;
   transform: rotateX(48deg) rotateZ(-18deg);
@@ -1669,8 +1672,8 @@ html[data-theme="dark"] .secondary-button {
 }
 
 .play-maze-cell {
-  width: 1.55rem;
-  height: 1.55rem;
+  width: var(--maze-cell);
+  height: var(--maze-cell);
   display: grid;
   place-items: center;
   border-radius: 0.28rem;
@@ -2113,6 +2116,34 @@ html[data-theme="dark"] .secondary-button {
 @media (min-width: 480px) {
   .play-mole-field {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 479px) {
+  .play-maze-grid {
+    --maze-cell: 1.15rem;
+  }
+
+  .play-maze-cell--exit {
+    font-size: 0.38rem;
+  }
+
+  .play-hero-svg,
+  .play-ghost-svg {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .play-sky {
+    height: 16rem;
+  }
+
+  .play-hole {
+    height: 7.2rem;
+  }
+
+  .play-mole {
+    width: 5.1rem;
   }
 }
 
