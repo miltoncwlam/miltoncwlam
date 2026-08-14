@@ -55,8 +55,17 @@ function friendlyError(message: string, code?: string) {
   if (code === "RATE_LIMITED") {
     return message || "Too many generates this hour. Wait a bit, then try again.";
   }
+  if (/too large to read|too large \(max/i.test(message)) {
+    return "That page is too heavy to fetch whole. Paste the article text, or try a shorter URL.";
+  }
+  if (/aborted|timeout/i.test(message)) {
+    return "The page took too long to load. Paste the text or try a shorter URL.";
+  }
   if (/failed to fetch|networkerror|load failed/i.test(message)) {
     return "The connection dropped. Try again with fewer cards or a shorter source.";
+  }
+  if (/expected number|invalid option|invalid input|invalid_type|too_small/i.test(message)) {
+    return "Check the form and try again. Retry needs the same topic, text, or URL.";
   }
   return message;
 }
@@ -161,32 +170,32 @@ export function CreateDeckForm({
       const file = formData.get("sourceFile");
       const payload: Record<string, unknown> = {
         sourceType: activeMode,
-        title: formData.get("title") || undefined,
+        title: String(formData.get("title") || "") || undefined,
         provider: "openrouter",
-        cardCount: Number(formData.get("cardCount")),
-        difficulty: formData.get("difficulty"),
-        language: formData.get("language"),
+        cardCount: Number(formData.get("cardCount")) || 10,
+        difficulty: String(formData.get("difficulty") || "beginner"),
+        language: String(formData.get("language") || locale),
         questionStyle:
           createMode === "quiz"
             ? "mcq"
-            : formData.get("questionStyle") || "mixed",
+            : String(formData.get("questionStyle") || "mixed"),
         mode: createMode,
-        sourceRetention: formData.get("sourceRetention") || "24h",
+        sourceRetention: String(formData.get("sourceRetention") || "24h"),
       };
 
       payload.model =
         (formData.get("openrouterModel") as string) || openrouterModel;
 
       if (activeMode === "topic") {
-        payload.topic = formData.get("topic");
+        payload.topic = String(formData.get("topic") || "");
         setPhase("generate");
         setLabel(tg("aiWriting"));
       } else if (activeMode === "text") {
-        payload.content = formData.get("content");
+        payload.content = String(formData.get("content") || "");
         setPhase("read");
         setLabel(tg("readingNotes"));
       } else if (activeMode === "url") {
-        payload.url = formData.get("sourceUrl");
+        payload.url = String(formData.get("sourceUrl") || "");
         setPhase("read");
         setLabel(tg("readingSource"));
       } else {
@@ -222,7 +231,15 @@ export function CreateDeckForm({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        result = await response.json();
+        try {
+          result = await response.json();
+        } catch {
+          throw new Error(
+            response.ok
+              ? "Generation failed"
+              : `Generation failed (${response.status})`,
+          );
+        }
         if (!response.ok) {
           const base = friendlyError(
             result.error || "Generation failed",
@@ -233,15 +250,10 @@ export function CreateDeckForm({
           );
         }
       } catch (fetchError) {
-        const message =
-          fetchError instanceof Error ? fetchError.message : "Generation failed";
-        throw new Error(
-          /energy was refunded|doesn't look like|not enough usable|too many generates/i.test(
-            message,
-          )
-            ? message
-            : friendlyError(message),
-        );
+        if (fetchError instanceof TypeError) {
+          throw new Error(friendlyError(fetchError.message));
+        }
+        throw fetchError;
       }
 
       setPhase("save");
@@ -253,6 +265,7 @@ export function CreateDeckForm({
       router.push(`/decks/${result.deckId}`);
       router.refresh();
     } catch (caught) {
+      setPending(false);
       setError(
         caught instanceof Error
           ? friendlyError(caught.message)

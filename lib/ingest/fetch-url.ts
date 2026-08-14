@@ -3,7 +3,7 @@ import "server-only";
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 
-const MAX_BYTES = 1_500_000;
+const MAX_BYTES = 5_000_000;
 const MAX_TEXT = 80_000;
 const FETCH_TIMEOUT_MS = 15_000;
 
@@ -64,7 +64,7 @@ async function assertSafeUrl(raw: string): Promise<URL> {
   return url;
 }
 
-function htmlToText(html: string): string {
+function htmlToText(html: string) {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
@@ -81,6 +81,37 @@ function htmlToText(html: string): string {
     .replace(/\n{3,}/g, "\n\n")
     .replace(/[ \t]{2,}/g, " ")
     .trim();
+}
+
+export async function readResponseBytes(
+  response: Response,
+  maxBytes = MAX_BYTES,
+): Promise<{ buffer: Buffer; truncated: boolean }> {
+  if (!response.body) {
+    const buffer = Buffer.from(await response.arrayBuffer());
+    if (buffer.byteLength > maxBytes) {
+      return { buffer: buffer.subarray(0, maxBytes), truncated: true };
+    }
+    return { buffer, truncated: false };
+  }
+
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const next = received + value.byteLength;
+    if (next > maxBytes) {
+      chunks.push(value.subarray(0, maxBytes - received));
+      received = maxBytes;
+      await reader.cancel();
+      return { buffer: Buffer.concat(chunks, received), truncated: true };
+    }
+    chunks.push(value);
+    received = next;
+  }
+  return { buffer: Buffer.concat(chunks, received), truncated: false };
 }
 
 function youtubeVideoId(url: URL): string | null {
@@ -116,7 +147,8 @@ async function fetchYoutubeTranscript(videoId: string): Promise<string> {
   if (!response.ok) {
     throw new Error("Could not load YouTube page");
   }
-  const html = await response.text();
+  const { buffer } = await readResponseBytes(response);
+  const html = buffer.toString("utf8");
   const match =
     html.match(/"captionTracks":(\[[\s\S]*?\])/) ||
     html.match(/"captionTracks":(\[[\s\S]*?\])\s*,\s*"/);
@@ -184,10 +216,17 @@ export async function fetchStudyTextFromUrl(rawUrl: string): Promise<{
   await assertSafeUrl(finalUrl.toString());
 
   const contentType = (response.headers.get("content-type") || "").toLowerCase();
-  const buffer = Buffer.from(await response.arrayBuffer());
-  if (buffer.byteLength > MAX_BYTES) {
-    throw new Error("Remote content is too large (max ~1.5MB)");
+  if (
+    contentType.includes("application/pdf") ||
+    contentType.includes("image/") ||
+    contentType.includes("audio/") ||
+    contentType.includes("video/") ||
+    contentType.includes("zip")
+  ) {
+    throw new Error(`Unsupported content type: ${contentType}`);
   }
+
+  const { buffer, truncated } = await readResponseBytes(response);
   const raw = buffer.toString("utf8");
 
   if (
@@ -219,7 +258,11 @@ export async function fetchStudyTextFromUrl(rawUrl: string): Promise<{
 
   const content = htmlToText(raw).slice(0, MAX_TEXT);
   if (content.length < 50) {
-    throw new Error("Could not extract enough readable text from that page");
+    throw new Error(
+      truncated
+        ? "That page is too large to read. Paste the article text instead."
+        : "Could not extract enough readable text from that page",
+    );
   }
   return { content, sourceUrl: finalUrl.toString(), kind: "webpage" };
 }

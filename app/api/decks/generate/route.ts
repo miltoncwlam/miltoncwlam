@@ -527,9 +527,11 @@ export async function POST(request: Request) {
     const message =
       error instanceof z.ZodError
         ? error.issues[0]?.message ?? "Invalid request"
-        : error instanceof Error
-          ? error.message
-          : "Generation failed";
+        : error instanceof Error && Array.isArray((error as { issues?: unknown }).issues)
+          ? "Invalid request. Check the form and try again."
+          : error instanceof Error
+            ? error.message
+            : "Generation failed";
 
     if (deckId && userId) {
       const discarded = await failDeckGeneration(deckId, userId, message);
