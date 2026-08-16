@@ -5,7 +5,7 @@ import { QuizPlayer } from "@/components/quiz-player";
 import { StudyPlayer } from "@/components/study-player";
 import { getSharedDeck } from "@/lib/data/shares";
 import { activityFromQuery } from "@/lib/play/activity";
-import { templateReason } from "@/lib/play/eligibility";
+import { blockedCopy, templateReason } from "@/lib/play/eligibility";
 import { shuffleIds } from "@/lib/study/shuffle";
 import type { QuizSession } from "@/lib/types/flashcard";
 
@@ -46,7 +46,9 @@ export default async function EmbedDeckPage({
       {activity ? (
         <div className="mt-4">
           {templateReason(activity, deck.cards) ? (
-            <p className="empty-state">{templateReason(activity, deck.cards)}</p>
+            <p className="empty-state">
+              {blockedCopy(templateReason(activity, deck.cards)!)}
+            </p>
           ) : (
             <PlayDispatcher
               cards={deck.cards}

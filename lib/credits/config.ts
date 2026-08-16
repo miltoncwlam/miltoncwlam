@@ -1,11 +1,11 @@
 /** Weekly grant — keep wording as "energy" in UI; payment later. */
 export const CREDIT_PERIOD_GRANT = 600;
-/** Separate weekly pool for illustrations. Users do not spend this; Klein is community last-resort only. */
+/** Unused weekly image pool (always 0 for learners). Community Klein art is last-resort only. */
 export const IMAGE_PERIOD_GRANT = 0;
 export const CREDIT_PERIOD_DAYS = 7;
 
 export const CREDITS_PER_USD = 50_000;
-/** Image energy scale (separate from text). Klein (~$0.014) → ~7 image energy. */
+/** Internal USD→units for community Klein art. Not a learner currency. */
 export const IMAGE_CREDITS_PER_USD = 500;
 export const MIN_GENERATION_CREDITS = 10;
 

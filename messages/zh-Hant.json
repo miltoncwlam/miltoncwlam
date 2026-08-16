@@ -76,16 +76,13 @@
     "noProviders": "請先設定 OPENROUTER_API_KEY。檔案上傳另需 SUPABASE_SECRET_KEY。仍可用「建立範例牌組」試用。",
     "chooseFile": "請選擇檔案",
     "uploadSecretError": "請在 .env.local 加入 SUPABASE_SECRET_KEY 以啟用上傳",
+    "unrelated": "這不像學習材料。請貼筆記、課文或文章，不要貼閒聊或迷因。",
+    "insufficient": "可用內容不夠做出那麼多卡。請加長筆記，或減少卡片數量。",
     "model": "模型",
     "modelFree": "較低能量",
     "modelBudget": "經濟",
     "modelStandard": "標準",
-    "energyShort": "文字能量不足。需要 {need}，目前 {have}。",
-    "energyImageShort": "圖像能量不足。需要 {need}，目前 {have}。",
-    "illustrations": "新增插圖",
-    "illustrationsHint": "插圖使用獨立的圖像能量。FLUX.2 Klein 能量最低。",
-    "imageModel": "插圖模型",
-    "energyEach": "圖像能量／張",
+    "energyShort": "能量不足。需要 {need}，目前 {have}。",
     "questionStyle": "題目類型",
     "styleMixed": "混合類型",
     "styleQa": "僅問答",
@@ -94,8 +91,7 @@
     "styleMcq": "選擇題",
     "modeFlashcards": "閃卡",
     "modeQuiz": "測驗牌組",
-    "energyCost": "文字能量：約 {cost}",
-    "energyImageCost": "圖像能量：約 {cost}",
+    "energyCost": "能量：約 {cost}",
     "quizModeNote": "測驗牌組會產生對戰模式用的選擇題。",
     "url": "URL",
     "urlLabel": "URL",
@@ -105,6 +101,7 @@
   "generation": {
     "eyebrow": "正在建立牌組",
     "doneTitle": "牌組已就緒",
+    "shortfall": "要 {want} 張，做成 {got} 張。先打開現有的牌組。",
     "opening": "正在開啟卡片…",
     "waitingCloud": "正在等待 AI 寫完閃卡。",
     "moving": "正在完成各設定步驟。",
@@ -290,9 +287,9 @@
   },
   "play": {
     "backToDeck": "返回牌組",
-    "eyebrow": "課堂活動",
+    "eyebrow": "香港城市遊戲",
     "title": "遊戲 · {deck}",
-    "subtitle": "同一副卡片，二十六個遊戲房。每局先扣能量；勝率 50% 以上可取回，全對可獲雙倍。",
+    "subtitle": "Fifteen city games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
     "dueCards": "使用到期卡片（{count}）· 顯示全部",
     "dueToday": "只顯示今日到期",
     "youWon": "你贏了",
@@ -300,17 +297,17 @@
     "playAgain": "再玩一次",
     "moreActivities": "更多活動",
     "continue": "繼續",
-    "anteing": "正在下注 {stake} 能量…",
-    "quitWarning": "中途離開此頁，{stake} 能量不會退回。",
-    "needEnergy": "能量不足",
+    "anteing": "Using {stake} weekly allowance…",
+    "quitWarning": "Quit or leave this page and the {stake} stays spent.",
+    "needEnergy": "Need allowance",
     "slowDown": "請稍候",
-    "anteHelp": "每局先扣 {stake} 能量。未完成就離開則下注作廢。勝率 50% 以上可取回；80% 以上得 30；全對得 40。",
+    "anteHelp": "A round uses {stake} weekly allowance. Leave before you finish and it stays spent. Score 50%+ to get it back; 80%+ returns 30; a perfect run returns 40.",
     "timeUp": "時間到！",
-    "stakeReturned": "下注已退回 — 打得漂亮。",
-    "anteKept": "下注留在獎池。",
-    "payoutProfit": "+{payout} 能量退回 · 淨賺 {net}",
-    "payoutEven": "+{payout} 能量退回 · 下注已還",
-    "payoutLoss": "已扣 {stake} 能量 · 下注未退",
+    "stakeReturned": "Allowance returned — nice run.",
+    "anteKept": "The weekly allowance stays spent.",
+    "payoutProfit": "+{payout} allowance back · +{net}",
+    "payoutEven": "+{payout} allowance back",
+    "payoutLoss": "{stake} allowance used",
     "exactMatch": "完全相符",
     "aiAccepted": "AI 判定正確",
     "niceHit": "答對了",
@@ -320,13 +317,8 @@
     "reveal": "揭曉",
     "gotIt": "我答對了",
     "groups": {
-      "pairing": "配對",
-      "recall": "回憶",
-      "classify": "分類",
-      "picture": "圖片",
-      "quiz": "測驗",
-      "puzzle": "解謎",
-      "arcade": "快攻"
+      "city": "市區",
+      "campus": "校園"
     },
     "templates": {
       "match-up": {
@@ -334,16 +326,18 @@
         "blurb": "先點詞語，再點定義。"
       },
       "matching-pairs": {
-        "name": "翻牌配對",
-        "blurb": "翻兩張牌，把題目與答案配對。"
+        "name": "雙花燈",
+        "blurb": "海濱配對花燈。",
+        "howTo": "翻兩盞燈。對了就亮著。錯了會暗，再滑入一盞誘餌。"
       },
       "find-the-match": {
         "name": "找出配對",
         "blurb": "點選對應答案，直到全部配完。"
       },
       "type-the-answer": {
-        "name": "輸入答案",
-        "blurb": "看題目，輸入答案。"
+        "name": "揮春墨",
+        "blurb": "墨未乾前記下詞語。",
+        "howTo": "輸入詞語再蓋印。空白不算。錯了會顯示便條和提示。"
       },
       "spell-the-word": {
         "name": "拼字",
@@ -370,8 +364,9 @@
         "blurb": "選一個箱子，再回答裡面的卡片。"
       },
       "group-sort": {
-        "name": "分類",
-        "blurb": "把每張卡放到所屬類別。"
+        "name": "功課盤",
+        "blurb": "把紙張撥進標籤托盤。",
+        "howTo": "只看題目，撥進正確托盤。錯的進重做疊。"
       },
       "odd-one-out": {
         "name": "找出異類",
@@ -398,16 +393,18 @@
         "blurb": "選擇題，100 / 200 / 300 分。"
       },
       "win-or-lose": {
-        "name": "三條命問答",
-        "blurb": "三條命。錯三次就結束。"
+        "name": "罰留堂",
+        "blurb": "三張遲到紙。連對計分。",
+        "howTo": "三張遲到紙。A 至 C。錯了蓋 WhyBox。"
       },
       "speaking-cards": {
         "name": "朗讀卡",
         "blurb": "大聲說出答案，再自行核對。"
       },
       "whack-a-mole": {
-        "name": "打地鼠",
-        "blurb": "點擊帶有正確答案的地鼠。"
+        "name": "突擊課桌",
+        "blurb": "只可點站起來的同學。",
+        "howTo": "點站著且詞語相符的人。坐下的不算。"
       },
       "balloon-pop": {
         "name": "氣球爆破",
@@ -418,8 +415,9 @@
         "blurb": "六十秒內完成分類。"
       },
       "maze-chase": {
-        "name": "迷宮追逐",
-        "blurb": "走向正確出口，避開追兵。"
+        "name": "風紀走廊",
+        "blurb": "趕集會。四色門。避開風紀。",
+        "howTo": "走到對應的門。錯門會傳送。倒數完才可動。"
       },
       "airplane": {
         "name": "飛機",
@@ -432,7 +430,59 @@
       "label-match": {
         "name": "標籤配對",
         "blurb": "點選標籤放到對應圖片上。"
+      },
+      "gate-dash": {
+        "name": "天橋閘",
+        "blurb": "紙飛機穿過行人天橋。點招牌，飛機飛進那扇閘。",
+        "howTo": "點招牌讓紙飛機飛進那扇閘，或按 1／2／3。"
+      },
+      "last-car": {
+        "name": "尾班車",
+        "blurb": "尾班車。上對的門，錯的要蹲。",
+        "howTo": "上對的車門，錯的就蹲下。"
+      },
+      "ding-ding": {
+        "name": "叮叮",
+        "blurb": "詞語過打擊線時點鐘。",
+        "howTo": "芯片過霓虹線時點鐘。減少動效則直接點。"
+      },
+      "estate-court": {
+        "name": "邨球場",
+        "blurb": "休憩處。答對的詞變新聞紙。",
+        "howTo": "新聞紙在球場上轉。點對的就自動清掉。點錯會撞到你。"
+      },
+      "mosaic-wall": {
+        "name": "花磚牆",
+        "blurb": "茶餐廳花磚。敲對的磚。",
+        "howTo": "敲對的花磚。敲錯會裂杯。"
+      },
+      "minibus-stop": {
+        "name": "小巴站",
+        "blurb": "對色小巴對準站牌就上車。",
+        "howTo": "對的小巴對準站牌時點上車。"
+      },
+      "station-lost": {
+        "name": "失物處",
+        "blurb": "手持領物紙，在堆裡點對的袋子。",
+        "howTo": "題目是領物紙。在雜物裡點對的袋子。"
+      },
+      "ticket-chops": {
+        "name": "車票印",
+        "blurb": "票根對就 Chop，不對就 Pass。",
+        "howTo": "一次一張票根。對就 Chop，不對就 Pass。沒有抽卡。"
+      },
+      "street-flyers": {
+        "name": "街招",
+        "blurb": "只斬對的街招。罰款告示扣命。",
+        "howTo": "斬對的街招。紅色罰款告示會扣命。"
       }
+    },
+    "howToSkip": "知道了",
+    "saveFailed": "Could not save this run.",
+    "blocked": {
+      "needCards": "Need at least 4 cards.",
+      "needChips": "Need 4 short play terms (not essays).",
+      "needBins": "Need two labelled groups with two cards each."
     }
   }
 }

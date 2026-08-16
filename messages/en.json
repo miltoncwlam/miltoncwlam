@@ -76,14 +76,8 @@
     "provider": "AI provider",
     "modeFlashcards": "Flashcards",
     "modeQuiz": "Quiz deck",
-    "energyCost": "Text energy: ~{cost}",
-    "energyImageCost": "Image energy: ~{cost}",
-    "energyShort": "Not enough text energy. Need {need}, have {have}. Energy refills each week.",
-    "energyImageShort": "Not enough image energy. Need {need}, have {have}. Image energy refills each week.",
-    "illustrations": "Add illustrations",
-    "illustrationsHint": "Uses a separate image-energy pool. FLUX.2 Klein is the lowest-energy option.",
-    "imageModel": "Illustration model",
-    "energyEach": "image energy / card",
+    "energyCost": "Energy: ~{cost}",
+    "energyShort": "Not enough energy. Need {need}, have {have}. Energy refills each week.",
     "quizModeNote": "Quiz decks generate multiple-choice questions for battle mode.",
     "cardCount": "Number of cards",
     "questionStyle": "Question style",
@@ -100,11 +94,14 @@
     "generate": "Generate flashcards",
     "noProviders": "Add OPENROUTER_API_KEY before creating an AI deck. File uploads also need SUPABASE_SECRET_KEY. You can still use Create sample deck to try study and sharing.",
     "chooseFile": "Choose a file to continue",
-    "uploadSecretError": "Add SUPABASE_SECRET_KEY to .env.local to upload files"
+    "uploadSecretError": "Add SUPABASE_SECRET_KEY to .env.local to upload files",
+    "unrelated": "This source doesn’t look like study material. Paste notes, a lesson, or an article — not random chat or memes.",
+    "insufficient": "Not enough usable study content for that many cards. Add more notes or try fewer cards."
   },
   "generation": {
     "eyebrow": "Creating your deck",
     "doneTitle": "Deck ready",
+    "shortfall": "Asked for {want} cards, got {got}. Opening what we could make.",
     "errorTitle": "Generation stopped",
     "retry": "Retry",
     "dismiss": "Back to form",
@@ -270,7 +267,7 @@
     "approved": "Listed in community",
     "makeUnlisted": "Share unlisted link",
     "makePrivate": "Make private",
-    "attachImages": "Add licensed pictures (Commons, then web, then AI)"
+    "attachImages": "Add licensed pictures"
   },
   "quiz": {
     "title": "Quiz battle",
@@ -291,9 +288,9 @@
   },
   "play": {
     "backToDeck": "Back to deck",
-    "eyebrow": "Classroom activities",
+    "eyebrow": "Hong Kong city play",
     "title": "Play · {deck}",
-    "subtitle": "Same cards, twenty-six arcade rooms. Each round costs energy; win 50%+ to get it back, and a perfect run pays double.",
+    "subtitle": "Fifteen city games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
     "dueCards": "Using due cards ({count}) · Show all",
     "dueToday": "Due today only",
     "youWon": "You won",
@@ -301,17 +298,17 @@
     "playAgain": "Play again",
     "moreActivities": "More activities",
     "continue": "Continue",
-    "anteing": "Anteing {stake} energy…",
+    "anteing": "Using {stake} weekly allowance…",
     "quitWarning": "Quit or leave this page and the {stake} stays spent.",
-    "needEnergy": "Need energy",
+    "needEnergy": "Need allowance",
     "slowDown": "Slow down",
-    "anteHelp": "A round costs {stake} energy. Leave before you finish and the ante stays spent. Score 50%+ to win it back; 80%+ pays 30; a perfect run pays 40.",
+    "anteHelp": "A round uses {stake} weekly allowance. Leave before you finish and it stays spent. Score 50%+ to get it back; 80%+ returns 30; a perfect run returns 40.",
     "timeUp": "Time!",
-    "stakeReturned": "Stake returned — nice run.",
-    "anteKept": "The ante stays in the pot.",
-    "payoutProfit": "+{payout} energy back · profit {net}",
-    "payoutEven": "+{payout} energy back · ante returned",
-    "payoutLoss": "{stake} energy spent · ante kept",
+    "stakeReturned": "Allowance returned — nice run.",
+    "anteKept": "The weekly allowance stays spent.",
+    "payoutProfit": "+{payout} allowance back · +{net}",
+    "payoutEven": "+{payout} allowance back",
+    "payoutLoss": "{stake} allowance used",
     "exactMatch": "Exact match",
     "aiAccepted": "AI accepted",
     "niceHit": "Nice hit",
@@ -321,13 +318,8 @@
     "reveal": "Reveal",
     "gotIt": "I got it",
     "groups": {
-      "pairing": "Match",
-      "recall": "Recall",
-      "classify": "Sort",
-      "picture": "Pictures",
-      "quiz": "Quiz",
-      "puzzle": "Puzzles",
-      "arcade": "Quick fire"
+      "city": "City",
+      "campus": "Campus"
     },
     "templates": {
       "match-up": {
@@ -335,16 +327,18 @@
         "blurb": "Tap a term, then its definition."
       },
       "matching-pairs": {
-        "name": "Matching pairs",
-        "blurb": "Flip two tiles. Pair prompt with answer."
+        "name": "Twin lanterns",
+        "blurb": "Pair Mid-Autumn lanterns on the harbourfront.",
+        "howTo": "Flip two lanterns. A match stays lit. A miss goes dark and a decoy slides in."
       },
       "find-the-match": {
         "name": "Find the match",
         "blurb": "Tap the matching answer until the bank is empty."
       },
       "type-the-answer": {
-        "name": "Type the answer",
-        "blurb": "Read the prompt and type the answer."
+        "name": "Ink well",
+        "blurb": "Write the term before the 揮春 ink dries.",
+        "howTo": "Type the term and chop. Empty ink does not count. A miss shows the chip and hint."
       },
       "spell-the-word": {
         "name": "Spell the word",
@@ -371,8 +365,9 @@
         "blurb": "Pick a box, then answer the card inside."
       },
       "group-sort": {
-        "name": "Group sort",
-        "blurb": "Sort each card into its category bin."
+        "name": "Homework trays",
+        "blurb": "Flick papers into labelled classroom trays.",
+        "howTo": "Read the prompt only. Flick it into the right tray. Misses go to a redo stack."
       },
       "odd-one-out": {
         "name": "Odd one out",
@@ -399,16 +394,18 @@
         "blurb": "Multiple choice with 100 / 200 / 300 points."
       },
       "win-or-lose": {
-        "name": "Win or lose quiz",
-        "blurb": "Three lives. Miss three and the run ends."
+        "name": "Detention hall",
+        "blurb": "Three late slips. Streak of facts, not a gameshow.",
+        "howTo": "Three late slips. Keys A–C. A miss stamps WhyBox on the slip."
       },
       "speaking-cards": {
         "name": "Speaking cards",
         "blurb": "Say the answer aloud, then check yourself."
       },
       "whack-a-mole": {
-        "name": "Whack-a-mole",
-        "blurb": "Tap the mole with the correct answer."
+        "name": "Pop-quiz desks",
+        "blurb": "Only a standing student is hittable. Chips hide when seated.",
+        "howTo": "Hit the standing student with the matching chip. Seated desks do not score."
       },
       "balloon-pop": {
         "name": "Balloon pop",
@@ -419,8 +416,9 @@
         "blurb": "Group sort against a 60-second clock."
       },
       "maze-chase": {
-        "name": "Maze chase",
-        "blurb": "Steer to the correct exit. Avoid the chaser."
+        "name": "Prefect’s corridor",
+        "blurb": "Late for assembly. Four coloured doors. Avoid the prefect.",
+        "howTo": "Move to the door that matches the prompt. Wrong door warps you. Wait for the countdown."
       },
       "airplane": {
         "name": "Airplane",
@@ -433,7 +431,59 @@
       "label-match": {
         "name": "Label match",
         "blurb": "Drag-tap labels onto the matching pictures."
+      },
+      "gate-dash": {
+        "name": "Gate dash",
+        "blurb": "Paper-plane a covered footbridge. Tap a sign to fly the plane into that gate.",
+        "howTo": "Tap a shop sign to fly the plane into that gate, or press 1 / 2 / 3."
+      },
+      "last-car": {
+        "name": "Last car",
+        "blurb": "Last train of the night. Board the matching door, duck the rest.",
+        "howTo": "Swipe up or tap Board for the matching door. Duck a wrong one."
+      },
+      "ding-ding": {
+        "name": "Ding ding",
+        "blurb": "Tap when the matching tram-bell chip crosses the strike line.",
+        "howTo": "Tap Bell when the chip hits the neon line. Reduced motion skips the beat window."
+      },
+      "estate-court": {
+        "name": "Estate court",
+        "blurb": "Sitting-out area. Right cards orbit as 新聞紙 and auto-clear matches.",
+        "howTo": "Papers orbit. Tap the matching 新聞紙 to auto-clear. Wrong papers bump you."
+      },
+      "mosaic-wall": {
+        "name": "Mosaic wall",
+        "blurb": "Cha chaan teng 花磚. Break the matching tile with a milk-tea paddle.",
+        "howTo": "Break the matching mosaic tile. A wrong tile cracks the glass."
+      },
+      "minibus-stop": {
+        "name": "Minibus stop",
+        "blurb": "Tap Board when the matching-chip van lines up with the pole.",
+        "howTo": "Wait until the matching van lines up, then tap Board."
+      },
+      "station-lost": {
+        "name": "Station lost property",
+        "blurb": "Claim ticket in hand. Tap the matching bag in the jumble.",
+        "howTo": "Your prompt is the claim ticket. Tap the matching bag in the jumble."
+      },
+      "ticket-chops": {
+        "name": "Ticket chops",
+        "blurb": "Chop if the stub matches. Pass a decoy.",
+        "howTo": "One stub at a time. Chop a match, Pass a decoy. No loot boxes."
+      },
+      "street-flyers": {
+        "name": "Street flyers",
+        "blurb": "Slash only the matching 街招. Penalty notices cost a life.",
+        "howTo": "Slash the matching flyer. A red penalty notice costs a life."
       }
+    },
+    "howToSkip": "Got it",
+    "saveFailed": "Could not save this run.",
+    "blocked": {
+      "needCards": "Need at least 4 cards.",
+      "needChips": "Need 4 short play terms (not essays).",
+      "needBins": "Need two labelled groups with two cards each."
     }
   }
 }

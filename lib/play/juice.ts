@@ -23,16 +23,16 @@ function context() {
 }
 
 export function prefersReducedMotion() {
-  if (typeof window === "undefined") return true;
-  if (process.env.NODE_ENV === "test") return true;
+  if (typeof window === "undefined") return false;
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 export function playBeep(kind: PlayBeep) {
-  if (prefersReducedMotion()) return;
+  if (process.env.NODE_ENV === "test") return;
   try {
     const audio = context();
     if (!audio) return;
+    if (audio.state === "suspended") void audio.resume();
     const tone = TONES[kind];
     const now = audio.currentTime;
     const speak = (freq: number, at: number, dur: number) => {
@@ -54,12 +54,21 @@ export function playBeep(kind: PlayBeep) {
   }
 }
 
+export const ARCADE_CLOCK = 75;
+
+const ARCADE_SKINS = new Set([
+  "mole",
+  "balloon",
+  "maze",
+  "plane",
+  "arcade",
+  "neon",
+  "match",
+  "puzzle",
+]);
+
 export function clockSecondsForSkin(skin: string, timed?: boolean) {
   if (timed) return 60;
-  if (skin === "mole" || skin === "balloon" || skin === "maze" || skin === "plane") {
-    return 45;
-  }
-  if (skin === "sort") return 90;
-  if (skin === "puzzle") return 180;
-  return 90;
+  if (ARCADE_SKINS.has(skin)) return ARCADE_CLOCK;
+  return 0;
 }

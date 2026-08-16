@@ -13,6 +13,11 @@ const REASON_LABELS: Record<string, string> = {
   admin_adjust: "Admin adjust",
 };
 
+const POOL_LABELS: Record<string, string> = {
+  text: "Energy",
+  image: "Unused",
+};
+
 export default async function AdminEnergyPage() {
   await requireAdminSession();
   const rows = await listCreditLedger(200);
@@ -49,7 +54,7 @@ export default async function AdminEnergyPage() {
                 </td>
                 <td className="px-4 py-3">{row.email ?? row.user_id}</td>
                 <td className="px-4 py-3 font-semibold">{row.delta}</td>
-                <td className="px-4 py-3">{row.pool}</td>
+                <td className="px-4 py-3">{POOL_LABELS[row.pool] ?? row.pool}</td>
                 <td className="px-4 py-3">
                   {REASON_LABELS[row.reason] ?? row.reason}
                   {REASON_LABELS[row.reason] ? (

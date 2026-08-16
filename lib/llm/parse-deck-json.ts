@@ -2,10 +2,18 @@ import { z } from "zod";
 
 import type { CardType, GeneratedDeck, GeneratedFlashcard } from "@/lib/types/flashcard";
 import { sanitizeMcqFields } from "@/lib/quiz/choices";
+import {
+  PLAY_HINT_MAX,
+  PLAY_OPTION_MAX,
+  PLAY_TERM_MAX_CHARS,
+  fitsPlayChip,
+  splitPlayTerm,
+  tightenForChip,
+} from "@/lib/play/term";
 
 export function mcqStyleRules() {
   return `Card style: only multiple choice.
-- "options": exactly 4 short, same-kind, similar-length, plausible answers to THIS question (four cities, four organs, four numbers — never mix a name with a paragraph).
+- "options": exactly 4 short, same-kind, similar-length answers (max ~32 characters each).
 - "back": the short correct option text only. It MUST match one option exactly.
 - Put any extra fact or "why" in "hint". Never put the why in "back" or "options".
 - Wrong options must be tempting mistakes on the same topic, never unrelated facts from other cards.
@@ -35,7 +43,7 @@ export function isAcceptableCardCount(actual: number, expected: number) {
 }
 
 const FRONT_MAX = 160;
-const BACK_MAX = 280;
+const HINT_MAX = PLAY_HINT_MAX;
 
 const cardTypeSchema = z.enum(["qa", "definition", "cloze", "mcq"]);
 
@@ -105,24 +113,33 @@ function throwIfRefusal(payload: unknown) {
 
 function normalizeCard(card: z.infer<typeof generatedCardSchema>): GeneratedFlashcard {
   const front = card.front.trim().slice(0, FRONT_MAX);
-  let back = card.back.trim().slice(0, BACK_MAX);
-  if (!front || !back) {
-    throw new Error("Card missing front or back after normalization");
-  }
   const type = (card.type ?? "qa") as CardType;
-  let hint = card.hint?.trim().slice(0, 280) || undefined;
+  let hint = card.hint?.trim().slice(0, HINT_MAX) || undefined;
   let options =
     type === "mcq"
       ? (card.options ?? []).map((entry) => entry.trim()).filter(Boolean).slice(0, 6)
       : undefined;
+  let back = card.back.trim();
   if (type === "mcq") {
     if (!options || options.length < 2) {
       throw new Error("MCQ cards need at least 2 options");
     }
     const sanitized = sanitizeMcqFields({ back, hint, options });
-    back = sanitized.back.slice(0, BACK_MAX);
-    hint = sanitized.hint?.slice(0, 280) || undefined;
-    options = sanitized.options;
+    back = sanitized.back;
+    hint = sanitized.hint?.slice(0, HINT_MAX) || undefined;
+    options = sanitized.options.map((entry) => entry.trim().slice(0, PLAY_OPTION_MAX));
+  }
+  const split = splitPlayTerm(back, hint);
+  if (type === "mcq") {
+    back = split.back.slice(0, PLAY_TERM_MAX_CHARS);
+    hint = split.hint?.slice(0, HINT_MAX);
+  } else {
+    const tight = tightenForChip(split.back, split.hint);
+    back = tight.back.slice(0, PLAY_TERM_MAX_CHARS);
+    hint = tight.hint?.slice(0, HINT_MAX);
+  }
+  if (!front || !back) {
+    throw new Error("Card missing front or back after normalization");
   }
   return {
     front,
@@ -136,9 +153,32 @@ function normalizeCard(card: z.infer<typeof generatedCardSchema>): GeneratedFlas
   };
 }
 
+export function needsChipRewrite(card: { back: string }) {
+  return !fitsPlayChip(card.back);
+}
+
+export function insufficientCountMessage(got: number, want: number) {
+  return `Not enough usable study content for ${want} cards (got ${got}). Add more notes or try fewer cards.`;
+}
+
+/** After a refill: keep a near-count deck, refuse a collapse to a handful. */
+export function assertEnoughCards(deck: GeneratedDeck, requested: number): GeneratedDeck {
+  const want = Math.min(30, Math.max(3, requested));
+  const got = deck.cards.length;
+  if (got < 3 || !isAcceptableCardCount(got, want)) {
+    throw new UnrelatedSourceError(insufficientCountMessage(got, want), "INSUFFICIENT_CONTENT");
+  }
+  return { ...deck, requestedCardCount: want };
+}
+
+const partialDeckSchema = z.object({
+  title: z.string().min(1).max(100).optional(),
+  cards: z.array(generatedCardSchema).min(1).max(30),
+});
+
 export function parseGeneratedDeck(
   payload: unknown,
-  options?: { expectedCardCount?: number; softCount?: boolean },
+  options?: { expectedCardCount?: number; softCount?: boolean; allowPartial?: boolean },
 ): GeneratedDeck {
   throwIfRefusal(payload);
 
@@ -146,13 +186,18 @@ export function parseGeneratedDeck(
     ? Math.min(30, Math.max(3, options.expectedCardCount))
     : undefined;
 
-  // Accept min..max here; cloud generateObject uses exact-length schema separately.
-  const deck = flashcardSchema.parse(payload);
+  const deck = options?.allowPartial
+    ? partialDeckSchema.parse(payload)
+    : flashcardSchema.parse(payload);
   const cards = deck.cards.map(normalizeCard);
+  const title = (deck.title ?? "Study deck").trim().slice(0, 100);
 
   if (expected && cards.length < expected) {
-    if (options?.softCount && isAcceptableCardCount(cards.length, expected)) {
-      return { title: deck.title.trim().slice(0, 100), cards };
+    if (options?.allowPartial && cards.length >= 1) {
+      return { title, cards };
+    }
+    if (options?.softCount && cards.length >= 3) {
+      return { title, cards };
     }
     throw new Error(
       `Model returned ${cards.length} cards but ${expected} were requested`,
@@ -160,8 +205,8 @@ export function parseGeneratedDeck(
   }
 
   if (expected && cards.length > expected) {
-    return { title: deck.title.trim().slice(0, 100), cards: cards.slice(0, expected) };
+    return { title, cards: cards.slice(0, expected) };
   }
 
-  return { title: deck.title.trim().slice(0, 100), cards };
+  return { title, cards };
 }

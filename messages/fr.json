@@ -76,16 +76,13 @@
     "noProviders": "Ajoutez OPENROUTER_API_KEY. Imports : SUPABASE_SECRET_KEY.",
     "chooseFile": "Choisissez un fichier",
     "uploadSecretError": "Ajoutez SUPABASE_SECRET_KEY pour importer",
+    "unrelated": "Ceci ne ressemble pas à un support de cours. Collez des notes, une leçon ou un article — pas un chat ou des mèmes.",
+    "insufficient": "Pas assez de contenu pour autant de cartes. Ajoutez des notes ou demandez-en moins.",
     "model": "Modèle",
     "modelFree": "Moins d'énergie",
     "modelBudget": "Économique",
     "modelStandard": "Standard",
-    "energyShort": "Pas assez d'énergie texte. Il faut {need}, vous avez {have}.",
-    "energyImageShort": "Pas assez d'énergie image. Il faut {need}, vous avez {have}.",
-    "illustrations": "Ajouter des illustrations",
-    "illustrationsHint": "Les illustrations utilisent un solde d'énergie image séparé. FLUX.2 Klein est le plus économique.",
-    "imageModel": "Modèle d'illustration",
-    "energyEach": "énergie image / carte",
+    "energyShort": "Pas assez d'énergie. Il faut {need}, vous avez {have}.",
     "questionStyle": "Style de question",
     "styleMixed": "Types mixtes",
     "styleQa": "Q&R uniquement",
@@ -94,8 +91,7 @@
     "styleMcq": "Choix multiple",
     "modeFlashcards": "Flashcards",
     "modeQuiz": "Paquet quiz",
-    "energyCost": "Énergie texte : ~{cost}",
-    "energyImageCost": "Énergie image : ~{cost}",
+    "energyCost": "Énergie : ~{cost}",
     "quizModeNote": "Les paquets quiz génèrent des QCM pour le mode bataille.",
     "url": "URL",
     "urlLabel": "URL",
@@ -105,6 +101,7 @@
   "generation": {
     "eyebrow": "Création du paquet",
     "doneTitle": "Paquet prêt",
+    "shortfall": "Demandé {want} cartes, obtenu {got}. Ouverture de ce qui a pu être fait.",
     "opening": "Ouverture des cartes…",
     "waitingCloud": "L’IA rédige les cartes.",
     "moving": "Étapes en cours.",
@@ -290,9 +287,9 @@
   },
   "play": {
     "backToDeck": "Retour au paquet",
-    "eyebrow": "Activités de classe",
+    "eyebrow": "Hong Kong city play",
     "title": "Jouer · {deck}",
-    "subtitle": "Les mêmes cartes, vingt-six salles. Chaque manche coûte de l’énergie ; 50 %+ la rend, un sans-faute double la mise.",
+    "subtitle": "Fifteen city games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
     "dueCards": "Cartes dues ({count}) · Tout afficher",
     "dueToday": "Dues aujourd’hui seulement",
     "youWon": "Gagné",
@@ -300,17 +297,17 @@
     "playAgain": "Rejouer",
     "moreActivities": "Plus d’activités",
     "continue": "Continuer",
-    "anteing": "Mise de {stake} d’énergie…",
-    "quitWarning": "Quitter cette page laisse les {stake} dépensés.",
-    "needEnergy": "Pas assez d’énergie",
+    "anteing": "Using {stake} weekly allowance…",
+    "quitWarning": "Quit or leave this page and the {stake} stays spent.",
+    "needEnergy": "Need allowance",
     "slowDown": "Un peu trop vite",
-    "anteHelp": "Une manche coûte {stake} d’énergie. Partir avant la fin perd la mise. 50 %+ la rend ; 80 %+ paie 30 ; un sans-faute paie 40.",
+    "anteHelp": "A round uses {stake} weekly allowance. Leave before you finish and it stays spent. Score 50%+ to get it back; 80%+ returns 30; a perfect run returns 40.",
     "timeUp": "Temps écoulé !",
-    "stakeReturned": "Mise rendue — belle manche.",
-    "anteKept": "La mise reste dans le pot.",
-    "payoutProfit": "+{payout} d’énergie · profit {net}",
-    "payoutEven": "+{payout} d’énergie · mise rendue",
-    "payoutLoss": "{stake} dépensés · mise perdue",
+    "stakeReturned": "Allowance returned — nice run.",
+    "anteKept": "The weekly allowance stays spent.",
+    "payoutProfit": "+{payout} allowance back · +{net}",
+    "payoutEven": "+{payout} allowance back",
+    "payoutLoss": "{stake} allowance used",
     "exactMatch": "Correspondance exacte",
     "aiAccepted": "Accepté par l’IA",
     "niceHit": "Bien joué",
@@ -320,13 +317,8 @@
     "reveal": "Révéler",
     "gotIt": "J’ai trouvé",
     "groups": {
-      "pairing": "Associer",
-      "recall": "Mémoriser",
-      "classify": "Trier",
-      "picture": "Images",
-      "quiz": "Quiz",
-      "puzzle": "Puzzles",
-      "arcade": "Rapide"
+      "city": "City",
+      "campus": "Campus"
     },
     "templates": {
       "match-up": {
@@ -334,16 +326,18 @@
         "blurb": "Touchez un terme, puis sa définition."
       },
       "matching-pairs": {
-        "name": "Paires",
-        "blurb": "Retournez deux tuiles. Reliez question et réponse."
+        "name": "Twin lanterns",
+        "blurb": "Pair Mid-Autumn lanterns on the harbourfront.",
+        "howTo": "Flip two lanterns. A match stays lit. A miss goes dark and a decoy slides in."
       },
       "find-the-match": {
         "name": "Trouver la paire",
         "blurb": "Touchez la bonne réponse jusqu’à vider le banc."
       },
       "type-the-answer": {
-        "name": "Saisir la réponse",
-        "blurb": "Lisez la question et tapez la réponse."
+        "name": "Ink well",
+        "blurb": "Write the term before the 揮春 ink dries.",
+        "howTo": "Type the term and chop. Empty ink does not count. A miss shows the chip and hint."
       },
       "spell-the-word": {
         "name": "Épeler",
@@ -370,8 +364,9 @@
         "blurb": "Choisissez une boîte, puis répondez."
       },
       "group-sort": {
-        "name": "Trier",
-        "blurb": "Classez chaque carte dans sa catégorie."
+        "name": "Homework trays",
+        "blurb": "Flick papers into labelled classroom trays.",
+        "howTo": "Read the prompt only. Flick it into the right tray. Misses go to a redo stack."
       },
       "odd-one-out": {
         "name": "L’intrus",
@@ -398,16 +393,18 @@
         "blurb": "QCM à 100 / 200 / 300 points."
       },
       "win-or-lose": {
-        "name": "Trois vies",
-        "blurb": "Trois vies. Trois erreurs et c’est fini."
+        "name": "Detention hall",
+        "blurb": "Three late slips. Streak of facts, not a gameshow.",
+        "howTo": "Three late slips. Keys A–C. A miss stamps WhyBox on the slip."
       },
       "speaking-cards": {
         "name": "Cartes orales",
         "blurb": "Dites la réponse à voix haute, puis vérifiez."
       },
       "whack-a-mole": {
-        "name": "Tape-taupe",
-        "blurb": "Touchez la taupe avec la bonne réponse."
+        "name": "Pop-quiz desks",
+        "blurb": "Only a standing student is hittable. Chips hide when seated.",
+        "howTo": "Hit the standing student with the matching chip. Seated desks do not score."
       },
       "balloon-pop": {
         "name": "Ballons",
@@ -418,8 +415,9 @@
         "blurb": "Triez contre une horloge de 60 secondes."
       },
       "maze-chase": {
-        "name": "Labyrinthe",
-        "blurb": "Allez à la bonne sortie. Évitez le poursuivant."
+        "name": "Prefect’s corridor",
+        "blurb": "Late for assembly. Four coloured doors. Avoid the prefect.",
+        "howTo": "Move to the door that matches the prompt. Wrong door warps you. Wait for the countdown."
       },
       "airplane": {
         "name": "Avion",
@@ -432,7 +430,59 @@
       "label-match": {
         "name": "Étiquettes",
         "blurb": "Placez les étiquettes sur les images."
+      },
+      "gate-dash": {
+        "name": "Gate dash",
+        "blurb": "Paper-plane a covered footbridge. Tap a sign to fly the plane into that gate.",
+        "howTo": "Tap a shop sign to fly the plane into that gate, or press 1 / 2 / 3."
+      },
+      "last-car": {
+        "name": "Last car",
+        "blurb": "Last train of the night. Board the matching door, duck the rest.",
+        "howTo": "Swipe up or tap Board for the matching door. Duck a wrong one."
+      },
+      "ding-ding": {
+        "name": "Ding ding",
+        "blurb": "Tap when the matching tram-bell chip crosses the strike line.",
+        "howTo": "Tap Bell when the chip hits the neon line. Reduced motion skips the beat window."
+      },
+      "estate-court": {
+        "name": "Estate court",
+        "blurb": "Sitting-out area. Right cards orbit as 新聞紙 and auto-clear matches.",
+        "howTo": "Papers orbit. Tap the matching 新聞紙 to auto-clear. Wrong papers bump you."
+      },
+      "mosaic-wall": {
+        "name": "Mosaic wall",
+        "blurb": "Cha chaan teng 花磚. Break the matching tile with a milk-tea paddle.",
+        "howTo": "Break the matching mosaic tile. A wrong tile cracks the glass."
+      },
+      "minibus-stop": {
+        "name": "Minibus stop",
+        "blurb": "Tap Board when the matching-chip van lines up with the pole.",
+        "howTo": "Wait until the matching van lines up, then tap Board."
+      },
+      "station-lost": {
+        "name": "Station lost property",
+        "blurb": "Claim ticket in hand. Tap the matching bag in the jumble.",
+        "howTo": "Your prompt is the claim ticket. Tap the matching bag in the jumble."
+      },
+      "ticket-chops": {
+        "name": "Ticket chops",
+        "blurb": "Chop if the stub matches. Pass a decoy.",
+        "howTo": "One stub at a time. Chop a match, Pass a decoy. No loot boxes."
+      },
+      "street-flyers": {
+        "name": "Street flyers",
+        "blurb": "Slash only the matching 街招. Penalty notices cost a life.",
+        "howTo": "Slash the matching flyer. A red penalty notice costs a life."
       }
+    },
+    "howToSkip": "Got it",
+    "saveFailed": "Could not save this run.",
+    "blocked": {
+      "needCards": "Need at least 4 cards.",
+      "needChips": "Need 4 short play terms (not essays).",
+      "needBins": "Need two labelled groups with two cards each."
     }
   }
 }

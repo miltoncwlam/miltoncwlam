@@ -76,16 +76,13 @@
     "noProviders": "OPENROUTER_API_KEY が必要です。アップロードには SUPABASE_SECRET_KEY。サンプルデッキは使えます。",
     "chooseFile": "ファイルを選んでください",
     "uploadSecretError": "アップロードには SUPABASE_SECRET_KEY が必要です",
+    "unrelated": "学習教材ではなさそうです。メモや授業、記事を貼ってください。雑談やミームは不可です。",
+    "insufficient": "その枚数を作るには内容が足りません。メモを増やすか、枚数を減らしてください。",
     "model": "モデル",
     "modelFree": "低エネルギー",
     "modelBudget": "節約",
     "modelStandard": "標準",
-    "energyShort": "テキストエネルギー不足。必要 {need}、所持 {have}。",
-    "energyImageShort": "画像エネルギー不足。必要 {need}、所持 {have}。",
-    "illustrations": "イラストを追加",
-    "illustrationsHint": "イラストは別の画像エネルギーを使います。FLUX.2 Klein が最も少ないです。",
-    "imageModel": "イラストモデル",
-    "energyEach": "画像エネルギー／枚",
+    "energyShort": "エネルギー不足。必要 {need}、所持 {have}。",
     "questionStyle": "問題形式",
     "styleMixed": "混合タイプ",
     "styleQa": "Q&A のみ",
@@ -94,8 +91,7 @@
     "styleMcq": "選択式",
     "modeFlashcards": "フラッシュカード",
     "modeQuiz": "クイズデッキ",
-    "energyCost": "テキストエネルギー: 約 {cost}",
-    "energyImageCost": "画像エネルギー: 約 {cost}",
+    "energyCost": "エネルギー: 約 {cost}",
     "quizModeNote": "クイズデッキはバトルモード用の選択問題を生成します。",
     "url": "URL",
     "urlLabel": "URL",
@@ -105,6 +101,7 @@
   "generation": {
     "eyebrow": "デッキ作成中",
     "doneTitle": "デッキ準備完了",
+    "shortfall": "{want} 枚希望、{got} 枚できました。作れた分を開きます。",
     "opening": "カードを開いています…",
     "waitingCloud": "AIがカードを作成中です。",
     "moving": "各ステップを進めています。",
@@ -290,9 +287,9 @@
   },
   "play": {
     "backToDeck": "デッキに戻る",
-    "eyebrow": "授業アクティビティ",
+    "eyebrow": "Hong Kong city play",
     "title": "プレイ · {deck}",
-    "subtitle": "同じカードで26のゲーム。1回ごとにエネルギーを先払い。50%以上で返還、パーフェクトは2倍。",
+    "subtitle": "Fifteen city games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
     "dueCards": "期限カードを使用（{count}）· すべて表示",
     "dueToday": "今日の期限のみ",
     "youWon": "勝ち",
@@ -300,17 +297,17 @@
     "playAgain": "もう一度",
     "moreActivities": "ほかのゲーム",
     "continue": "続ける",
-    "anteing": "{stake} エネルギーを賭けています…",
-    "quitWarning": "このページを離れると {stake} は戻りません。",
-    "needEnergy": "エネルギー不足",
+    "anteing": "Using {stake} weekly allowance…",
+    "quitWarning": "Quit or leave this page and the {stake} stays spent.",
+    "needEnergy": "Need allowance",
     "slowDown": "少し待って",
-    "anteHelp": "1回 {stake} エネルギー。途中で離れると賭け金は失われます。50%以上で返還、80%以上で30、パーフェクトで40。",
+    "anteHelp": "A round uses {stake} weekly allowance. Leave before you finish and it stays spent. Score 50%+ to get it back; 80%+ returns 30; a perfect run returns 40.",
     "timeUp": "時間切れ！",
-    "stakeReturned": "賭け金が戻りました。",
-    "anteKept": "賭け金はポットに残ります。",
-    "payoutProfit": "+{payout} エネルギー返還 · 利益 {net}",
-    "payoutEven": "+{payout} エネルギー返還 · 賭け金戻り",
-    "payoutLoss": "{stake} 消費 · 賭け金は戻りません",
+    "stakeReturned": "Allowance returned — nice run.",
+    "anteKept": "The weekly allowance stays spent.",
+    "payoutProfit": "+{payout} allowance back · +{net}",
+    "payoutEven": "+{payout} allowance back",
+    "payoutLoss": "{stake} allowance used",
     "exactMatch": "完全一致",
     "aiAccepted": "AIが正解と判定",
     "niceHit": "正解",
@@ -320,13 +317,8 @@
     "reveal": "答えを見る",
     "gotIt": "できた",
     "groups": {
-      "pairing": "マッチ",
-      "recall": "想起",
-      "classify": "分類",
-      "picture": "画像",
-      "quiz": "クイズ",
-      "puzzle": "パズル",
-      "arcade": "スピード"
+      "city": "City",
+      "campus": "Campus"
     },
     "templates": {
       "match-up": {
@@ -334,16 +326,18 @@
         "blurb": "用語をタップしてから定義を選ぶ。"
       },
       "matching-pairs": {
-        "name": "神経衰弱",
-        "blurb": "2枚めくって問題と答えをペアに。"
+        "name": "Twin lanterns",
+        "blurb": "Pair Mid-Autumn lanterns on the harbourfront.",
+        "howTo": "Flip two lanterns. A match stays lit. A miss goes dark and a decoy slides in."
       },
       "find-the-match": {
         "name": "マッチ探し",
         "blurb": "対応する答えをタップして空にする。"
       },
       "type-the-answer": {
-        "name": "答えを入力",
-        "blurb": "問題を読んで答えを入力。"
+        "name": "Ink well",
+        "blurb": "Write the term before the 揮春 ink dries.",
+        "howTo": "Type the term and chop. Empty ink does not count. A miss shows the chip and hint."
       },
       "spell-the-word": {
         "name": "スペル",
@@ -370,8 +364,9 @@
         "blurb": "箱を選んで中のカードに答える。"
       },
       "group-sort": {
-        "name": "グループ分け",
-        "blurb": "カードをカテゴリに分ける。"
+        "name": "Homework trays",
+        "blurb": "Flick papers into labelled classroom trays.",
+        "howTo": "Read the prompt only. Flick it into the right tray. Misses go to a redo stack."
       },
       "odd-one-out": {
         "name": "仲間外れ",
@@ -398,16 +393,18 @@
         "blurb": "選択問題。100 / 200 / 300点。"
       },
       "win-or-lose": {
-        "name": "3ライフクイズ",
-        "blurb": "ライフは3。3回ミスで終了。"
+        "name": "Detention hall",
+        "blurb": "Three late slips. Streak of facts, not a gameshow.",
+        "howTo": "Three late slips. Keys A–C. A miss stamps WhyBox on the slip."
       },
       "speaking-cards": {
         "name": "スピーキング",
         "blurb": "答えを声に出して自分で確認。"
       },
       "whack-a-mole": {
-        "name": "モグラたたき",
-        "blurb": "正解のモグラをタップ。"
+        "name": "Pop-quiz desks",
+        "blurb": "Only a standing student is hittable. Chips hide when seated.",
+        "howTo": "Hit the standing student with the matching chip. Seated desks do not score."
       },
       "balloon-pop": {
         "name": "風船割り",
@@ -418,8 +415,9 @@
         "blurb": "60秒でグループ分け。"
       },
       "maze-chase": {
-        "name": "迷路チェイス",
-        "blurb": "正しい出口へ。追跡者を避ける。"
+        "name": "Prefect’s corridor",
+        "blurb": "Late for assembly. Four coloured doors. Avoid the prefect.",
+        "howTo": "Move to the door that matches the prompt. Wrong door warps you. Wait for the countdown."
       },
       "airplane": {
         "name": "飛行機",
@@ -432,7 +430,59 @@
       "label-match": {
         "name": "ラベル合わせ",
         "blurb": "ラベルを対応する画像へ。"
+      },
+      "gate-dash": {
+        "name": "Gate dash",
+        "blurb": "Paper-plane a covered footbridge. Tap a sign to fly the plane into that gate.",
+        "howTo": "Tap a shop sign to fly the plane into that gate, or press 1 / 2 / 3."
+      },
+      "last-car": {
+        "name": "Last car",
+        "blurb": "Last train of the night. Board the matching door, duck the rest.",
+        "howTo": "Swipe up or tap Board for the matching door. Duck a wrong one."
+      },
+      "ding-ding": {
+        "name": "Ding ding",
+        "blurb": "Tap when the matching tram-bell chip crosses the strike line.",
+        "howTo": "Tap Bell when the chip hits the neon line. Reduced motion skips the beat window."
+      },
+      "estate-court": {
+        "name": "Estate court",
+        "blurb": "Sitting-out area. Right cards orbit as 新聞紙 and auto-clear matches.",
+        "howTo": "Papers orbit. Tap the matching 新聞紙 to auto-clear. Wrong papers bump you."
+      },
+      "mosaic-wall": {
+        "name": "Mosaic wall",
+        "blurb": "Cha chaan teng 花磚. Break the matching tile with a milk-tea paddle.",
+        "howTo": "Break the matching mosaic tile. A wrong tile cracks the glass."
+      },
+      "minibus-stop": {
+        "name": "Minibus stop",
+        "blurb": "Tap Board when the matching-chip van lines up with the pole.",
+        "howTo": "Wait until the matching van lines up, then tap Board."
+      },
+      "station-lost": {
+        "name": "Station lost property",
+        "blurb": "Claim ticket in hand. Tap the matching bag in the jumble.",
+        "howTo": "Your prompt is the claim ticket. Tap the matching bag in the jumble."
+      },
+      "ticket-chops": {
+        "name": "Ticket chops",
+        "blurb": "Chop if the stub matches. Pass a decoy.",
+        "howTo": "One stub at a time. Chop a match, Pass a decoy. No loot boxes."
+      },
+      "street-flyers": {
+        "name": "Street flyers",
+        "blurb": "Slash only the matching 街招. Penalty notices cost a life.",
+        "howTo": "Slash the matching flyer. A red penalty notice costs a life."
       }
+    },
+    "howToSkip": "Got it",
+    "saveFailed": "Could not save this run.",
+    "blocked": {
+      "needCards": "Need at least 4 cards.",
+      "needChips": "Need 4 short play terms (not essays).",
+      "needBins": "Need two labelled groups with two cards each."
     }
   }
 }

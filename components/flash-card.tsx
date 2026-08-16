@@ -167,9 +167,6 @@ export function FlashCard({
               <span className="card-content tcg-move">
                 {cardType === "cloze" ? renderClozeFront(front) : front}
               </span>
-              {hint ? (
-                <span className="card-hint tcg-weakness">Hint: {hint}</span>
-              ) : null}
               <span className="card-instruction">
                 {isMcq && !answered
                   ? "Choose an answer below"
@@ -192,6 +189,9 @@ export function FlashCard({
                 <span className="tcg-art-badge">REVEAL</span>
               </span>
               <span className="card-content tcg-move">{back}</span>
+              {hint ? (
+                <span className="card-hint tcg-weakness">{hint}</span>
+              ) : null}
               {answered ? (
                 <span className="card-hint tcg-weakness">
                   {correct ? "Correct" : `Your pick: ${selectedOption}`}
@@ -242,7 +242,7 @@ export function FlashCard({
                   <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-black text-white">
                     {String.fromCharCode(65 + optionIndex)}
                   </span>
-                  <span>{option}</span>
+                  <span className="play-choice-text">{option}</span>
                 </button>
               </li>
             );

@@ -7,18 +7,18 @@ import { getClassLinkById } from "@/lib/data/class-links";
 import { completeGameRun, startGameRun } from "@/lib/data/games";
 import { getDeckWithCards } from "@/lib/data/decks";
 import { gradeTypedAnswer } from "@/lib/llm/grade-answer";
-import { PLAY_TEMPLATE_IDS } from "@/lib/play/templates";
+import { playTemplateEnum } from "@/lib/play/templates";
 
 const startSchema = z.object({
   deckId: z.string().uuid(),
-  template: z.enum(PLAY_TEMPLATE_IDS),
+  template: z.enum(playTemplateEnum()),
   clientKey: z.string().uuid(),
   classLinkId: z.string().uuid().optional(),
 });
 
 const completeSchema = z.object({
   deckId: z.string().uuid(),
-  template: z.enum(PLAY_TEMPLATE_IDS),
+  template: z.enum(playTemplateEnum()),
   score: z.number().int().min(0).max(10000),
   maxScore: z.number().int().min(0).max(10000),
   clientKey: z.string().uuid().optional(),

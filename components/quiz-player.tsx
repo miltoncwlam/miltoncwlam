@@ -146,7 +146,7 @@ export function QuizPlayer({
             <span className="play-choice-letter">
               {String.fromCharCode(65 + i)}
             </span>
-            {choice}
+            <span className="play-choice-text">{choice}</span>
           </button>
         ))}
       </div>

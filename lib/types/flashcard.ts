@@ -106,6 +106,8 @@ export type GeneratedDeck = {
   title: string;
   cards: GeneratedFlashcard[];
   usage?: { inputTokens: number; outputTokens: number };
+  /** How many cards the user asked for; may be greater than `cards.length` after a refill. */
+  requestedCardCount?: number;
 };
 
 export type DeckWithCards = Deck & {

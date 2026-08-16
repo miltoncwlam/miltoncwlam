@@ -9,15 +9,7 @@ import { classAssignFromQuery, classJoinPath, playAssignSearch } from "@/lib/pla
 import { templatesForDeck } from "@/lib/play/eligibility";
 import { PLAY_SKIN_EMOJI, PLAY_SKINS } from "@/lib/play/worlds";
 
-const GROUPS = [
-  "pairing",
-  "recall",
-  "classify",
-  "picture",
-  "quiz",
-  "puzzle",
-  "arcade",
-] as const;
+const GROUPS = ["city", "campus"] as const;
 
 export default async function DeckPlayPage({
   params,
@@ -89,7 +81,7 @@ export default async function DeckPlayPage({
                     key={item.id}
                   >
                     <p className="font-bold">{t(`templates.${item.id}.name`)}</p>
-                    <p className="mt-1 text-sm">{item.blocked}</p>
+                    <p className="mt-1 text-sm">{t(`blocked.${item.blocked}`)}</p>
                     <span className="play-pick-emoji" aria-hidden>
                       {PLAY_SKIN_EMOJI[PLAY_SKINS[item.id]]}
                     </span>

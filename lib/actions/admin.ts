@@ -10,10 +10,8 @@ import { pool } from "@/lib/db";
 const energySchema = z.object({
   userId: z.string().min(1),
   periodGrant: z.coerce.number().int().min(0).max(10_000),
-  imagePeriodGrant: z.coerce.number().int().min(0).max(10_000),
   isUnlimited: z.coerce.boolean(),
   balance: z.coerce.number().int().min(0).max(100_000).optional(),
-  imageBalance: z.coerce.number().int().min(0).max(100_000).optional(),
 });
 
 export async function adminUpdateEnergyAction(formData: FormData) {
@@ -21,10 +19,8 @@ export async function adminUpdateEnergyAction(formData: FormData) {
   const input = energySchema.parse({
     userId: formData.get("userId"),
     periodGrant: formData.get("periodGrant"),
-    imagePeriodGrant: formData.get("imagePeriodGrant"),
     isUnlimited: formData.get("isUnlimited") === "on",
     balance: formData.get("balance") || undefined,
-    imageBalance: formData.get("imageBalance") || undefined,
   });
 
   await setUserEnergySettings(input);

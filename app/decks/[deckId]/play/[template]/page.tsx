@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { PlayDispatcher } from "@/components/play/play-dispatcher";
 import { requireSession } from "@/lib/auth-server";
@@ -7,7 +7,8 @@ import { getDeckWithCards } from "@/lib/data/decks";
 import { listDueCardIds } from "@/lib/data/study";
 import { classAssignFromQuery, playAssignSearch } from "@/lib/play/activity";
 import { templateReason } from "@/lib/play/eligibility";
-import { isPlayTemplateId } from "@/lib/play/templates";
+import { isPlayTemplateId, resolvePlayTemplate } from "@/lib/play/templates";
+import { getTranslations } from "next-intl/server";
 
 export default async function DeckPlayTemplatePage({
   params,
@@ -20,6 +21,15 @@ export default async function DeckPlayTemplatePage({
   const { deckId, template } = await params;
   const query = await searchParams;
   if (!isPlayTemplateId(template)) notFound();
+  const resolved = resolvePlayTemplate(template);
+  if (resolved === "study") {
+    redirect(`/decks/${deckId}/study`);
+  }
+  if (resolved && resolved !== template) {
+    const assign = classAssignFromQuery({ ...query, activity: resolved });
+    redirect(`/decks/${deckId}/play/${resolved}${playAssignSearch(assign)}`);
+  }
+  if (!resolved) notFound();
 
   const deck = await getDeckWithCards(deckId, session.user.id);
   if (!deck || deck.generationStatus !== "complete" || !deck.cards.length) {
@@ -39,6 +49,7 @@ export default async function DeckPlayTemplatePage({
     ? `/decks/${deck.id}`
     : `/decks/${deck.id}/play${assignQuery}`;
   const replayHref = `/decks/${deck.id}/play/${template}${assignQuery}`;
+  const t = await getTranslations("play");
 
   return (
     <main className="page-shell">
@@ -48,7 +59,7 @@ export default async function DeckPlayTemplatePage({
         </Link>
       </div>
       {blocked ? (
-        <p className="empty-state">{blocked}</p>
+        <p className="empty-state">{t(`blocked.${blocked}`)}</p>
       ) : (
         <PlayDispatcher
           cards={cards}

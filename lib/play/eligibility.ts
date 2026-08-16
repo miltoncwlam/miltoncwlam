@@ -1,70 +1,66 @@
 import type { Flashcard } from "@/lib/types/flashcard";
 
-import { categoryBins, clozeBlank, shortTarget, spellingWord } from "./answers";
-import { buildCrossword, buildWordsearch } from "./puzzles";
-import { PLAY_TEMPLATES, type PlayTemplateId } from "./templates";
+import { categoryBins, chipCards } from "./answers";
+import {
+  PLAY_TEMPLATES,
+  isPlayCatalogId,
+  resolvePlayTemplate,
+  type PlayCatalogId,
+  type PlayTemplateId,
+} from "./templates";
+
+export type PlayBlockReason = "needCards" | "needChips" | "needBins";
+
+const CHIP_FLOOR = 4;
 
 export function templateReason(
   id: PlayTemplateId,
   cards: Flashcard[],
-): string | null {
-  const n = cards.length;
-  if (n < 4) return "Need at least 4 cards.";
+): PlayBlockReason | null {
+  const resolved = resolvePlayTemplate(id);
+  if (!resolved || resolved === "study") return "needCards";
+  return catalogReason(resolved, cards);
+}
 
-  const short = cards.filter((card) => shortTarget(card));
-  const spell = cards.filter((card) => spellingWord(card));
-  const images = cards.filter((card) => card.imageUrl);
-  const bins = categoryBins(cards);
-  const cloze = cards.filter((card) => clozeBlank(card));
-
-  switch (id) {
-    case "match-up":
-    case "matching-pairs":
-    case "find-the-match":
-    case "true-or-false":
-    case "open-the-box":
-    case "gameshow-quiz":
-    case "win-or-lose":
-    case "speaking-cards":
-    case "whack-a-mole":
-    case "balloon-pop":
-    case "rank-order":
-    case "maze-chase":
-    case "airplane":
-      return null;
-    case "type-the-answer":
-      return short.length >= 4 ? null : "Need 4 short answers to type.";
-    case "spell-the-word":
-    case "unjumble":
-    case "hangman":
-      return spell.length >= 4 ? null : "Need 4 short letter-answers (3–14 letters).";
-    case "complete-the-sentence":
-      return cloze.length >= 4 ? null : "Need 4 sentence-style cards to blank.";
-    case "group-sort":
-    case "speed-sort":
-      return bins.length >= 2
-        ? null
-        : "Need at least two categories with two cards each.";
-    case "odd-one-out":
-      return bins.length >= 2 && n >= 8
-        ? null
-        : "Need 8+ cards across two categories.";
-    case "image-quiz":
-    case "labelled-diagram":
-    case "label-match":
-      return images.length >= 4 ? null : "Need 4 cards with pictures.";
-    case "crossword":
-      return buildCrossword(cards) ? null : "Need more short answers that share letters.";
-    case "wordsearch":
-      return buildWordsearch(cards) ? null : "Need 4 short letter-answers.";
-    default:
-      return "This activity is not available.";
+export function catalogReason(
+  id: PlayCatalogId,
+  cards: Flashcard[],
+): PlayBlockReason | null {
+  if (cards.length < CHIP_FLOOR) return "needCards";
+  const chips = chipCards(cards);
+  if (id === "group-sort") {
+    return categoryBins(cards).length >= 2 ? null : "needBins";
   }
+  return chips.length >= CHIP_FLOOR ? null : "needChips";
 }
 
 export function templatesForDeck(cards: Flashcard[]) {
   return PLAY_TEMPLATES.map((template) => ({
     ...template,
-    blocked: templateReason(template.id, cards),
+    blocked: catalogReason(template.id, cards),
   }));
+}
+
+export function unlockedCatalogCount(cards: Flashcard[]) {
+  return templatesForDeck(cards).filter((item) => !item.blocked).length;
+}
+
+export function blockedCopy(reason: PlayBlockReason) {
+  switch (reason) {
+    case "needChips":
+      return "Need 4 short play terms (not essays).";
+    case "needBins":
+      return "Need two labelled groups with two cards each.";
+    default:
+      return "Need at least 4 cards.";
+  }
+}
+
+export function playableTemplateId(
+  value: string,
+): PlayCatalogId | "study" | null {
+  if (!isPlayCatalogId(value) && resolvePlayTemplate(value) == null) {
+    return null;
+  }
+  return resolvePlayTemplate(value);
 }

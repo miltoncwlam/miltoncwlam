@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">HK Study A</string>
+    <string name="title_activity_main">HK Study A</string>
+    <string name="package_name">app.hkstudya</string>
+    <string name="custom_url_scheme">app.hkstudya</string>
+</resources>

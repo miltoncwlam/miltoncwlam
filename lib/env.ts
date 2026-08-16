@@ -25,6 +25,8 @@ const envSchema = z.object({
   OPENROUTER_API_KEY: optionalSecret,
   OPENROUTER_MODEL: z.string().min(1).default("deepseek/deepseek-v4-flash"),
   OPENROUTER_FREE_MODEL_BLOCKLIST: z.string().optional(),
+  OLLAMA_BASE_URL: optionalSecret,
+  OLLAMA_MODEL: z.string().min(1).optional(),
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
   CLERK_SECRET_KEY: z.string().min(1),
 });

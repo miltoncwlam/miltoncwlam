@@ -4,6 +4,16 @@ import {
   resolveCorrectChoice,
 } from "@/lib/quiz/choices";
 import type { Flashcard } from "@/lib/types/flashcard";
+import { fitsPlayChip, fitsPlayTerm, stripTail } from "@/lib/play/term";
+
+export {
+  splitPlayTerm,
+  tightenForChip,
+  fitsPlayChip,
+  fitsPlayTerm,
+  PLAY_CHIP_MAX_CHARS,
+  PLAY_TERM_MAX_CHARS,
+} from "@/lib/play/term";
 
 const STOPWORDS = new Set([
   "a",
@@ -28,13 +38,26 @@ export function promptText(card: Flashcard) {
 }
 
 export function shortTarget(card: Flashcard): string | null {
-  const choice = resolveCorrectChoice(card).trim();
-  if (choice && choice.length <= 48 && choice.split(/\s+/).length <= 8) {
-    return choice.replace(/[.。!！?？]+$/g, "");
-  }
-  const back = card.back.trim().replace(/[.。!！?？]+$/g, "");
-  if (back.length <= 40 && back.split(/\s+/).length <= 6) return back;
+  const choice = stripTail(resolveCorrectChoice(card));
+  if (choice && fitsPlayTerm(choice)) return choice;
+  const back = stripTail(card.back);
+  if (back && fitsPlayTerm(back)) return back;
   return null;
+}
+
+/** Tap-able label for Play sprites. Never a truncated paragraph. */
+export function playChip(card: Flashcard): string | null {
+  const choice = stripTail(resolveCorrectChoice(card));
+  if (choice && fitsPlayChip(choice)) return choice;
+  const target = shortTarget(card);
+  if (target && fitsPlayChip(target)) return target;
+  const back = stripTail(card.back);
+  if (back && fitsPlayChip(back)) return back;
+  return null;
+}
+
+export function chipCards(cards: Flashcard[]) {
+  return cards.filter((card) => playChip(card));
 }
 
 export function spellingWord(card: Flashcard): string | null {

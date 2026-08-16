@@ -92,7 +92,7 @@ export function privacyBlocks(v: LegalValues): LegalBlock[] {
     block("5. AI processing", [
       "When you generate a deck or quiz, the study text (and, for scanned PDFs or photos, page images) is sent to the model provider you pick.",
       "Cloud generation uses OpenRouter, which routes the request to the selected model. OpenRouter and that model host process the prompt under their own privacy terms. Do not paste secrets, exam papers you are not allowed to share, or other people’s personal data.",
-      "Learners do not pay for or run image-generation models. User generate may look up a confirmed-licence photo when a picture would help. AI illustrations are a last resort for community/admin library art only, and those cards are labelled “AI-generated”.",
+      "Learners do not pay for or run image-generation models. Generating a deck may look up a confirmed-licence photo when a picture would help. AI illustrations are a last resort for community/admin library art only, and those cards are labelled “AI-generated”.",
     ], undefined, v),
     block("6. Licensed images", [
       "We look up pictures in this order: Wikimedia Commons, then other confirmed-licence sources such as Openverse (CC0, public domain, CC BY, or CC BY-SA, commercial-ok). We download a copy into our storage instead of hotlinking. We store attribution (creator, licence, source URL) and show credit under the picture.",

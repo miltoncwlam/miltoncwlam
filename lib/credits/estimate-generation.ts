@@ -82,9 +82,7 @@ export function estimateGenerationCredits(
     imageCount > 0 ? creditsFromImageUsd(imageCount * usdPerImage) : 0;
 
   const credits = textCredits + imageCredits;
-  const breakdown = imageCredits
-    ? `~${textCredits} text energy · ~${imageCredits} image energy`
-    : `~${textCredits} text energy`;
+  const breakdown = `~${textCredits} energy`;
 
   return {
     credits,

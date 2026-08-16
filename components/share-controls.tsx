@@ -23,7 +23,7 @@ export function ShareControls({
   const [shared, setShared] = useState(isShared);
   const [pending, startTransition] = useTransition();
 
-  const [activity, setActivity] = useState("match-up");
+  const [activity, setActivity] = useState("matching-pairs");
   const token = link?.split("/share/")[1] ?? null;
   const activityLink = token
     ? `${appUrl}/share/${token}?activity=${activity}`
@@ -109,7 +109,7 @@ export function ShareControls({
           />
           <p className="text-xs text-slate-500">
             Share <code>?mode=quiz</code> for quiz battle. Embed the same with{" "}
-            <code>?mode=quiz</code>, or <code>?mode=match-up</code> (or any
+            <code>?mode=quiz</code>, or <code>?mode=matching-pairs</code> (or any
             activity id) for a classroom template.
           </p>
         </div>

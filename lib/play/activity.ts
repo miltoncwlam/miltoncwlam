@@ -1,4 +1,8 @@
-import { isPlayTemplateId, type PlayTemplateId } from "@/lib/play/templates";
+import {
+  isPlayTemplateId,
+  resolvePlayTemplate,
+  type PlayTemplateId,
+} from "@/lib/play/templates";
 
 export function activityFromQuery(value?: string | null): PlayTemplateId | null {
   if (!value) return null;
@@ -72,7 +76,10 @@ export function classInviteSearch(assign: Partial<ClassAssign>) {
 export function classJoinPath(deckId: string, assign: ClassAssign) {
   const query = playAssignSearch(assign);
   if (assign.activity) {
-    return `/decks/${deckId}/play/${assign.activity}${query}`;
+    const resolved = resolvePlayTemplate(assign.activity);
+    if (resolved === "study") return `/decks/${deckId}/study${query}`;
+    const activity = resolved ?? assign.activity;
+    return `/decks/${deckId}/play/${activity}${query}`;
   }
   return `/decks/${deckId}/play${query}`;
 }

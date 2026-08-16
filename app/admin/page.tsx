@@ -72,10 +72,8 @@ export default async function AdminPage() {
                 <div>
                   <p className="font-bold break-all">{user.id}</p>
                   <p className="text-sm text-slate-500">
-                    text{" "}
-                    {user.is_unlimited ? "unlimited" : (user.balance ?? 0)} ·
-                    images{" "}
-                    {user.is_unlimited ? "unlimited" : (user.image_balance ?? 0)}
+                    energy{" "}
+                    {user.is_unlimited ? "unlimited" : (user.balance ?? 0)}
                   </p>
                 </div>
               </div>
@@ -85,7 +83,7 @@ export default async function AdminPage() {
               >
                 <input name="userId" type="hidden" value={user.id} />
                 <label className="block space-y-1">
-                  <span className="text-xs font-bold">Text grant</span>
+                  <span className="text-xs font-bold">Weekly grant</span>
                   <Input
                     defaultValue={user.period_grant ?? 600}
                     name="periodGrant"
@@ -93,10 +91,10 @@ export default async function AdminPage() {
                   />
                 </label>
                 <label className="block space-y-1">
-                  <span className="text-xs font-bold">Image grant</span>
+                  <span className="text-xs font-bold">Balance</span>
                   <Input
-                    defaultValue={user.image_period_grant ?? 0}
-                    name="imagePeriodGrant"
+                    defaultValue={user.balance ?? 600}
+                    name="balance"
                     type="number"
                   />
                 </label>
@@ -107,22 +105,6 @@ export default async function AdminPage() {
                     type="checkbox"
                   />
                   Unlimited
-                </label>
-                <label className="block space-y-1">
-                  <span className="text-xs font-bold">Text balance</span>
-                  <Input
-                    defaultValue={user.balance ?? 600}
-                    name="balance"
-                    type="number"
-                  />
-                </label>
-                <label className="block space-y-1">
-                  <span className="text-xs font-bold">Image balance</span>
-                  <Input
-                    defaultValue={user.image_balance ?? 0}
-                    name="imageBalance"
-                    type="number"
-                  />
                 </label>
                 <Button className="mt-5" type="submit" variant="secondary">
                   Save

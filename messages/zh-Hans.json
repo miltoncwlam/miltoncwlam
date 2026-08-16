@@ -76,16 +76,13 @@
     "noProviders": "請先設定 OPENROUTER_API_KEY。檔案上傳另需 SUPABASE_SECRET_KEY。仍可用「建立範例牌組」試用。",
     "chooseFile": "請選擇檔案",
     "uploadSecretError": "請在 .env.local 加入 SUPABASE_SECRET_KEY 以啟用上傳",
+    "unrelated": "这不像学习材料。请粘贴笔记、课文或文章，不要贴闲聊或梗图。",
+    "insufficient": "可用内容不够做出那么多卡。请加长笔记，或减少卡片数量。",
     "model": "模型",
     "modelFree": "较低能量",
     "modelBudget": "经济",
     "modelStandard": "标准",
-    "energyShort": "文字能量不足。需要 {need}，当前 {have}。",
-    "energyImageShort": "图像能量不足。需要 {need}，当前 {have}。",
-    "illustrations": "添加插图",
-    "illustrationsHint": "插图使用独立的图像能量。FLUX.2 Klein 能量最低。",
-    "imageModel": "插图模型",
-    "energyEach": "图像能量／张",
+    "energyShort": "能量不足。需要 {need}，当前 {have}。",
     "questionStyle": "题目类型",
     "styleMixed": "混合类型",
     "styleQa": "仅问答",
@@ -94,8 +91,7 @@
     "styleMcq": "选择题",
     "modeFlashcards": "闪卡",
     "modeQuiz": "测验牌组",
-    "energyCost": "文字能量：约 {cost}",
-    "energyImageCost": "图像能量：约 {cost}",
+    "energyCost": "能量：约 {cost}",
     "quizModeNote": "测验牌组会生成用于对战模式的选择题。",
     "url": "URL",
     "urlLabel": "URL",
@@ -105,6 +101,7 @@
   "generation": {
     "eyebrow": "正在建立牌組",
     "doneTitle": "牌組已就緒",
+    "shortfall": "要 {want} 张，做成 {got} 张。先打开现有的牌组。",
     "opening": "正在開啟卡片…",
     "waitingCloud": "正在等待 AI 寫完閃卡。",
     "moving": "正在完成各設定步驟。",
@@ -290,9 +287,9 @@
   },
   "play": {
     "backToDeck": "返回牌组",
-    "eyebrow": "课堂活动",
+    "eyebrow": "Hong Kong city play",
     "title": "游戏 · {deck}",
-    "subtitle": "同一副卡片，二十六个游戏房。每局先扣能量；胜率 50% 以上可取回，全对可获双倍。",
+    "subtitle": "Fifteen city games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
     "dueCards": "使用到期卡片（{count}）· 显示全部",
     "dueToday": "只显示今日到期",
     "youWon": "你赢了",
@@ -300,17 +297,17 @@
     "playAgain": "再玩一次",
     "moreActivities": "更多活动",
     "continue": "继续",
-    "anteing": "正在下注 {stake} 能量…",
-    "quitWarning": "中途离开此页，{stake} 能量不会退回。",
-    "needEnergy": "能量不足",
+    "anteing": "Using {stake} weekly allowance…",
+    "quitWarning": "Quit or leave this page and the {stake} stays spent.",
+    "needEnergy": "Need allowance",
     "slowDown": "请稍候",
-    "anteHelp": "每局先扣 {stake} 能量。未完成就离开则下注作废。胜率 50% 以上可取回；80% 以上得 30；全对得 40。",
+    "anteHelp": "A round uses {stake} weekly allowance. Leave before you finish and it stays spent. Score 50%+ to get it back; 80%+ returns 30; a perfect run returns 40.",
     "timeUp": "时间到！",
-    "stakeReturned": "下注已退回 — 打得漂亮。",
-    "anteKept": "下注留在奖池。",
-    "payoutProfit": "+{payout} 能量退回 · 净赚 {net}",
-    "payoutEven": "+{payout} 能量退回 · 下注已还",
-    "payoutLoss": "已扣 {stake} 能量 · 下注未退",
+    "stakeReturned": "Allowance returned — nice run.",
+    "anteKept": "The weekly allowance stays spent.",
+    "payoutProfit": "+{payout} allowance back · +{net}",
+    "payoutEven": "+{payout} allowance back",
+    "payoutLoss": "{stake} allowance used",
     "exactMatch": "完全相符",
     "aiAccepted": "AI 判定正确",
     "niceHit": "答对了",
@@ -320,13 +317,8 @@
     "reveal": "揭晓",
     "gotIt": "我答对了",
     "groups": {
-      "pairing": "配对",
-      "recall": "回忆",
-      "classify": "分类",
-      "picture": "图片",
-      "quiz": "测验",
-      "puzzle": "解谜",
-      "arcade": "快攻"
+      "city": "City",
+      "campus": "Campus"
     },
     "templates": {
       "match-up": {
@@ -334,16 +326,18 @@
         "blurb": "先点词语，再点定义。"
       },
       "matching-pairs": {
-        "name": "翻牌配对",
-        "blurb": "翻两张牌，把题目与答案配对。"
+        "name": "Twin lanterns",
+        "blurb": "Pair Mid-Autumn lanterns on the harbourfront.",
+        "howTo": "Flip two lanterns. A match stays lit. A miss goes dark and a decoy slides in."
       },
       "find-the-match": {
         "name": "找出配对",
         "blurb": "点选对应答案，直到全部配完。"
       },
       "type-the-answer": {
-        "name": "输入答案",
-        "blurb": "看题目，输入答案。"
+        "name": "Ink well",
+        "blurb": "Write the term before the 揮春 ink dries.",
+        "howTo": "Type the term and chop. Empty ink does not count. A miss shows the chip and hint."
       },
       "spell-the-word": {
         "name": "拼字",
@@ -370,8 +364,9 @@
         "blurb": "选一个箱子，再回答里面的卡片。"
       },
       "group-sort": {
-        "name": "分类",
-        "blurb": "把每张卡放到所属类别。"
+        "name": "Homework trays",
+        "blurb": "Flick papers into labelled classroom trays.",
+        "howTo": "Read the prompt only. Flick it into the right tray. Misses go to a redo stack."
       },
       "odd-one-out": {
         "name": "找出异类",
@@ -398,16 +393,18 @@
         "blurb": "选择题，100 / 200 / 300 分。"
       },
       "win-or-lose": {
-        "name": "三条命问答",
-        "blurb": "三条命。错三次就结束。"
+        "name": "Detention hall",
+        "blurb": "Three late slips. Streak of facts, not a gameshow.",
+        "howTo": "Three late slips. Keys A–C. A miss stamps WhyBox on the slip."
       },
       "speaking-cards": {
         "name": "朗读卡",
         "blurb": "大声说出答案，再自行核对。"
       },
       "whack-a-mole": {
-        "name": "打地鼠",
-        "blurb": "点击带有正确答案的地鼠。"
+        "name": "Pop-quiz desks",
+        "blurb": "Only a standing student is hittable. Chips hide when seated.",
+        "howTo": "Hit the standing student with the matching chip. Seated desks do not score."
       },
       "balloon-pop": {
         "name": "气球爆破",
@@ -418,8 +415,9 @@
         "blurb": "六十秒内完成分类。"
       },
       "maze-chase": {
-        "name": "迷宫追逐",
-        "blurb": "走向正确出口，避开追兵。"
+        "name": "Prefect’s corridor",
+        "blurb": "Late for assembly. Four coloured doors. Avoid the prefect.",
+        "howTo": "Move to the door that matches the prompt. Wrong door warps you. Wait for the countdown."
       },
       "airplane": {
         "name": "飞机",
@@ -432,7 +430,59 @@
       "label-match": {
         "name": "标签配对",
         "blurb": "点选标签放到对应图片上。"
+      },
+      "gate-dash": {
+        "name": "Gate dash",
+        "blurb": "Paper-plane a covered footbridge. Tap a sign to fly the plane into that gate.",
+        "howTo": "Tap a shop sign to fly the plane into that gate, or press 1 / 2 / 3."
+      },
+      "last-car": {
+        "name": "Last car",
+        "blurb": "Last train of the night. Board the matching door, duck the rest.",
+        "howTo": "Swipe up or tap Board for the matching door. Duck a wrong one."
+      },
+      "ding-ding": {
+        "name": "Ding ding",
+        "blurb": "Tap when the matching tram-bell chip crosses the strike line.",
+        "howTo": "Tap Bell when the chip hits the neon line. Reduced motion skips the beat window."
+      },
+      "estate-court": {
+        "name": "Estate court",
+        "blurb": "Sitting-out area. Right cards orbit as 新聞紙 and auto-clear matches.",
+        "howTo": "Papers orbit. Tap the matching 新聞紙 to auto-clear. Wrong papers bump you."
+      },
+      "mosaic-wall": {
+        "name": "Mosaic wall",
+        "blurb": "Cha chaan teng 花磚. Break the matching tile with a milk-tea paddle.",
+        "howTo": "Break the matching mosaic tile. A wrong tile cracks the glass."
+      },
+      "minibus-stop": {
+        "name": "Minibus stop",
+        "blurb": "Tap Board when the matching-chip van lines up with the pole.",
+        "howTo": "Wait until the matching van lines up, then tap Board."
+      },
+      "station-lost": {
+        "name": "Station lost property",
+        "blurb": "Claim ticket in hand. Tap the matching bag in the jumble.",
+        "howTo": "Your prompt is the claim ticket. Tap the matching bag in the jumble."
+      },
+      "ticket-chops": {
+        "name": "Ticket chops",
+        "blurb": "Chop if the stub matches. Pass a decoy.",
+        "howTo": "One stub at a time. Chop a match, Pass a decoy. No loot boxes."
+      },
+      "street-flyers": {
+        "name": "Street flyers",
+        "blurb": "Slash only the matching 街招. Penalty notices cost a life.",
+        "howTo": "Slash the matching flyer. A red penalty notice costs a life."
       }
+    },
+    "howToSkip": "Got it",
+    "saveFailed": "Could not save this run.",
+    "blocked": {
+      "needCards": "Need at least 4 cards.",
+      "needChips": "Need 4 short play terms (not essays).",
+      "needBins": "Need two labelled groups with two cards each."
     }
   }
 }

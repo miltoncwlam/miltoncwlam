@@ -23,6 +23,7 @@ import {
   prefersReducedMotion,
 } from "@/lib/play/juice";
 import type { PlayTemplateId } from "@/lib/play/templates";
+import { resolvePlayTemplate } from "@/lib/play/templates";
 import type { PlaySkin } from "@/lib/play/worlds";
 
 export type PlayOptions = {
@@ -51,6 +52,10 @@ const PlayJuiceContext = createContext<PlayJuiceValue>({
 
 export function usePlayJuice() {
   return useContext(PlayJuiceContext);
+}
+
+function isTestEnv() {
+  return process.env.NODE_ENV === "test";
 }
 
 export function PlayOptionsProvider({
@@ -158,41 +163,60 @@ export function PlayShell({
 }) {
   const options = useContext(PlayOptionsContext);
   const t = useTranslations("play");
-  const skipCount = prefersReducedMotion();
+  const skipCount = isTestEnv() || prefersReducedMotion() || Boolean(options.readOnly);
   const [count, setCount] = useState(skipCount ? 0 : 3);
+  const [hidden, setHidden] = useState(false);
   const started = count <= 0;
-  const timed = options.template === "speed-sort" || title === "Speed sorting";
-  const initial = clock === false ? 0 : (clock ?? clockSecondsForSkin(skin, timed));
-  const heading = options.template
-    ? t(`templates.${options.template}.name`)
-    : title;
+  const initial = clock === false ? 0 : (clock ?? clockSecondsForSkin(skin));
+  const catalogId = options.template
+    ? resolvePlayTemplate(options.template)
+    : null;
+  const i18nId =
+    catalogId && catalogId !== "study" ? catalogId : options.template;
+  const heading = i18nId ? t(`templates.${i18nId}.name`) : title;
   const [remaining, setRemaining] = useState(initial);
   const comboRef = useRef(combo ?? 0);
-  const expired = started && initial > 0 && remaining <= 0;
+  const howKey = i18nId ? `hk-play-how:${i18nId}` : "";
+  const [howTo, setHowTo] = useState(() => {
+    if (isTestEnv() || options.readOnly || !howKey) return false;
+    try {
+      return !localStorage.getItem(howKey);
+    } catch {
+      return true;
+    }
+  });
+  const expired = started && initial > 0 && remaining <= 0 && !howTo;
 
   useEffect(() => {
-    if (skipCount || count <= 0) return;
+    const onVis = () => setHidden(document.hidden);
+    onVis();
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
+  useEffect(() => {
+    if (skipCount || count <= 0 || hidden) return;
     const id = window.setTimeout(() => {
       setCount((n) => n - 1);
       if (count === 1) playBeep("go");
     }, 400);
     return () => window.clearTimeout(id);
-  }, [count, skipCount]);
+  }, [count, skipCount, hidden]);
 
   useEffect(() => {
-    if (!started || initial <= 0 || remaining <= 0) return;
+    if (!started || initial <= 0 || remaining <= 0 || hidden || howTo) return;
     const id = window.setTimeout(() => setRemaining((n) => n - 1), 1000);
     return () => window.clearTimeout(id);
-  }, [started, initial, remaining]);
+  }, [started, initial, remaining, hidden, howTo]);
 
   useEffect(() => {
     const next = combo ?? 0;
-    if (next > comboRef.current && next > 1) {
+    if (next > comboRef.current && next > 1 && initial > 0) {
       setRemaining((n) => n + 2);
       playBeep("combo");
     }
     comboRef.current = next;
-  }, [combo]);
+  }, [combo, initial]);
 
   const addTime = useCallback((delta: number) => {
     setRemaining((n) => Math.max(0, n + delta));
@@ -202,11 +226,16 @@ export function PlayShell({
     [remaining, started, addTime],
   );
 
-  if (
-    expired &&
-    options.deckId &&
-    options.template
-  ) {
+  function dismissHowTo() {
+    try {
+      if (howKey) localStorage.setItem(howKey, "1");
+    } catch {
+      // ignore
+    }
+    setHowTo(false);
+  }
+
+  if (expired && options.deckId && options.template) {
     return (
       <PlayFinished
         deckId={options.deckId}
@@ -218,9 +247,11 @@ export function PlayShell({
     );
   }
 
+  const howToText = i18nId ? t(`templates.${i18nId}.howTo`) : "";
+
   return (
     <PlayJuiceContext.Provider value={juice}>
-      <section className={`play-stage play-stage--${skin} study-mobile mx-auto max-w-xl`}>
+      <section className={`play-stage play-stage--${skin} play-stage--city study-mobile mx-auto max-w-2xl`}>
         <div className="play-hud">
           <h2 className="play-hud-title">{heading}</h2>
           <div className="flex items-center gap-2">
@@ -234,7 +265,7 @@ export function PlayShell({
                 ))}
               </div>
             ) : null}
-            <span className="play-hud-score">
+            <span className="play-hud-score play-allowance">
               {score}/{maxScore}
               {initial > 0 ? ` · ${remaining}s` : ""}
               {extra ? ` · ${extra}` : ""}
@@ -244,6 +275,13 @@ export function PlayShell({
         {!started ? (
           <div className="play-countdown" aria-live="assertive">
             {count}
+          </div>
+        ) : howTo ? (
+          <div className="play-howto">
+            <p className="play-howto-note">{howToText}</p>
+            <button className="primary-button" onClick={dismissHowTo} type="button">
+              {t("howToSkip")}
+            </button>
           </div>
         ) : (
           children
@@ -270,6 +308,7 @@ export function PlayFinished({
   const t = useTranslations("play");
   const options = useContext(PlayOptionsContext);
   const saved = useRef(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [payout, setPayout] = useState<{
     stake: number;
     payout: number;
@@ -278,6 +317,7 @@ export function PlayFinished({
 
   useEffect(() => {
     if (options.readOnly || saved.current) return;
+    if (maxScore < 1) return;
     saved.current = true;
     sessionStorage.removeItem(`hk-play:${deckId}:${template}`);
     void completeGameRunAction({
@@ -295,7 +335,11 @@ export function PlayFinished({
         });
         router.refresh();
       })
-      .catch(() => undefined);
+      .catch((caught) => {
+        setSaveError(
+          caught instanceof Error ? caught.message : t("saveFailed"),
+        );
+      });
   }, [
     deckId,
     template,
@@ -304,6 +348,7 @@ export function PlayFinished({
     options.readOnly,
     options.clientKey,
     router,
+    t,
   ]);
 
   const pct = maxScore ? Math.round((score / maxScore) * 100) : 0;
@@ -329,6 +374,7 @@ export function PlayFinished({
       <p className="page-subtitle">
         {pct}% · {message ?? (won ? t("stakeReturned") : t("anteKept"))}
       </p>
+      {saveError ? <p className="play-why-miss mt-3">{saveError}</p> : null}
       {payout && payout.stake > 0 ? (
         <p className="mt-3 font-black">
           {payout.net > 0
@@ -392,7 +438,9 @@ export function WhyBox({
 
   return (
     <div className="play-why space-y-3">
-      <p className={ok ? "play-why-ok" : "play-why-miss"}>{label}</p>
+      <p className={ok ? "play-why-ok" : "play-why-miss play-stamp"}>
+        {ok ? label : `${label} · 印`}
+      </p>
       {why ? <p className="play-muted">{why}</p> : null}
       <button className="primary-button" onClick={onContinue} type="button">
         {t("continue")}

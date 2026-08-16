@@ -39,6 +39,5 @@ export function mergeGeneratedDecks(
     return { title, cards: merged.slice(0, target) };
   }
 
-  // If short, keep what we have (caller may retry); pad only if we have at least 3
   return { title, cards: merged };
 }

@@ -50,3 +50,17 @@ next-env.d.ts
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# Capacitor APK wrapper (apk/android source is committed)
+apk/node_modules/
+apk/android/local.properties
+apk/android/.gradle/
+apk/android/build/
+apk/android/app/build/
+apk/android/captures/
+apk/android/.idea/
+*.apk
+apk/**/*.aab
+apk/**/*.keystore
+apk/**/*.jks
+

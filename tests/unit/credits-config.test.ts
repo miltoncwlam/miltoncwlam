@@ -73,14 +73,14 @@ describe("unified token credits", () => {
     expect(withImages.textCredits).toBe(textOnly.textCredits);
   });
 
-  it("keeps Klein image energy far below text-rate conversion", () => {
+  it("keeps Klein community-art units far below text-rate conversion", () => {
     expect(IMAGE_CREDITS_PER_USD).toBeLessThan(50_000);
     expect(creditsFromImageUsd(0.014)).toBe(7);
   });
 });
 
 describe("weekly grant and rate limits", () => {
-  it("grants 600 text energy and no user image energy", () => {
+  it("grants 600 weekly energy and no learner image pool", () => {
     expect(CREDIT_PERIOD_GRANT).toBe(600);
     expect(IMAGE_PERIOD_GRANT).toBe(0);
   });

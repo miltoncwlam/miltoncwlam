@@ -48,9 +48,12 @@ export function LabelledDiagramGame({
 
   useEffect(() => {
     if (!board || matched.size < board.length) return;
-    setMatched(new Set());
-    setPicked(null);
-    setIndex((n) => n + 1);
+    const id = window.setTimeout(() => {
+      setMatched(new Set());
+      setPicked(null);
+      setIndex((n) => n + 1);
+    }, 0);
+    return () => window.clearTimeout(id);
   }, [board, matched.size]);
 
   if (!board || index >= boards.length) {

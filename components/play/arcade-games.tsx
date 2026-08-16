@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
-import { promptText, shortTarget } from "@/lib/play/answers";
-import { playBeep } from "@/lib/play/juice";
-import { shuffleList } from "@/lib/study/shuffle";
+import { promptText } from "@/lib/play/answers";
+import { playBeep, prefersReducedMotion } from "@/lib/play/juice";
 import type { Flashcard } from "@/lib/types/flashcard";
 
-import { GhostSvg, HeroSvg, PlaneSvg } from "./play-art";
-import { PlayFinished, PlayShell } from "./play-shell";
+import { GhostSvg, HeroSvg, PlaneSvg, ShopSignSvg } from "./play-art";
+import { chipOf, missWhy, mixWithDecoys, takeChips } from "./play-kit";
+import { PlayFinished, PlayShell, WhyBox, usePlayJuice } from "./play-shell";
 
 const MAZE = [
   "###########",
@@ -35,6 +35,8 @@ const DIRS: Record<string, [number, number]> = {
   d: [0, 1],
 };
 
+const DOOR_COLORS = ["#e23d3d", "#2f6fed", "#2f9e5f", "#f0c14a"];
+
 function findChar(letter: string): [number, number] {
   for (let r = 0; r < MAZE.length; r += 1) {
     const c = MAZE[r]!.indexOf(letter);
@@ -54,89 +56,24 @@ const EXITS: { r: number; c: number }[] = [
   { r: 5, c: 1 },
 ];
 
-export function MazeChaseGame({
-  cards,
-  deckId,
+function MazeMovers({
+  posRef,
+  moveToRef,
+  onGhost,
 }: {
-  cards: Flashcard[];
-  deckId: string;
+  posRef: React.MutableRefObject<[number, number]>;
+  moveToRef: React.MutableRefObject<(next: [number, number]) => void>;
+  onGhost: () => void;
 }) {
-  const pool = useMemo(() => shuffleList(cards).slice(0, 10), [cards]);
-  const start = findChar("P");
-  const [index, setIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [pos, setPos] = useState(start);
-  const [ghost, setGhost] = useState<[number, number]>([1, 1]);
-  const [lives, setLives] = useState(3);
-  const [combo, setCombo] = useState(0);
-  const card = pool[index];
-  const choices = useMemo(() => {
-    if (!card) return [];
-    const others = shuffleList(pool.filter((item) => item.id !== card.id)).slice(
-      0,
-      3,
-    );
-    return shuffleList([card, ...others]).map((item, i) => ({
-      ...EXITS[i]!,
-      card: item,
-      label: shortTarget(item) ?? item.back,
-    }));
-  }, [card, pool]);
-  const resolved = useRef(false);
-  const posRef = useRef(pos);
-  const ghostRef = useRef(ghost);
-  const moveToRef = useRef<(next: [number, number]) => void>(() => undefined);
-  const resolveRef = useRef<(nextPos: [number, number], nextGhost: [number, number]) => void>(
-    () => undefined,
-  );
-  const choicesRef = useRef(choices);
-  const cardRef = useRef(card);
+  const juice = usePlayJuice();
+  const ghostFn = useRef(onGhost);
 
   useEffect(() => {
-    resolved.current = false;
-  }, [index]);
-
-  const resolve = useCallback((nextPos: [number, number], nextGhost: [number, number]) => {
-    const current = cardRef.current;
-    if (resolved.current || !current) return;
-    if (nextPos[0] === nextGhost[0] && nextPos[1] === nextGhost[1]) {
-      playBeep("miss");
-      setCombo(0);
-      setLives((n) => n - 1);
-      posRef.current = start;
-      setPos(start);
-      return;
-    }
-    const hit = choicesRef.current.find(
-      (exit) => exit.r === nextPos[0] && exit.c === nextPos[1],
-    );
-    if (!hit) return;
-    resolved.current = true;
-    const ok = hit.card.id === current.id;
-    playBeep(ok ? "hit" : "miss");
-    setCombo((n) => (ok ? n + 1 : 0));
-    if (ok) setScore((n) => n + 1);
-    setIndex((n) => n + 1);
-    posRef.current = start;
-    setPos(start);
-  }, [start]);
-
-  const moveTo = useCallback((next: [number, number]) => {
-    posRef.current = next;
-    setPos(next);
-    resolveRef.current(next, ghostRef.current);
-  }, []);
-
-  useLayoutEffect(() => {
-    posRef.current = pos;
-    ghostRef.current = ghost;
-    choicesRef.current = choices;
-    cardRef.current = card;
-    resolveRef.current = resolve;
-    moveToRef.current = moveTo;
-  }, [pos, ghost, choices, card, resolve, moveTo]);
+    ghostFn.current = onGhost;
+  }, [onGhost]);
 
   useEffect(() => {
+    if (!juice.started) return;
     function onKey(event: KeyboardEvent) {
       const delta = DIRS[event.key];
       if (!delta) return;
@@ -148,26 +85,123 @@ export function MazeChaseGame({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [juice.started, posRef, moveToRef]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      const [r, c] = ghostRef.current;
-      const options = (
-        [
-          [r - 1, c],
-          [r + 1, c],
-          [r, c - 1],
-          [r, c + 1],
-        ] as [number, number][]
-      ).filter(([nr, nc]) => !isWall(nr, nc));
-      const next = options[Math.floor(Math.random() * options.length)] ?? [r, c];
-      ghostRef.current = next;
-      setGhost(next);
-      resolveRef.current(posRef.current, next);
-    }, 420);
+    if (!juice.started) return;
+    const timer = window.setInterval(() => ghostFn.current(), 420);
     return () => window.clearInterval(timer);
+  }, [juice.started]);
+
+  return null;
+}
+
+export function MazeChaseGame({
+  cards,
+  deckId,
+}: {
+  cards: Flashcard[];
+  deckId: string;
+}) {
+  const pool = useMemo(() => takeChips(cards, 10), [cards]);
+  const start = findChar("P");
+  const [index, setIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [pos, setPos] = useState(start);
+  const [ghost, setGhost] = useState<[number, number]>([1, 1]);
+  const [lives, setLives] = useState(3);
+  const [combo, setCombo] = useState(0);
+  const [iframeUntil, setIframeUntil] = useState(0);
+  const [why, setWhy] = useState<string | null>(null);
+  const card = pool[index];
+  const choices = useMemo(() => {
+    if (!card) return [];
+    return mixWithDecoys(card, pool, 3).map((item, i) => ({
+      ...EXITS[i]!,
+      card: item,
+      label: chipOf(item),
+      color: DOOR_COLORS[i]!,
+    }));
+  }, [card, pool]);
+  const resolved = useRef(false);
+  const posRef = useRef(pos);
+  const ghostRef = useRef(ghost);
+  const iframeRef = useRef(0);
+  const moveToRef = useRef<(next: [number, number]) => void>(() => undefined);
+  const resolveRef = useRef<(nextPos: [number, number], nextGhost: [number, number]) => void>(
+    () => undefined,
+  );
+
+  useEffect(() => {
+    resolved.current = false;
   }, [index]);
+
+  const resolve = useCallback(
+    (nextPos: [number, number], nextGhost: [number, number]) => {
+      const current = card;
+      if (resolved.current || !current) return;
+      if (nextPos[0] === nextGhost[0] && nextPos[1] === nextGhost[1]) {
+        if (Date.now() < iframeRef.current) return;
+        playBeep("miss");
+        setCombo(0);
+        setLives((n) => n - 1);
+        iframeRef.current = Date.now() + 1500;
+        setIframeUntil(iframeRef.current);
+        posRef.current = start;
+        setPos(start);
+        return;
+      }
+      const hit = choices.find(
+        (exit) => exit.r === nextPos[0] && exit.c === nextPos[1],
+      );
+      if (!hit) return;
+      resolved.current = true;
+      const ok = hit.card.id === current.id;
+      playBeep(ok ? "hit" : "miss");
+      setCombo((n) => (ok ? n + 1 : 0));
+      if (ok) setScore((n) => n + 1);
+      else setWhy(missWhy(current));
+      if (ok) {
+        setIndex((n) => n + 1);
+        posRef.current = start;
+        setPos(start);
+      } else {
+        posRef.current = start;
+        setPos(start);
+      }
+    },
+    [card, choices, start],
+  );
+
+  const moveTo = useCallback((next: [number, number]) => {
+    posRef.current = next;
+    setPos(next);
+    resolveRef.current(next, ghostRef.current);
+  }, []);
+
+  useLayoutEffect(() => {
+    posRef.current = pos;
+    ghostRef.current = ghost;
+    iframeRef.current = iframeUntil;
+    resolveRef.current = resolve;
+    moveToRef.current = moveTo;
+  }, [pos, ghost, iframeUntil, resolve, moveTo]);
+
+  function stepGhost() {
+    const [r, c] = ghostRef.current;
+    const options = (
+      [
+        [r - 1, c],
+        [r + 1, c],
+        [r, c - 1],
+        [r, c + 1],
+      ] as [number, number][]
+    ).filter(([nr, nc]) => !isWall(nr, nc));
+    const next = options[Math.floor(Math.random() * options.length)] ?? [r, c];
+    ghostRef.current = next;
+    setGhost(next);
+    resolveRef.current(posRef.current, next);
+  }
 
   if (!card || index >= pool.length || lives <= 0) {
     return (
@@ -189,17 +223,20 @@ export function MazeChaseGame({
 
   return (
     <PlayShell
+      clock={75}
       combo={combo}
       lives={lives}
       maxScore={pool.length}
       score={score}
       skin="maze"
-      title="Maze chase"
+      title="Prefect’s corridor"
     >
+      <MazeMovers moveToRef={moveToRef} onGhost={stepGhost} posRef={posRef} />
       <p className="play-prompt">{promptText(card)}</p>
       <div className="play-maze-board">
         <div
           className="play-maze-grid"
+          data-started="1"
           style={{
             gridTemplateColumns: `repeat(${MAZE[0]!.length}, var(--maze-cell, 1.55rem))`,
           }}
@@ -219,16 +256,25 @@ export function MazeChaseGame({
                         : "play-maze-cell--floor"
                   }`}
                   key={`${r}-${c}`}
+                  style={exit ? { background: exit.color } : undefined}
                   title={exit?.label}
                 >
-                  {here ? <HeroSvg /> : foe ? <GhostSvg /> : exit ? exit.label.slice(0, 2) : ""}
+                  {here ? <HeroSvg /> : foe ? <GhostSvg /> : ""}
                 </div>
               );
             }),
           )}
         </div>
       </div>
-      <div className="mx-auto mt-6 grid w-40 grid-cols-3 gap-1">
+      <ul className="play-legend">
+        {choices.map((exit) => (
+          <li key={exit.card.id}>
+            <span className="play-legend-swatch" style={{ background: exit.color }} />
+            <span className="play-chip">{exit.label}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="mx-auto mt-4 grid w-40 grid-cols-3 gap-1">
         <span />
         <button className="play-choice play-choice--center py-3" onClick={() => nudge(-1, 0)} type="button">
           ↑
@@ -244,133 +290,75 @@ export function MazeChaseGame({
           →
         </button>
       </div>
-      <ul className="play-muted mt-3 text-center text-xs">
-        {choices.map((exit) => (
-          <li key={exit.card.id}>{exit.label}</li>
-        ))}
-      </ul>
+      {why ? (
+        <WhyBox
+          ok={false}
+          onContinue={() => {
+            setWhy(null);
+            setIndex((n) => n + 1);
+          }}
+          why={why}
+        />
+      ) : null}
     </PlayShell>
   );
 }
 
-type Cloud = { id: number; lane: number; y: number; card: Flashcard };
-
-let cloudSeq = 1;
-
-function spawnClouds(card: Flashcard, pool: Flashcard[]): Cloud[] {
-  const others = shuffleList(pool.filter((item) => item.id !== card.id)).slice(
-    0,
-    3,
-  );
-  return shuffleList([card, ...others]).map((item, i) => ({
-    id: cloudSeq++,
-    lane: i,
-    y: -10 - i * 18,
-    card: item,
-  }));
-}
-
-function PlaneSky({
-  card,
-  lane,
-  onHit,
-  onLane,
-  pool,
-}: {
-  card: Flashcard;
-  lane: number;
-  onHit: (ok: boolean) => void;
-  onLane: (lane: number) => void;
-  pool: Flashcard[];
-}) {
-  const [clouds, setClouds] = useState(() => spawnClouds(card, pool));
-  const hitLock = useRef(false);
-  const laneRef = useRef(lane);
-  const onHitRef = useRef(onHit);
-  const cardRef = useRef(card);
-  const cloudsRef = useRef(clouds);
-
-  useLayoutEffect(() => {
-    laneRef.current = lane;
-    onHitRef.current = onHit;
-    cardRef.current = card;
-    cloudsRef.current = clouds;
-  }, [lane, onHit, card, clouds]);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      if (hitLock.current) return;
-      const moved = cloudsRef.current.map((cloud) => ({
-        ...cloud,
-        y: cloud.y + 2.4,
-      }));
-      cloudsRef.current = moved;
-      setClouds(moved);
-      const current = cardRef.current;
-      if (!current) return;
-      const hit = moved.find(
-        (cloud) => cloud.y >= 78 && cloud.y < 92 && cloud.lane === laneRef.current,
-      );
-      if (hit) {
-        hitLock.current = true;
-        const ok = hit.card.id === current.id;
-        playBeep(ok ? "hit" : "miss");
-        onHitRef.current(ok);
-      } else if (moved.length && moved.every((cloud) => cloud.y > 96)) {
-        hitLock.current = true;
-        playBeep("miss");
-        onHitRef.current(false);
-      }
-    }, 40);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  return (
-    <div className="play-sky">
-      {clouds.map((cloud) => (
-        <button
-          className="play-cloud"
-          key={cloud.id}
-          onClick={() => onLane(cloud.lane)}
-          style={{ left: `${6 + cloud.lane * 24}%`, top: `${cloud.y}%` }}
-          type="button"
-        >
-          {(shortTarget(cloud.card) ?? cloud.card.back).slice(0, 28)}
-        </button>
-      ))}
-      <div className="play-plane-wrap" style={{ left: `${6 + lane * 24}%` }}>
-        <PlaneSvg />
-      </div>
-    </div>
-  );
-}
-
-export function AirplaneGame({
+export function GateDashGame({
   cards,
   deckId,
 }: {
   cards: Flashcard[];
   deckId: string;
 }) {
-  const pool = useMemo(() => shuffleList(cards).slice(0, 10), [cards]);
+  const easy = prefersReducedMotion() || process.env.NODE_ENV === "test";
+  const pool = useMemo(() => takeChips(cards, 10), [cards]);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
-  const [lane, setLane] = useState(1);
+  const [why, setWhy] = useState<string | null>(null);
+  const [lock, setLock] = useState(false);
+  const [lane, setLane] = useState<number | null>(null);
   const card = pool[index];
+  const gates = useMemo(
+    () => (card ? mixWithDecoys(card, pool, 2).slice(0, 3) : []),
+    [card, pool],
+  );
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
-      if (event.key === "ArrowLeft" || event.key === "a") {
-        setLane((n) => Math.max(0, n - 1));
-      }
-      if (event.key === "ArrowRight" || event.key === "d") {
-        setLane((n) => Math.min(3, n + 1));
-      }
+      const n = Number(event.key);
+      if (n < 1 || n > 3 || lock || !gates[n - 1]) return;
+      pick(gates[n - 1]!, n - 1);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  });
+
+  function pick(gate: Flashcard, i: number) {
+    if (!card || lock) return;
+    setLock(true);
+    const ok = gate.id === card.id;
+    const resolve = () => {
+      playBeep(ok ? "hit" : "miss");
+      setCombo((n) => (ok ? n + 1 : 0));
+      if (ok) setScore((n) => n + 1);
+      else setWhy(missWhy(card));
+      if (ok) {
+        window.setTimeout(() => {
+          setLane(null);
+          setLock(false);
+          setIndex((n) => n + 1);
+        }, easy ? 0 : 200);
+      }
+    };
+    if (easy) {
+      resolve();
+      return;
+    }
+    setLane(i);
+    window.setTimeout(resolve, 420);
+  }
 
   if (!card || index >= pool.length) {
     return (
@@ -378,44 +366,54 @@ export function AirplaneGame({
         deckId={deckId}
         maxScore={pool.length}
         score={score}
-        template="airplane"
+        template="gate-dash"
       />
     );
   }
 
   return (
     <PlayShell
+      clock={75}
       combo={combo}
       maxScore={pool.length}
       score={score}
       skin="plane"
-      title="Airplane"
+      title="Gate dash"
     >
+      <p className="play-muted">Tap a shop sign to fly the plane into that gate.</p>
       <p className="play-prompt">{promptText(card)}</p>
-      <PlaneSky
-        card={card}
-        key={index}
-        lane={lane}
-        onHit={(ok) => {
-          setCombo((n) => (ok ? n + 1 : 0));
-          if (ok) setScore((n) => n + 1);
-          setIndex((n) => n + 1);
-        }}
-        onLane={setLane}
-        pool={pool}
-      />
-      <div className="mt-3 grid grid-cols-4 gap-2">
-        {[0, 1, 2, 3].map((value) => (
+      <div className="play-sky play-gate-sky">
+        <span className={`play-gate-plane ${lane === null ? "" : `is-fly is-lane-${lane}`}`}>
+          <PlaneSvg />
+        </span>
+      </div>
+      <div className="play-gate-row">
+        {gates.map((gate, i) => (
           <button
-            className="play-choice play-choice--center"
-            key={value}
-            onClick={() => setLane(value)}
+            className="play-chip play-sprite play-gate"
+            data-card-id={gate.id}
+            disabled={lock}
+            key={`${gate.id}-${i}`}
+            onClick={() => pick(gate, i)}
             type="button"
           >
-            Lane {value + 1}
+            <ShopSignSvg n={i + 1} />
+            <span className="play-sprite-label">{chipOf(gate)}</span>
           </button>
         ))}
       </div>
+      {why ? (
+        <WhyBox
+          ok={false}
+          onContinue={() => {
+            setWhy(null);
+            setLane(null);
+            setLock(false);
+            setIndex((n) => n + 1);
+          }}
+          why={why}
+        />
+      ) : null}
     </PlayShell>
   );
 }

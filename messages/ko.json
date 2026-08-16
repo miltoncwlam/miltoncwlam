@@ -76,16 +76,13 @@
     "noProviders": "OPENROUTER_API_KEY가 필요합니다.",
     "chooseFile": "파일을 선택하세요",
     "uploadSecretError": "업로드에는 SUPABASE_SECRET_KEY가 필요합니다",
+    "unrelated": "학습 자료로 보이지 않습니다. 메모, 수업, 기사를 붙여 주세요. 잡담이나 밈은 안 됩니다.",
+    "insufficient": "그 수만큼 카드를 만들 내용이 부족합니다. 메모를 늘리거나 카드 수를 줄이세요.",
     "model": "모델",
     "modelFree": "낮은 에너지",
     "modelBudget": "절약",
     "modelStandard": "표준",
-    "energyShort": "텍스트 에너지가 부족합니다. 필요 {need}, 보유 {have}.",
-    "energyImageShort": "이미지 에너지가 부족합니다. 필요 {need}, 보유 {have}.",
-    "illustrations": "일러스트 추가",
-    "illustrationsHint": "일러스트는 별도의 이미지 에너지를 씁니다. FLUX.2 Klein이 가장 낮습니다.",
-    "imageModel": "일러스트 모델",
-    "energyEach": "이미지 에너지／장",
+    "energyShort": "에너지가 부족합니다. 필요 {need}, 보유 {have}.",
     "questionStyle": "문제 유형",
     "styleMixed": "혼합 유형",
     "styleQa": "Q&A만",
@@ -94,8 +91,7 @@
     "styleMcq": "객관식",
     "modeFlashcards": "플래시카드",
     "modeQuiz": "퀴즈 덱",
-    "energyCost": "텍스트 에너지: 약 {cost}",
-    "energyImageCost": "이미지 에너지: 약 {cost}",
+    "energyCost": "에너지: 약 {cost}",
     "quizModeNote": "퀴즈 덱은 배틀 모드용 객관식 문제를 생성합니다.",
     "url": "URL",
     "urlLabel": "URL",
@@ -105,6 +101,7 @@
   "generation": {
     "eyebrow": "덱 만드는 중",
     "doneTitle": "덱 준비 완료",
+    "shortfall": "{want}장 요청, {got}장 생성. 만든 덱을 엽니다.",
     "opening": "카드를 여는 중…",
     "waitingCloud": "AI가 카드를 작성 중입니다.",
     "moving": "각 단계를 진행 중입니다.",
@@ -290,9 +287,9 @@
   },
   "play": {
     "backToDeck": "덱으로",
-    "eyebrow": "수업 활동",
+    "eyebrow": "Hong Kong city play",
     "title": "플레이 · {deck}",
-    "subtitle": "같은 카드, 26개 게임. 라운드마다 에너지를 먼저 씁니다. 50% 이상이면 돌려받고, 만점은 두 배입니다.",
+    "subtitle": "Fifteen city games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
     "dueCards": "기한 카드 사용({count}) · 전체 보기",
     "dueToday": "오늘 기한만",
     "youWon": "승리",
@@ -300,17 +297,17 @@
     "playAgain": "다시 하기",
     "moreActivities": "다른 활동",
     "continue": "계속",
-    "anteing": "{stake} 에너지 베팅 중…",
-    "quitWarning": "이 페이지를 떠나면 {stake}은 돌려받지 못합니다.",
-    "needEnergy": "에너지 부족",
+    "anteing": "Using {stake} weekly allowance…",
+    "quitWarning": "Quit or leave this page and the {stake} stays spent.",
+    "needEnergy": "Need allowance",
     "slowDown": "잠시만요",
-    "anteHelp": "한 판에 {stake} 에너지. 중간에 나가면 베팅은 사라집니다. 50% 이상이면 반환, 80% 이상은 30, 만점은 40.",
+    "anteHelp": "A round uses {stake} weekly allowance. Leave before you finish and it stays spent. Score 50%+ to get it back; 80%+ returns 30; a perfect run returns 40.",
     "timeUp": "시간 종료!",
-    "stakeReturned": "베팅이 돌아왔습니다.",
-    "anteKept": "베팅은 팟에 남습니다.",
-    "payoutProfit": "+{payout} 에너지 반환 · 이익 {net}",
-    "payoutEven": "+{payout} 에너지 반환 · 베팅 반환",
-    "payoutLoss": "{stake} 사용 · 베팅 미반환",
+    "stakeReturned": "Allowance returned — nice run.",
+    "anteKept": "The weekly allowance stays spent.",
+    "payoutProfit": "+{payout} allowance back · +{net}",
+    "payoutEven": "+{payout} allowance back",
+    "payoutLoss": "{stake} allowance used",
     "exactMatch": "정확히 일치",
     "aiAccepted": "AI가 정답으로 인정",
     "niceHit": "정답",
@@ -320,13 +317,8 @@
     "reveal": "정답 보기",
     "gotIt": "맞혔어요",
     "groups": {
-      "pairing": "짝 맞추기",
-      "recall": "회상",
-      "classify": "분류",
-      "picture": "그림",
-      "quiz": "퀴즈",
-      "puzzle": "퍼즐",
-      "arcade": "스피드"
+      "city": "City",
+      "campus": "Campus"
     },
     "templates": {
       "match-up": {
@@ -334,16 +326,18 @@
         "blurb": "용어를 누른 뒤 정의를 고르세요."
       },
       "matching-pairs": {
-        "name": "카드 뒤집기",
-        "blurb": "두 장을 뒤집어 문제와 답을 짝지으세요."
+        "name": "Twin lanterns",
+        "blurb": "Pair Mid-Autumn lanterns on the harbourfront.",
+        "howTo": "Flip two lanterns. A match stays lit. A miss goes dark and a decoy slides in."
       },
       "find-the-match": {
         "name": "짝 찾기",
         "blurb": "맞는 답을 눌러 모두 비우세요."
       },
       "type-the-answer": {
-        "name": "답 입력",
-        "blurb": "문제를 읽고 답을 입력하세요."
+        "name": "Ink well",
+        "blurb": "Write the term before the 揮春 ink dries.",
+        "howTo": "Type the term and chop. Empty ink does not count. A miss shows the chip and hint."
       },
       "spell-the-word": {
         "name": "철자",
@@ -370,8 +364,9 @@
         "blurb": "상자를 고른 뒤 안의 카드에 답하세요."
       },
       "group-sort": {
-        "name": "분류하기",
-        "blurb": "각 카드를 범주 통에 넣으세요."
+        "name": "Homework trays",
+        "blurb": "Flick papers into labelled classroom trays.",
+        "howTo": "Read the prompt only. Flick it into the right tray. Misses go to a redo stack."
       },
       "odd-one-out": {
         "name": "다른 하나",
@@ -398,16 +393,18 @@
         "blurb": "객관식 100 / 200 / 300점."
       },
       "win-or-lose": {
-        "name": "목숨 세 개",
-        "blurb": "목숨 세 개. 세 번 틀리면 끝."
+        "name": "Detention hall",
+        "blurb": "Three late slips. Streak of facts, not a gameshow.",
+        "howTo": "Three late slips. Keys A–C. A miss stamps WhyBox on the slip."
       },
       "speaking-cards": {
         "name": "말하기 카드",
         "blurb": "답을 말한 뒤 스스로 확인하세요."
       },
       "whack-a-mole": {
-        "name": "두더지 잡기",
-        "blurb": "정답이 적힌 두더지를 누르세요."
+        "name": "Pop-quiz desks",
+        "blurb": "Only a standing student is hittable. Chips hide when seated.",
+        "howTo": "Hit the standing student with the matching chip. Seated desks do not score."
       },
       "balloon-pop": {
         "name": "풍선 터뜨리기",
@@ -418,8 +415,9 @@
         "blurb": "60초 안에 분류하세요."
       },
       "maze-chase": {
-        "name": "미로 추격",
-        "blurb": "맞는 출구로 가고 추격자를 피하세요."
+        "name": "Prefect’s corridor",
+        "blurb": "Late for assembly. Four coloured doors. Avoid the prefect.",
+        "howTo": "Move to the door that matches the prompt. Wrong door warps you. Wait for the countdown."
       },
       "airplane": {
         "name": "비행기",
@@ -432,7 +430,59 @@
       "label-match": {
         "name": "라벨 맞추기",
         "blurb": "라벨을 해당 그림에 놓으세요."
+      },
+      "gate-dash": {
+        "name": "Gate dash",
+        "blurb": "Paper-plane a covered footbridge. Tap a sign to fly the plane into that gate.",
+        "howTo": "Tap a shop sign to fly the plane into that gate, or press 1 / 2 / 3."
+      },
+      "last-car": {
+        "name": "Last car",
+        "blurb": "Last train of the night. Board the matching door, duck the rest.",
+        "howTo": "Swipe up or tap Board for the matching door. Duck a wrong one."
+      },
+      "ding-ding": {
+        "name": "Ding ding",
+        "blurb": "Tap when the matching tram-bell chip crosses the strike line.",
+        "howTo": "Tap Bell when the chip hits the neon line. Reduced motion skips the beat window."
+      },
+      "estate-court": {
+        "name": "Estate court",
+        "blurb": "Sitting-out area. Right cards orbit as 新聞紙 and auto-clear matches.",
+        "howTo": "Papers orbit. Tap the matching 新聞紙 to auto-clear. Wrong papers bump you."
+      },
+      "mosaic-wall": {
+        "name": "Mosaic wall",
+        "blurb": "Cha chaan teng 花磚. Break the matching tile with a milk-tea paddle.",
+        "howTo": "Break the matching mosaic tile. A wrong tile cracks the glass."
+      },
+      "minibus-stop": {
+        "name": "Minibus stop",
+        "blurb": "Tap Board when the matching-chip van lines up with the pole.",
+        "howTo": "Wait until the matching van lines up, then tap Board."
+      },
+      "station-lost": {
+        "name": "Station lost property",
+        "blurb": "Claim ticket in hand. Tap the matching bag in the jumble.",
+        "howTo": "Your prompt is the claim ticket. Tap the matching bag in the jumble."
+      },
+      "ticket-chops": {
+        "name": "Ticket chops",
+        "blurb": "Chop if the stub matches. Pass a decoy.",
+        "howTo": "One stub at a time. Chop a match, Pass a decoy. No loot boxes."
+      },
+      "street-flyers": {
+        "name": "Street flyers",
+        "blurb": "Slash only the matching 街招. Penalty notices cost a life.",
+        "howTo": "Slash the matching flyer. A red penalty notice costs a life."
       }
+    },
+    "howToSkip": "Got it",
+    "saveFailed": "Could not save this run.",
+    "blocked": {
+      "needCards": "Need at least 4 cards.",
+      "needChips": "Need 4 short play terms (not essays).",
+      "needBins": "Need two labelled groups with two cards each."
     }
   }
 }

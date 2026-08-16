@@ -47,6 +47,7 @@ import {
   UnrelatedSourceError,
 } from "@/lib/llm/generate-flashcards";
 import { mergeGeneratedDecks } from "@/lib/llm/merge-decks";
+import { assertEnoughCards } from "@/lib/llm/parse-deck-json";
 import { listOpenRouterFreeModels } from "@/lib/llm/openrouter-models";
 import { resolveLicensedImage } from "@/lib/images/resolve-licensed-image";
 import {
@@ -213,30 +214,29 @@ async function generateFromLongText(
     partials[0]?.title,
   );
 
-  if (merged.cards.length < Math.min(3, generationOptions.cardCount)) {
-    throw new Error("Chunked generation produced too few usable cards");
-  }
-
   if (merged.cards.length < generationOptions.cardCount) {
     const missing = generationOptions.cardCount - merged.cards.length;
-    if (missing >= 3) {
+    if (missing >= 1) {
       try {
         const extra = await generateFlashcardsFromContent(content.slice(0, 20_000), {
           ...generationOptions,
-          cardCount: missing,
+          cardCount: Math.max(3, missing),
         });
-        return mergeGeneratedDecks(
-          [merged, extra],
+        return assertEnoughCards(
+          mergeGeneratedDecks(
+            [merged, extra],
+            generationOptions.cardCount,
+            merged.title,
+          ),
           generationOptions.cardCount,
-          merged.title,
         );
-      } catch {
-        // keep merged as-is
+      } catch (error) {
+        if (error instanceof UnrelatedSourceError) throw error;
       }
     }
   }
 
-  return merged;
+  return assertEnoughCards(merged, generationOptions.cardCount);
 }
 
 export async function POST(request: Request) {
@@ -518,7 +518,11 @@ export async function POST(request: Request) {
       }
     }
 
-    return Response.json({ deckId });
+    return Response.json({
+      deckId,
+      cardCount: cards.length,
+      requestedCardCount: generated.requestedCardCount ?? input.cardCount,
+    });
   } catch (error) {
     if (error instanceof Response) return error;
     captureException(error, { deckId, userId, route: "generate" });

@@ -224,6 +224,8 @@ export function CreateDeckForm({
         deckId?: string;
         code?: string;
         refunded?: boolean;
+        cardCount?: number;
+        requestedCardCount?: number;
       };
       try {
         const response = await fetch("/api/decks/generate", {
@@ -241,6 +243,12 @@ export function CreateDeckForm({
           );
         }
         if (!response.ok) {
+          if (result.code === "UNRELATED_SOURCE") {
+            throw new Error(t("unrelated"));
+          }
+          if (result.code === "INSUFFICIENT_CONTENT") {
+            throw new Error(t("insufficient"));
+          }
           const base = friendlyError(
             result.error || "Generation failed",
             result.code,
@@ -260,8 +268,15 @@ export function CreateDeckForm({
       setLabel(tg("saving"));
       await new Promise((resolve) => window.setTimeout(resolve, 250));
       setPhase("done");
-      setLabel(tg("doneTitle"));
-      await new Promise((resolve) => window.setTimeout(resolve, 700));
+      const got = result.cardCount;
+      const want = result.requestedCardCount ?? Number(payload.cardCount) || 10;
+      if (got && got < want) {
+        setLabel(tg("shortfall", { got, want }));
+        await new Promise((resolve) => window.setTimeout(resolve, 1400));
+      } else {
+        setLabel(tg("doneTitle"));
+        await new Promise((resolve) => window.setTimeout(resolve, 700));
+      }
       router.push(`/decks/${result.deckId}`);
       router.refresh();
     } catch (caught) {

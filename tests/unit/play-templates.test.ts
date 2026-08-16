@@ -3,10 +3,13 @@ import { describe, expect, it } from "vitest";
 import { ENCYCLOPEDIA_FEATURED_PACKS } from "@/lib/data/community-packs/encyclopedia-featured";
 import { ENCYCLOPEDIA_GENERAL_PACKS } from "@/lib/data/community-packs/encyclopedia-general";
 import { COMMUNITY_SEED_PACKS } from "@/lib/data/community-packs";
-import { shortTarget, spellingWord, typedMatches } from "@/lib/play/answers";
-import { templateReason, templatesForDeck } from "@/lib/play/eligibility";
-import { buildCrossword, buildWordsearch } from "@/lib/play/puzzles";
-import { PLAY_TEMPLATE_IDS } from "@/lib/play/templates";
+import { playChip, shortTarget, typedMatches } from "@/lib/play/answers";
+import {
+  catalogReason,
+  templateReason,
+  unlockedCatalogCount,
+} from "@/lib/play/eligibility";
+import { PLAY_CATALOG_IDS, PLAY_TEMPLATES, PLAY_TEMPLATE_IDS, resolvePlayTemplate } from "@/lib/play/templates";
 import type { CommunitySeedPack } from "@/lib/data/community-packs/types";
 import type { Flashcard } from "@/lib/types/flashcard";
 
@@ -36,6 +39,24 @@ function asCards(pack: CommunitySeedPack, withImages = false): Flashcard[] {
   }));
 }
 
+function chipDeck(count = 10): Flashcard[] {
+  return Array.from({ length: count }, (_, index) => ({
+    id: `chip-${index}`,
+    deckId: "11111111-1111-4111-8111-111111111111",
+    front: `What is term ${index}?`,
+    back: `Term${index}`,
+    hint: "A leftover explanation that belongs in WhyBox, not on a sprite.",
+    category: index % 2 === 0 ? "Even" : "Odd",
+    cardType: "qa" as const,
+    options: null,
+    imageUrl: null,
+    imageAttribution: null,
+    sortOrder: index,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }));
+}
+
 describe("play templates", () => {
   const solar = ENCYCLOPEDIA_FEATURED_PACKS.find((pack) =>
     pack.slug === "ency-solar-primary",
@@ -47,40 +68,38 @@ describe("play templates", () => {
     expect(new Set(slugs).size).toBe(slugs.length);
   });
 
-  it("unlocks classroom templates on an illustrated encyclopedia pack", () => {
-    const list = templatesForDeck(cards);
-    expect(list).toHaveLength(PLAY_TEMPLATE_IDS.length);
-    expect(templateReason("match-up", cards)).toBeNull();
-    expect(templateReason("group-sort", cards)).toBeNull();
-    expect(templateReason("image-quiz", cards)).toBeNull();
-    expect(templateReason("maze-chase", cards)).toBeNull();
-    expect(templateReason("airplane", cards)).toBeNull();
-    expect(templateReason("labelled-diagram", cards)).toBeNull();
-    expect(templateReason("label-match", cards)).toBeNull();
-    expect(templateReason("true-or-false", cards)).toBeNull();
+  it("ships a 15-game catalog and keeps retired ids for old runs", () => {
+    expect(PLAY_TEMPLATES).toHaveLength(15);
+    expect(PLAY_CATALOG_IDS).toHaveLength(15);
+    expect(PLAY_TEMPLATE_IDS.length).toBeGreaterThan(15);
+    expect(resolvePlayTemplate("crossword")).toBe("type-the-answer");
+    expect(resolvePlayTemplate("airplane")).toBe("gate-dash");
+    expect(resolvePlayTemplate("speaking-cards")).toBe("study");
+    expect(resolvePlayTemplate("match-up")).toBe("matching-pairs");
   });
 
-  it("types a short encyclopedia answer", () => {
+  it("unlocks at least 10 of 15 on a 10-card chip-only deck", () => {
+    const deck = chipDeck(10);
+    expect(unlockedCatalogCount(deck)).toBeGreaterThanOrEqual(10);
+    expect(catalogReason("matching-pairs", deck)).toBeNull();
+    expect(catalogReason("gate-dash", deck)).toBeNull();
+    expect(catalogReason("group-sort", deck)).toBeNull();
+    expect(templateReason("airplane", deck)).toBeNull();
+  });
+
+  it("types a short encyclopedia answer when one exists", () => {
     const card = cards.find((item) => /Mars/.test(item.back) || /Mars/.test(item.front));
     expect(card).toBeTruthy();
     if (!card) return;
     const target = shortTarget(card);
-    expect(target).toBeTruthy();
-    expect(typedMatches(target!, card)).toBe(true);
+    if (!target) {
+      expect(playChip(card)).toBeNull();
+      return;
+    }
+    expect(typedMatches(target, card)).toBe(true);
   });
 
-  it("builds crossword and wordsearch from short answers when possible", () => {
-    const spellable = cards.filter((card) => spellingWord(card));
-    if (spellable.length >= 4) {
-      expect(buildWordsearch(spellable)).toBeTruthy();
-    }
-    const puzzle = buildCrossword(cards);
-    if (puzzle) {
-      expect(puzzle.entries.length).toBeGreaterThanOrEqual(4);
-    }
-  });
-
-  it("gives general packs categories for group sort", () => {
+  it("gives general packs categories for homework trays", () => {
     const matter = ENCYCLOPEDIA_GENERAL_PACKS.find(
       (pack) => pack.slug === "ency-magnets",
     )!;
@@ -110,6 +129,9 @@ describe("locale catalogs", () => {
     for (const id of PLAY_TEMPLATE_IDS) {
       expect(en.play.templates[id].name.length).toBeGreaterThan(0);
       expect(en.play.templates[id].blurb.length).toBeGreaterThan(0);
+    }
+    for (const id of PLAY_CATALOG_IDS) {
+      expect(en.play.templates[id].howTo.length).toBeGreaterThan(0);
     }
   });
 });

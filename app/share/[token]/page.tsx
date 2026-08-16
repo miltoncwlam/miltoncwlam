@@ -76,7 +76,9 @@ export default async function SharedDeckPage({
             </Link>
           </p>
           {templateReason(activity, deck.cards) ? (
-            <p className="empty-state">{templateReason(activity, deck.cards)}</p>
+            <p className="empty-state">
+              {t(`blocked.${templateReason(activity, deck.cards)}`)}
+            </p>
           ) : (
             <PlayDispatcher
               cards={deck.cards}

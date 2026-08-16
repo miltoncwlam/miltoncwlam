@@ -2,99 +2,29 @@
 
 import { useMemo, useState } from "react";
 
+import { playChip } from "@/lib/play/answers";
 import { playBeep } from "@/lib/play/juice";
-import { promptText, shortTarget } from "@/lib/play/answers";
-import { quizExplanation } from "@/lib/quiz/choices";
 import { shuffleList } from "@/lib/study/shuffle";
 import type { Flashcard } from "@/lib/types/flashcard";
 
+import { LanternSvg } from "./play-art";
+import { chipOf, missWhy, promptOf, takeChips } from "./play-kit";
 import { PlayFinished, PlayShell, WhyBox } from "./play-shell";
 
-function takePairs(cards: Flashcard[], max = 8) {
-  return shuffleList(cards).slice(0, Math.min(max, cards.length));
+const LANTERN_HUES = ["red", "gold", "pink"] as const;
+
+function faceText(value: string) {
+  const text = value.trim();
+  if (text.length <= 32) return text;
+  return `${text.slice(0, 30).trim()}…`;
 }
 
-export function MatchUpGame({
-  cards,
-  deckId,
-}: {
-  cards: Flashcard[];
-  deckId: string;
-}) {
-  const pairs = useMemo(() => takePairs(cards, 8), [cards]);
-  const [left] = useState(() => shuffleList(pairs));
-  const [right] = useState(() => shuffleList(pairs));
-  const [picked, setPicked] = useState<string | null>(null);
-  const [matched, setMatched] = useState<Set<string>>(new Set());
-  const [wrong, setWrong] = useState(0);
-
-  if (matched.size >= pairs.length) {
-    return (
-      <PlayFinished
-        deckId={deckId}
-        maxScore={pairs.length}
-        score={Math.max(0, pairs.length - wrong)}
-        template="match-up"
-      />
-    );
-  }
-
-  return (
-    <PlayShell
-      maxScore={pairs.length}
-      score={matched.size}
-      skin="match"
-      title="Match up"
-    >
-      <p className="play-prompt">Tap a prompt, then its twin.</p>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-2">
-          {left.map((card) => (
-            <button
-              className={`play-choice w-full ${
-                matched.has(card.id)
-                  ? "is-done"
-                  : picked === card.id
-                    ? "is-picked"
-                    : ""
-              }`}
-              disabled={matched.has(card.id)}
-              key={`l-${card.id}`}
-              onClick={() => setPicked(card.id)}
-              type="button"
-            >
-              {promptText(card)}
-            </button>
-          ))}
-        </div>
-        <div className="space-y-2">
-          {right.map((card) => (
-            <button
-              className={`play-choice w-full ${matched.has(card.id) ? "is-done" : ""}`}
-              disabled={matched.has(card.id)}
-              key={`r-${card.id}`}
-              onClick={() => {
-                if (!picked) return;
-                if (picked === card.id) {
-                  playBeep("hit");
-                  setMatched(new Set(matched).add(card.id));
-                  setPicked(null);
-                } else {
-                  playBeep("miss");
-                  setWrong((value) => value + 1);
-                  setPicked(null);
-                }
-              }}
-              type="button"
-            >
-              {shortTarget(card) ?? card.back}
-            </button>
-          ))}
-        </div>
-      </div>
-    </PlayShell>
-  );
-}
+type Lantern = {
+  id: string;
+  cardId: string;
+  text: string;
+  decoy?: boolean;
+};
 
 export function MatchingPairsGame({
   cards,
@@ -103,23 +33,24 @@ export function MatchingPairsGame({
   cards: Flashcard[];
   deckId: string;
 }) {
-  const pairs = useMemo(() => takePairs(cards, 8), [cards]);
-  const [tiles] = useState(() =>
+  const pairs = useMemo(() => takeChips(cards, 6), [cards]);
+  const leftover = useMemo(
+    () => cards.filter((card) => playChip(card) && !pairs.some((item) => item.id === card.id)),
+    [cards, pairs],
+  );
+  const [tiles, setTiles] = useState<Lantern[]>(() =>
     shuffleList(
       pairs.flatMap((card) => [
-        { id: `${card.id}-a`, cardId: card.id, text: promptText(card) },
-        {
-          id: `${card.id}-b`,
-          cardId: card.id,
-          text: shortTarget(card) ?? card.back,
-        },
+        { id: `${card.id}-a`, cardId: card.id, text: faceText(promptOf(card)) },
+        { id: `${card.id}-b`, cardId: card.id, text: faceText(chipOf(card)) },
       ]),
     ),
   );
   const [open, setOpen] = useState<string[]>([]);
   const [matched, setMatched] = useState<Set<string>>(new Set());
   const [misses, setMisses] = useState(0);
-  const [wrong, setWrongPair] = useState<string[]>([]);
+  const [wrong, setWrong] = useState<string[]>([]);
+  const [why, setWhy] = useState<string | null>(null);
 
   if (matched.size >= pairs.length) {
     return (
@@ -134,36 +65,57 @@ export function MatchingPairsGame({
 
   return (
     <PlayShell
+      clock={false}
       extra={`${misses} misses`}
       maxScore={pairs.length}
       score={matched.size}
       skin="flip"
-      title="Matching pairs"
+      title="Twin lanterns"
     >
-      <div className="play-flip-grid">
-        {tiles.map((tile) => {
+      <p className="play-prompt">Harbourfront lanterns. Flip a pair.</p>
+      <div className="play-flip-grid play-lantern-grid">
+        {tiles.map((tile, i) => {
           const show = open.includes(tile.id) || matched.has(tile.cardId);
+          const hue = LANTERN_HUES[i % LANTERN_HUES.length]!;
           return (
             <button
-              className={`play-flip ${show ? "is-open" : ""} ${matched.has(tile.cardId) ? "is-matched" : ""} ${wrong.includes(tile.id) ? "is-wrong" : ""}`}
-              disabled={show}
+              className={`play-flip play-lantern ${show ? "is-open" : ""} ${matched.has(tile.cardId) ? "is-matched is-lit" : ""} ${wrong.includes(tile.id) ? "is-wrong" : ""} ${tile.decoy ? "is-decoy" : ""}`}
+              disabled={show || Boolean(why)}
               key={tile.id}
               onClick={() => {
+                if (tile.decoy || open.length === 2) return;
                 if (open.length === 1) {
                   const first = tiles.find((item) => item.id === open[0]);
                   if (first?.cardId === tile.cardId && first.id !== tile.id) {
                     playBeep("hit");
                     setMatched(new Set(matched).add(tile.cardId));
                     setOpen([]);
+                    setWhy(null);
                   } else {
                     playBeep("miss");
+                    const missCard =
+                      pairs.find((item) => item.id === first?.cardId) ?? pairs[0]!;
                     setOpen([open[0]!, tile.id]);
-                    setWrongPair([open[0]!, tile.id]);
+                    setWrong([open[0]!, tile.id]);
                     setMisses((value) => value + 1);
+                    setWhy(missWhy(missCard));
+                    const decoySrc = leftover[misses % Math.max(leftover.length, 1)];
+                    if (decoySrc) {
+                      const decoy: Lantern = {
+                        id: `decoy-${misses}-${decoySrc.id}`,
+                        cardId: `decoy-${decoySrc.id}`,
+                        text: chipOf(decoySrc),
+                        decoy: true,
+                      };
+                      setTiles((list) => [...list, decoy]);
+                      window.setTimeout(() => {
+                        setTiles((list) => list.filter((item) => item.id !== decoy.id));
+                      }, 900);
+                    }
                     window.setTimeout(() => {
                       setOpen([]);
-                      setWrongPair([]);
-                    }, 650);
+                      setWrong([]);
+                    }, 700);
                   }
                 } else {
                   setOpen([tile.id]);
@@ -171,79 +123,25 @@ export function MatchingPairsGame({
               }}
               type="button"
             >
+              <span className="play-lantern-cord" />
               <span className="play-flip-inner">
-                <span className="play-flip-face play-flip-back">★</span>
-                <span className="play-flip-face play-flip-front">{tile.text}</span>
+                <span className="play-flip-face play-flip-back">
+                  <LanternSvg hue={hue} />
+                </span>
+                <span className="play-flip-face play-flip-front">
+                  <LanternSvg hue={hue} lit />
+                  <span className="play-lantern-text">{tile.text}</span>
+                </span>
               </span>
             </button>
           );
         })}
       </div>
-    </PlayShell>
-  );
-}
-
-export function FindTheMatchGame({
-  cards,
-  deckId,
-}: {
-  cards: Flashcard[];
-  deckId: string;
-}) {
-  const [pool] = useState(() => takePairs(cards, 10));
-  const [remaining, setRemaining] = useState(pool);
-  const [prompt, setPrompt] = useState(pool[0]!);
-  const [misses, setMisses] = useState(0);
-  const [feedback, setFeedback] = useState<boolean | null>(null);
-
-  if (remaining.length === 0) {
-    return (
-      <PlayFinished
-        deckId={deckId}
-        maxScore={pool.length}
-        score={Math.max(0, pool.length - misses)}
-        template="find-the-match"
-      />
-    );
-  }
-
-  return (
-    <PlayShell
-      maxScore={pool.length}
-      score={pool.length - remaining.length}
-      skin="match"
-      title="Find the match"
-    >
-      <p className="play-prompt">{promptText(prompt)}</p>
-      <div className="grid gap-2">
-        {remaining.map((card) => (
-          <button
-            className="play-choice"
-            disabled={feedback !== null}
-            key={card.id}
-            onClick={() => {
-              const ok = card.id === prompt.id;
-              setFeedback(ok);
-              if (!ok) setMisses((value) => value + 1);
-            }}
-            type="button"
-          >
-            {shortTarget(card) ?? card.back}
-          </button>
-        ))}
-      </div>
-      {feedback !== null ? (
+      {why ? (
         <WhyBox
-          ok={feedback}
-          onContinue={() => {
-            if (feedback) {
-              const next = remaining.filter((card) => card.id !== prompt.id);
-              setRemaining(next);
-              setPrompt(next[0] ?? prompt);
-            }
-            setFeedback(null);
-          }}
-          why={quizExplanation(prompt)}
+          ok={false}
+          onContinue={() => setWhy(null)}
+          why={why}
         />
       ) : null}
     </PlayShell>

@@ -230,7 +230,7 @@ export async function assertAndSpendCredits(input: {
     }
     if (imageAmount > 0 && row.image_balance < imageAmount) {
       throw new Error(
-        `Not enough image energy. Need ${imageAmount}, have ${row.image_balance}. Image energy refills each week.`,
+        `Not enough energy. Need ${imageAmount}, have ${row.image_balance}. Energy refills each week.`,
       );
     }
 
