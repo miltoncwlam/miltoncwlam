@@ -196,8 +196,8 @@ export function StudyPlayer({
 
   if (completed) {
     return (
-      <section className="mx-auto max-w-xl rounded-3xl bg-white p-10 text-center shadow-xl">
-        <p className="text-sm font-black uppercase tracking-widest text-indigo-600">
+      <section className="study-complete mx-auto max-w-xl p-10 text-center">
+        <p className="eyebrow">
           {t("finished", { count: orderedCards.length })}
         </p>
         <div className="mt-8 flex justify-center gap-3">

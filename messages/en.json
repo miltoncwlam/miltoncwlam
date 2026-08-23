@@ -78,7 +78,7 @@
     "modeQuiz": "Quiz deck",
     "energyCost": "Energy: ~{cost}",
     "energyShort": "Not enough energy. Need {need}, have {have}. Energy refills each week.",
-    "quizModeNote": "Quiz decks generate multiple-choice questions for battle mode.",
+    "quizModeNote": "Quiz decks create multiple-choice practice questions. Choose the best answer, then review what you missed.",
     "cardCount": "Number of cards",
     "questionStyle": "Question style",
     "styleMixed": "Mixed types",

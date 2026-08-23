@@ -68,8 +68,9 @@ export default async function DecksPage({
       {folders.length ? (
         <div className="mt-6 flex flex-wrap gap-2" aria-label="Folders">
           <Link
-            className={`rounded-full px-3 py-1 text-sm font-semibold ${
-              !folder ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-700"
+            aria-current={!folder ? "page" : undefined}
+            className={`school-tab inline-flex px-3 py-1 text-sm font-semibold ${
+              !folder ? "bg-[var(--surface)]" : ""
             }`}
             href={`/decks?filter=${filter}&sort=${sort}`}
           >
@@ -77,10 +78,9 @@ export default async function DecksPage({
           </Link>
           {folders.map((entry) => (
             <Link
-              className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                folder === entry
-                  ? "bg-indigo-600 text-white"
-                  : "bg-slate-100 text-slate-700"
+              aria-current={folder === entry ? "page" : undefined}
+              className={`school-tab inline-flex px-3 py-1 text-sm font-semibold ${
+                folder === entry ? "bg-[var(--surface)]" : ""
               }`}
               href={`/decks?filter=${filter}&sort=${sort}&folder=${encodeURIComponent(entry)}`}
               key={entry}
@@ -125,12 +125,12 @@ export default async function DecksPage({
         </div>
       ) : (
         <section className="empty-state mt-10">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-indigo-600">
+          <p className="eyebrow">
             First run
           </p>
           <h2 className="mt-2 text-2xl font-black">{t("emptyTitle")}</h2>
-          <p className="mt-2 text-slate-600">{t("emptyBody")}</p>
-          <ol className="mx-auto mt-6 max-w-md space-y-2 text-left text-sm text-slate-600">
+          <p className="mt-2 text-[var(--muted)]">{t("emptyBody")}</p>
+          <ol className="mx-auto mt-6 max-w-md space-y-2 text-left text-sm text-[var(--muted)]">
             <li>1. Create a deck from notes, a URL, or a sample pack.</li>
             <li>2. Study with ratings — hard cards come back sooner.</li>
             <li>3. Try quiz battle, then share or embed when ready.</li>

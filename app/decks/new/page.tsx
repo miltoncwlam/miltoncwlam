@@ -32,7 +32,7 @@ export default async function NewDeckPage() {
         </Button>
       </form>
 
-      <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-xl sm:p-8">
+      <section className="school-panel mt-8 p-6 sm:p-8">
         <CreateDeckForm
           canUpload={canUpload}
           energyBalance={credits.balance}

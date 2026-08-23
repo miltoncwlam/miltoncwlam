@@ -56,7 +56,7 @@ export async function AppHeader({ session }: { session: AppSession | null }) {
               <Button asChild variant="ghost">
                 <Link href="/sign-in">{t("signIn")}</Link>
               </Button>
-              <Button asChild className="rounded-full bg-[var(--accent)] px-4 text-[var(--primary-foreground)] hover:opacity-90">
+              <Button asChild className="primary-button px-4">
                 <Link href="/sign-up">{t("signUp")}</Link>
               </Button>
             </>

@@ -2123,6 +2123,300 @@ html[data-theme="dark"] .secondary-button {
   }
 }
 
+/* Modern school system: clear, playful surfaces without sacrificing contrast. */
+:root,
+html[data-theme="light"] {
+  --background: #f7f8fc;
+  --foreground: #172033;
+  --surface: #ffffff;
+  --surface-soft: #edf4ff;
+  --muted: #526078;
+  --border: #cbd5e1;
+  --accent: #0f766e;
+  --accent-strong: #115e59;
+  --accent-warm: #f59e0b;
+  --sun: #fbbf24;
+  --ink: #172033;
+  --paper: #ffffff;
+  --card: #ffffff;
+  --card-foreground: #172033;
+  --popover: #ffffff;
+  --popover-foreground: #172033;
+  --primary: #0f766e;
+  --primary-foreground: #ffffff;
+  --secondary: #e8f1ff;
+  --secondary-foreground: #172033;
+  --muted-foreground: #526078;
+  --accent-foreground: #ffffff;
+  --input: #b8c7da;
+  --ring: #2563eb;
+}
+
+html[data-theme="dark"] {
+  --background: #111a2b;
+  --foreground: #eef5ff;
+  --surface: #18243a;
+  --surface-soft: #24344f;
+  --muted: #bac7db;
+  --border: #3d506e;
+  --accent: #5eead4;
+  --accent-strong: #99f6e4;
+  --accent-warm: #fcd34d;
+  --sun: #fbbf24;
+  --ink: #f8fbff;
+  --paper: #18243a;
+  --card: #18243a;
+  --card-foreground: #eef5ff;
+  --popover: #18243a;
+  --popover-foreground: #eef5ff;
+  --primary: #5eead4;
+  --primary-foreground: #082f2a;
+  --secondary: #24344f;
+  --secondary-foreground: #eef5ff;
+  --muted-foreground: #bac7db;
+  --accent-foreground: #082f2a;
+  --input: #4b5f7e;
+  --ring: #93c5fd;
+}
+
+body {
+  background:
+    radial-gradient(circle at 14% 12%, rgb(251 191 36 / 15%), transparent 19rem),
+    radial-gradient(circle at 88% 14%, rgb(45 212 191 / 13%), transparent 20rem),
+    linear-gradient(90deg, rgb(37 99 235 / 4%) 1px, transparent 1px),
+    linear-gradient(rgb(37 99 235 / 4%) 1px, transparent 1px),
+    var(--background);
+  background-size: auto, auto, 1.5rem 1.5rem, 1.5rem 1.5rem, auto;
+}
+
+html[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at 14% 12%, rgb(251 191 36 / 11%), transparent 19rem),
+    radial-gradient(circle at 88% 14%, rgb(45 212 191 / 10%), transparent 20rem),
+    var(--background);
+}
+
+:where(a, button, input, textarea, select):focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
+}
+
+.app-header {
+  border-bottom-color: color-mix(in srgb, var(--border) 82%, var(--sun));
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow: 0 8px 24px rgb(23 32 51 / 6%);
+}
+
+.brand-mark {
+  border: 2px solid color-mix(in srgb, var(--sun) 72%, white);
+  border-radius: 0.7rem;
+  background: linear-gradient(145deg, var(--sun), #f97316);
+  color: #172033;
+  box-shadow: 0 3px 0 #d97706;
+}
+
+.page-shell {
+  max-width: 74rem;
+  padding-top: clamp(2.25rem, 5vw, 4.25rem);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  padding: 0.36rem 0.72rem;
+  color: var(--accent-strong);
+  letter-spacing: 0.12em;
+}
+
+.page-title {
+  max-width: 18ch;
+  text-wrap: balance;
+}
+
+.page-subtitle {
+  max-width: 64ch;
+  color: var(--muted);
+}
+
+.field,
+select.field {
+  min-height: 2.9rem;
+  border-color: var(--input);
+  border-radius: 0.85rem;
+  background: var(--paper);
+  box-shadow: 0 2px 0 rgb(23 32 51 / 5%);
+}
+
+.field:hover,
+select.field:hover {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--input));
+}
+
+.field:focus,
+select.field:focus {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ring) 18%, transparent);
+}
+
+.primary-button,
+.secondary-button {
+  min-height: 2.8rem;
+  border-radius: 0.9rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #0f766e, #0d9488);
+  box-shadow: 0 4px 0 #115e59, 0 10px 18px rgb(13 148 136 / 20%);
+}
+
+.primary-button:hover {
+  box-shadow: 0 5px 0 #115e59, 0 13px 20px rgb(13 148 136 / 24%);
+}
+
+.primary-button:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #115e59;
+}
+
+.secondary-button {
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--border) 72%, transparent);
+}
+
+.secondary-button:hover {
+  border-color: var(--ring);
+  background: color-mix(in srgb, var(--secondary) 75%, var(--surface));
+  color: var(--ink);
+}
+
+.deck-card {
+  border: 2px solid var(--border);
+  border-radius: 1.35rem;
+  background:
+    linear-gradient(125deg, rgb(255 255 255 / 68%), transparent 48%),
+    var(--paper);
+  box-shadow: 0 5px 0 color-mix(in srgb, var(--border) 65%, transparent);
+}
+
+.deck-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 8px 0 color-mix(in srgb, var(--accent) 42%, transparent);
+}
+
+.deck-card-badge {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.empty-state {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background:
+    radial-gradient(circle at 82% 18%, rgb(251 191 36 / 22%), transparent 10rem),
+    var(--paper);
+  color: var(--muted);
+}
+
+.school-panel {
+  border: 2px solid color-mix(in srgb, var(--border) 82%, var(--sun));
+  border-radius: 1.5rem;
+  background:
+    radial-gradient(circle at 92% 12%, rgb(251 191 36 / 18%), transparent 9rem),
+    var(--paper);
+  box-shadow: 0 8px 0 color-mix(in srgb, var(--border) 55%, transparent);
+}
+
+.school-tabs {
+  border: 2px solid color-mix(in srgb, var(--border) 85%, var(--ring));
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--secondary) 72%, var(--surface));
+  padding: 0.35rem;
+}
+
+.school-tab {
+  min-height: 2.8rem;
+  border: 2px solid transparent;
+  border-radius: 0.7rem;
+  color: var(--muted);
+}
+
+.school-tab[aria-pressed="true"],
+.school-tab[aria-current="page"] {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  background: var(--surface);
+  color: var(--accent-strong);
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.school-notice {
+  border: 2px solid #f59e0b;
+  border-radius: 0.9rem;
+  background: #fffbeb;
+  color: #713f12;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+html[data-theme="dark"] .school-notice {
+  border-color: #fcd34d;
+  background: #422006;
+  color: #fef3c7;
+}
+
+.study-complete,
+.quiz-complete {
+  border: 2px solid color-mix(in srgb, var(--border) 80%, var(--sun));
+  border-radius: 1.75rem;
+  background: var(--paper);
+  box-shadow: 0 8px 0 color-mix(in srgb, var(--border) 55%, transparent);
+}
+
+.study-choice {
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.study-choice:hover:not(:disabled) {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.study-choice.is-selected {
+  border-color: var(--ring);
+  background: color-mix(in srgb, var(--secondary) 72%, var(--surface));
+  color: var(--ink);
+}
+
+.study-choice.is-correct {
+  border-color: #059669;
+  background: #d1fae5;
+  color: #064e3b;
+}
+
+.study-choice.is-wrong {
+  border-color: #e11d48;
+  background: #ffe4e6;
+  color: #881337;
+}
+
+html[data-theme="dark"] .study-choice.is-correct {
+  background: #064e3b;
+  color: #d1fae5;
+}
+
+html[data-theme="dark"] .study-choice.is-wrong {
+  background: #4c0519;
+  color: #ffe4e6;
+}
+
 .play-input {
   width: 100%;
   border: 0;

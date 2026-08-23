@@ -54,7 +54,7 @@ export default async function Home() {
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-center text-[length:clamp(1.05rem,1.5vw,1.2rem)] leading-7 text-[var(--muted)]">
           Paste text, import a URL, or upload a PDF. Study with spaced
-          repetition, quiz battles, and shareable embeds.
+          repetition, quick quizzes, and shareable embeds.
         </p>
         <div className="landing-features">
           <div>
@@ -75,7 +75,7 @@ export default async function Home() {
             <p className="landing-feature-num">03</p>
             <h3 className="landing-feature-title">Quiz</h3>
             <p className="landing-feature-copy">
-              Run a trainer-style quiz, then share or embed the deck.
+              Check your understanding, then share or embed the deck.
             </p>
           </div>
         </div>

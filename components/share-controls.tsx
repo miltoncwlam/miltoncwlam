@@ -48,30 +48,30 @@ export function ShareControls({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p className="font-bold text-slate-900">Read-only sharing</p>
-      <p className="mt-1 text-sm text-slate-600">
+    <div className="school-panel p-5">
+      <p className="font-bold text-[var(--ink)]">Read-only sharing</p>
+      <p className="mt-1 text-sm text-[var(--muted)]">
         Anyone with the link can study. Only signed-in users save progress.
       </p>
 
       {shared ? (
-        <p className="mt-3 text-sm font-bold text-emerald-700">Sharing on</p>
+        <p className="mt-3 text-sm font-bold text-[var(--accent-strong)]">Sharing on</p>
       ) : null}
 
       {link ? (
-        <p className="mt-3 break-all rounded-lg bg-white p-3 text-xs text-indigo-700">
+        <p className="mt-3 break-all rounded-lg bg-[var(--surface)] p-3 text-xs font-semibold text-[var(--accent-strong)]">
           {link} (copied)
         </p>
       ) : shared ? (
-        <p className="mt-3 text-sm text-slate-600">
+        <p className="mt-3 text-sm text-[var(--muted)]">
           A share link is already active. Rotate to copy a fresh URL.
         </p>
       ) : null}
 
       {quizLink ? (
         <div className="mt-4 space-y-2">
-          <p className="text-sm font-bold text-slate-900">Quiz link</p>
-          <p className="break-all rounded-lg bg-white p-3 text-xs text-indigo-700">
+          <p className="text-sm font-bold text-[var(--ink)]">Quiz link</p>
+          <p className="break-all rounded-lg bg-[var(--surface)] p-3 text-xs font-semibold text-[var(--accent-strong)]">
             {quizLink}
           </p>
         </div>
@@ -79,13 +79,13 @@ export function ShareControls({
 
       {embedSnippet ? (
         <div className="mt-4 space-y-2">
-          <p className="text-sm font-bold text-slate-900">Embed snippet</p>
+          <p className="text-sm font-bold text-[var(--ink)]">Embed snippet</p>
           <textarea
             className="field min-h-24 font-mono text-xs"
             readOnly
             value={embedSnippet}
           />
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-[var(--muted)]">
             This embeds the study view. Add <code>?mode=quiz</code> to the URL to
             embed the quiz instead.
           </p>

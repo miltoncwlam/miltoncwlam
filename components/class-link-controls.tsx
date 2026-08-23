@@ -23,14 +23,14 @@ export function ClassLinkControls({
   const [pending, startTransition] = useTransition();
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-      <p className="font-bold text-slate-900">Class mode</p>
-      <p className="mt-1 text-sm text-slate-600">
+    <div className="school-panel p-5">
+      <p className="font-bold text-[var(--ink)]">Class mode</p>
+      <p className="mt-1 text-sm text-[var(--muted)]">
         Students open the link and get a copy of this deck in their library.
       </p>
 
       {freshLink ? (
-        <p className="mt-3 break-all rounded-lg bg-white p-3 text-xs text-indigo-700">
+        <p className="mt-3 break-all rounded-lg bg-[var(--surface)] p-3 text-xs font-semibold text-[var(--accent-strong)]">
           {freshLink}
         </p>
       ) : null}
@@ -58,7 +58,7 @@ export function ClassLinkControls({
         <ul className="mt-4 space-y-2 text-sm">
           {links.map((link) => (
             <li
-              className="flex items-center justify-between gap-2 rounded-lg bg-white px-3 py-2"
+              className="flex items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2"
               key={link.id}
             >
               <span>

@@ -222,14 +222,13 @@ export function FlashCard({
             const isSelected = selectedOption === option;
             const isCorrectOption =
               normalizeAnswer(option) === normalizeAnswer(back);
-            let tone =
-              "border-slate-200 bg-white text-slate-800 hover:border-indigo-300";
+            let tone = "study-choice";
             if (answered && isCorrectOption) {
-              tone = "border-emerald-400 bg-emerald-50 text-emerald-900";
+              tone = "study-choice is-correct";
             } else if (answered && isSelected && !isCorrectOption) {
-              tone = "border-rose-400 bg-rose-50 text-rose-900";
+              tone = "study-choice is-wrong";
             } else if (isSelected) {
-              tone = "border-indigo-400 bg-indigo-50 text-indigo-950";
+              tone = "study-choice is-selected";
             }
             return (
               <li key={`${option}-${optionIndex}`}>

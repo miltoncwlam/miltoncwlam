@@ -84,7 +84,7 @@ export function QuizPlayer({
       ? Math.round((session.score / session.total) * 100)
       : 0;
     return (
-      <section className="play-finish mx-auto max-w-lg">
+      <section className="quiz-complete mx-auto max-w-lg p-8 text-center">
         <div className="play-finish-cup" aria-hidden>
           {pct >= 50 ? "🏆" : "💀"}
         </div>

@@ -339,15 +339,16 @@ export function CreateDeckForm({
       ) : null}
 
       <form className="space-y-6" onSubmit={handleSubmit} ref={formRef}>
-        <div className="grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-2 sm:grid-cols-4">
+        <div className="school-tabs grid grid-cols-2 gap-2 sm:grid-cols-4">
           {modes.map(({ value, label: modeLabel, enabled }) => (
             <button
-              className={`rounded-xl px-3 py-3 text-sm font-bold ${
+              aria-pressed={activeMode === value}
+              className={`school-tab px-3 py-3 text-sm font-bold ${
                 activeMode === value
-                  ? "bg-white text-indigo-700 shadow"
+                  ? ""
                   : enabled
-                    ? "text-slate-600"
-                    : "cursor-not-allowed text-slate-400"
+                    ? ""
+                    : "cursor-not-allowed opacity-50"
               }`}
               disabled={!enabled || pending}
               key={value}
@@ -365,7 +366,7 @@ export function CreateDeckForm({
           </p>
         ) : null}
 
-        <div className="grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-2">
+        <div className="school-tabs grid grid-cols-2 gap-2">
           {(
             [
               { value: "flashcards" as const, label: t("modeFlashcards") },
@@ -373,11 +374,8 @@ export function CreateDeckForm({
             ] as const
           ).map((entry) => (
             <button
-              className={`rounded-xl px-3 py-3 text-sm font-bold ${
-                createMode === entry.value
-                  ? "bg-background text-primary shadow"
-                  : "text-muted-foreground"
-              }`}
+              aria-pressed={createMode === entry.value}
+              className="school-tab px-3 py-3 text-sm font-bold"
               disabled={pending}
               key={entry.value}
               onClick={() => setCreateMode(entry.value)}
@@ -564,7 +562,7 @@ export function CreateDeckForm({
               </select>
             </div>
           ) : (
-            <p className="self-end rounded-xl bg-muted px-3 py-3 text-sm text-muted-foreground">
+            <p className="school-notice self-end px-4 py-3 text-sm">
               {t("quizModeNote")}
             </p>
           )}
