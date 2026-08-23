@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
 import { EnergyBadge } from "@/components/energy-badge";
+import { StreakBadge } from "@/components/streak-badge";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -29,6 +30,7 @@ export async function AppHeader({ session }: { session: AppSession | null }) {
           <LocaleSwitcher />
           {signedIn && session ? (
             <>
+              <StreakBadge userId={session.user.id} />
               <EnergyBadge userId={session.user.id} />
               <Button asChild variant="ghost">
                 <Link href="/decks">{t("myDecks")}</Link>

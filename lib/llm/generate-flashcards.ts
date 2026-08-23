@@ -10,6 +10,10 @@ import { env } from "@/lib/env";
 import { promptLanguageName } from "@/lib/i18n/locales";
 import { mergeGeneratedDecks } from "@/lib/llm/merge-decks";
 import {
+  OpenRouterTimeoutError,
+  withOpenRouterRetry,
+} from "@/lib/llm/openrouter-retry";
+import {
   extractJsonObject,
   flashcardSchemaForCount,
   mcqStyleRules,
@@ -42,6 +46,8 @@ export type TokenUsage = {
 export type GenerationOptions = {
   provider?: LLMProvider;
   model?: string;
+  /** Absolute route deadline supplied by the generation endpoint. */
+  deadlineAt?: number;
   cardCount?: number;
   difficulty?: "beginner" | "intermediate" | "advanced";
   language?: string;
@@ -53,6 +59,13 @@ function getModel(modelOverride?: string) {
   const config = getLLMConfig();
   const client = getOpenRouterClient();
   return client(resolveOpenRouterModel(modelOverride || config.openrouter.model));
+}
+
+async function generateCloudObject<T>(
+  request: (abortSignal: AbortSignal) => Promise<T>,
+  options: GenerationOptions,
+): Promise<T> {
+  return withOpenRouterRetry((abortSignal) => request(abortSignal), options.deadlineAt);
 }
 
 function readUsage(result: {
@@ -89,7 +102,7 @@ Reply with ONLY:
 function qualityRules() {
   return `Quality rules (strict):
 - Front: ONE clear question or prompt, max ~160 characters. No essays.
-- Back: the word or short phrase a player would tap in a game (max 40 characters, max 6 words). Must directly answer the front.
+- Back: the word or short phrase a student would use to answer a quiz (max 40 characters, max 6 words). Must directly answer the front.
 - Put any extra fact, definition, or "why" in "hint" (max ~280 characters). Never put an essay in "back".
 - Front and back must match (same fact). Do not invent unsupported facts.`;
 }
@@ -205,7 +218,8 @@ async function ollamaChat(userContent: string): Promise<unknown> {
       format: "json",
       messages: [{ role: "user", content: `${userContent}\nReply with JSON only.` }],
     }),
-    signal: AbortSignal.timeout(120_000),
+    // A local fallback must not consume Vercel's generation request budget.
+    signal: AbortSignal.timeout(12_000),
   });
   if (!response.ok) {
     throw new Error(`Ollama ${response.status}`);
@@ -306,12 +320,13 @@ async function refillWithCloud(
         ? `${refillInstructions(deck, missing, options)}\n\nStudy material:\n${prompt.content.slice(0, 20_000)}`
         : `${refillInstructions(deck, missing, options)}\nUse the same images.`;
   try {
-    const result =
-      prompt.kind === "images"
-        ? await generateObject({
+    const result = await generateCloudObject(
+      (abortSignal) =>
+        prompt.kind === "images"
+          ? generateObject({
             model: getModel(options.model),
             schema,
-            abortSignal: AbortSignal.timeout(45_000),
+            abortSignal,
             messages: [
               {
                 role: "user",
@@ -326,12 +341,14 @@ async function refillWithCloud(
               },
             ],
           })
-        : await generateObject({
+          : generateObject({
             model: getModel(options.model),
             schema,
-            abortSignal: AbortSignal.timeout(45_000),
+            abortSignal,
             prompt: extraPrompt,
-          });
+          }),
+      options,
+    );
     const extra = parseGeneratedDeck(result.object, {
       expectedCardCount: Math.max(3, missing),
       softCount: true,
@@ -372,31 +389,30 @@ async function generateWithCloud(
     | { kind: "images"; images: ImageInput[] },
   options: GenerationOptions,
 ): Promise<GeneratedDeck> {
-  let lastError: unknown;
   const cardCount = requestedCount(options);
   const schema = flashcardSchemaForCount(cardCount);
 
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    try {
-      const result =
+  try {
+    const result = await generateCloudObject(
+      (abortSignal) =>
         prompt.kind === "text"
-          ? await generateObject({
+          ? generateObject({
               model: getModel(options.model),
               schema,
-              abortSignal: AbortSignal.timeout(45_000),
+              abortSignal,
               prompt: `${generationInstructions(options)}\n\nStudy material:\n${prompt.content.slice(0, 80_000)}`,
             })
           : prompt.kind === "topic"
-            ? await generateObject({
+            ? generateObject({
                 model: getModel(options.model),
                 schema,
-                abortSignal: AbortSignal.timeout(45_000),
+                abortSignal,
                 prompt: `${topicGenerationInstructions(options)}\n\nTopic:\n${prompt.topic.trim().slice(0, 200)}`,
               })
-            : await generateObject({
+            : generateObject({
                 model: getModel(options.model),
                 schema,
-                abortSignal: AbortSignal.timeout(60_000),
+                abortSignal,
                 messages: [
                   {
                     role: "user",
@@ -410,25 +426,26 @@ async function generateWithCloud(
                     ],
                   },
                 ],
-              });
-
-      const parsed = parseGeneratedDeck(result.object, {
-        expectedCardCount: cardCount,
-        softCount: true,
-      });
-      const filled = await refillWithCloud(
-        { ...parsed, usage: readUsage(result) },
-        prompt,
-        options,
-      );
-      return assertEnoughCards(filled, cardCount);
-    } catch (error) {
-      if (error instanceof UnrelatedSourceError) throw error;
-      lastError = error;
+              }),
+      options,
+    );
+    const parsed = parseGeneratedDeck(result.object, {
+      expectedCardCount: cardCount,
+      softCount: true,
+    });
+    const filled = await refillWithCloud(
+      { ...parsed, usage: readUsage(result) },
+      prompt,
+      options,
+    );
+    return assertEnoughCards(filled, cardCount);
+  } catch (error) {
+    if (error instanceof UnrelatedSourceError) throw error;
+    if (error instanceof OpenRouterTimeoutError || error instanceof DOMException) {
+      throw new OpenRouterTimeoutError();
     }
+    throw new Error(cloudFailureMessage(error, options.model));
   }
-
-  throw new Error(cloudFailureMessage(lastError, options.model));
 }
 
 function cloudFailureMessage(lastError: unknown, modelId?: string) {

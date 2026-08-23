@@ -44,13 +44,7 @@ export default async function StudyPage({
           <p className="eyebrow">{t("dueEmpty")}</p>
           <p className="page-subtitle mt-3">{t("dueEmptyBody")}</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link
-              className="primary-button"
-              href={`/decks/${deck.id}/play?due=1`}
-            >
-              {t("playDue")}
-            </Link>
-            <Link className="secondary-button" href={`/decks/${deck.id}/quiz`}>
+            <Link className="primary-button" href={`/decks/${deck.id}/quiz`}>
               {t("quizInstead")}
             </Link>
             <Link className="text-button" href={`/decks/${deck.id}/study?new=1`}>

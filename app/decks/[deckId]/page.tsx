@@ -77,11 +77,8 @@ export default async function DeckDetailPage({
               <Link className="secondary-button" href={`/decks/${deck.id}/quiz`}>
                 Quiz battle
               </Link>
-              <Link className="secondary-button" href={`/decks/${deck.id}/play`}>
-                Play activities
-              </Link>
               <Link className="secondary-button" href={`/decks/${deck.id}/class`}>
-                Class scores
+                Class links
               </Link>
             </>
           ) : (
@@ -205,7 +202,7 @@ export default async function DeckDetailPage({
               <ClassLinkControls deckId={deck.id} links={classLinks} />
               <p className="text-sm">
                 <Link className="text-button" href={`/decks/${deck.id}/class`}>
-                  Open class scores →
+                  Manage class links →
                 </Link>
               </p>
               <CommunityVisibilityControls

@@ -127,7 +127,9 @@ function normalizeCard(card: z.infer<typeof generatedCardSchema>): GeneratedFlas
     const sanitized = sanitizeMcqFields({ back, hint, options });
     back = sanitized.back;
     hint = sanitized.hint?.slice(0, HINT_MAX) || undefined;
-    options = sanitized.options.map((entry) => entry.trim().slice(0, PLAY_OPTION_MAX));
+    options = (sanitized.options ?? []).map((entry) =>
+      entry.trim().slice(0, PLAY_OPTION_MAX),
+    );
   }
   const split = splitPlayTerm(back, hint);
   if (type === "mcq") {

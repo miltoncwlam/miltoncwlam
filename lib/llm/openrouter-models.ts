@@ -187,6 +187,7 @@ export async function listOpenRouterFreeModels(): Promise<
         "HTTP-Referer": env.NEXT_PUBLIC_APP_URL,
         "X-Title": "HK Study A",
       },
+      signal: AbortSignal.timeout(8_000),
     });
     if (!response.ok) {
       return cache?.models ?? [];

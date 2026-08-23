@@ -1,13 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
 
 import {
   disableSharingAction,
   enableSharingAction,
 } from "@/lib/actions/sharing";
-import { PLAY_TEMPLATES } from "@/lib/play/templates";
 
 export function ShareControls({
   deckId,
@@ -18,18 +16,14 @@ export function ShareControls({
   isShared: boolean;
   appUrl: string;
 }) {
-  const t = useTranslations("play");
   const [link, setLink] = useState<string | null>(null);
   const [shared, setShared] = useState(isShared);
   const [pending, startTransition] = useTransition();
 
-  const [activity, setActivity] = useState("matching-pairs");
   const token = link?.split("/share/")[1] ?? null;
-  const activityLink = token
-    ? `${appUrl}/share/${token}?activity=${activity}`
-    : null;
+  const quizLink = token ? `${appUrl}/share/${token}?mode=quiz` : null;
   const embedSnippet = token
-    ? `<iframe src="${appUrl}/embed/${token}?mode=${activity}" title="HK Study A" width="100%" height="520" style="border:0;border-radius:16px;" loading="lazy" referrerpolicy="no-referrer"></iframe>`
+    ? `<iframe src="${appUrl}/embed/${token}" title="HK Study A" width="100%" height="520" style="border:0;border-radius:16px;" loading="lazy" referrerpolicy="no-referrer"></iframe>`
     : null;
 
   function createOrRotate() {
@@ -74,27 +68,11 @@ export function ShareControls({
         </p>
       ) : null}
 
-      {activityLink ? (
+      {quizLink ? (
         <div className="mt-4 space-y-2">
-          <label className="block text-sm font-bold text-slate-900">
-            Assign one activity
-            <select
-              className="field mt-1"
-              onChange={(event) => setActivity(event.target.value)}
-              value={activity}
-            >
-              {PLAY_TEMPLATES.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {t(`templates.${item.id}.name`)}
-                </option>
-              ))}
-            </select>
-          </label>
+          <p className="text-sm font-bold text-slate-900">Quiz link</p>
           <p className="break-all rounded-lg bg-white p-3 text-xs text-indigo-700">
-            {activityLink}
-          </p>
-          <p className="break-all rounded-lg bg-white p-3 text-xs text-indigo-700">
-            {appUrl}/share/{token}?mode=quiz
+            {quizLink}
           </p>
         </div>
       ) : null}
@@ -108,9 +86,8 @@ export function ShareControls({
             value={embedSnippet}
           />
           <p className="text-xs text-slate-500">
-            Share <code>?mode=quiz</code> for quiz battle. Embed the same with{" "}
-            <code>?mode=quiz</code>, or <code>?mode=matching-pairs</code> (or any
-            activity id) for a classroom template.
+            This embeds the study view. Add <code>?mode=quiz</code> to the URL to
+            embed the quiz instead.
           </p>
         </div>
       ) : null}

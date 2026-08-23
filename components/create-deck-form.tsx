@@ -58,8 +58,8 @@ function friendlyError(message: string, code?: string) {
   if (/too large to read|too large \(max/i.test(message)) {
     return "That page is too heavy to fetch whole. Paste the article text, or try a shorter URL.";
   }
-  if (/aborted|timeout/i.test(message)) {
-    return "The page took too long to load. Paste the text or try a shorter URL.";
+  if (/aborted|timeout|provider took too long/i.test(message)) {
+    return "The AI provider timed out. Your energy will be refunded; try again with fewer cards or a shorter source.";
   }
   if (/failed to fetch|networkerror|load failed/i.test(message)) {
     return "The connection dropped. Try again with fewer cards or a shorter source.";
@@ -232,6 +232,7 @@ export function CreateDeckForm({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(55_000),
         });
         try {
           result = await response.json();
@@ -269,7 +270,7 @@ export function CreateDeckForm({
       await new Promise((resolve) => window.setTimeout(resolve, 250));
       setPhase("done");
       const got = result.cardCount;
-      const want = result.requestedCardCount ?? Number(payload.cardCount) || 10;
+      const want = result.requestedCardCount ?? (Number(payload.cardCount) || 10);
       if (got && got < want) {
         setLabel(tg("shortfall", { got, want }));
         await new Promise((resolve) => window.setTimeout(resolve, 1400));

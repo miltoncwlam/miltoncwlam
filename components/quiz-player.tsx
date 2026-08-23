@@ -4,7 +4,6 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import { WhyBox } from "@/components/play/play-shell";
 import { answerQuizAction } from "@/lib/actions/quizzes";
 import { useSwipe } from "@/lib/hooks/use-swipe";
 import {
@@ -14,6 +13,28 @@ import {
   resolveCorrectChoice,
 } from "@/lib/quiz/choices";
 import type { Flashcard, QuizSession } from "@/lib/types/flashcard";
+
+function QuizFeedback({
+  ok,
+  why,
+  onContinue,
+}: {
+  ok: boolean;
+  why?: string | null;
+  onContinue: () => void;
+}) {
+  return (
+    <div className="play-why space-y-3">
+      <p className={ok ? "play-why-ok" : "play-why-miss"}>
+        {ok ? "Correct" : "Not quite"}
+      </p>
+      {why ? <p className="play-muted">{why}</p> : null}
+      <button className="primary-button" onClick={onContinue} type="button">
+        Continue
+      </button>
+    </div>
+  );
+}
 
 export function QuizPlayer({
   deckId,
@@ -152,7 +173,7 @@ export function QuizPlayer({
       </div>
 
       {feedback ? (
-        <WhyBox
+        <QuizFeedback
           ok={feedback === "correct"}
           onContinue={continueQuiz}
           why={explanation}

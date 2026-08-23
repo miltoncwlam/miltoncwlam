@@ -12,7 +12,6 @@ import {
   IMAGE_PERIOD_GRANT,
   PAID_GENERATE_LIMIT_HOUR,
 } from "@/lib/credits/config";
-import { PLAY_STAKE_LIMIT_HOUR } from "@/lib/credits/play";
 import { isPaidOpenRouterModel } from "@/lib/llm/models";
 
 export type CreditPool = "text" | "image";
@@ -407,30 +406,6 @@ export async function assertGenerateRateLimit(
         `Too many catalog-model generates today (max ${FREE_GENERATE_LIMIT_DAY}). Try DeepSeek V4 Flash or Qwen 3.7 Flash, or wait until tomorrow.`,
       );
     }
-  }
-}
-
-/** Reject burst play-ante abuse (counts play_stake ledger rows this hour). */
-export async function assertPlayStakeRateLimit(
-  userId: string,
-  input?: { isUnlimited?: boolean },
-): Promise<void> {
-  if (input?.isUnlimited) return;
-
-  const hourResult = await pool.query<{ count: string }>(
-    `select count(*)::text as count
-     from credit_ledger
-     where user_id = $1
-       and pool = 'text'
-       and reason = 'play_stake'
-       and created_at > now() - interval '1 hour'`,
-    [userId],
-  );
-  const hourCount = Number(hourResult.rows[0]?.count ?? 0);
-  if (hourCount >= PLAY_STAKE_LIMIT_HOUR) {
-    throw new Error(
-      `Too many play rounds this hour (max ${PLAY_STAKE_LIMIT_HOUR}). Leave a round and the 20 stays spent — try again later.`,
-    );
   }
 }
 

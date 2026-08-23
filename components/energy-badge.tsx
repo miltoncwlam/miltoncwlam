@@ -1,4 +1,3 @@
-import { PLAY_STAKE } from "@/lib/credits/play";
 import { getOrRefreshCredits } from "@/lib/data/credits";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +22,7 @@ export async function EnergyBadge({ userId }: { userId: string }) {
   return (
     <span
       className={cn(className)}
-      title={`Play ante ${PLAY_STAKE}; win 50%+ to get it back. Energy refills in about ${daysLeft} day(s)`}
+      title={`Energy refills in about ${daysLeft} day(s)`}
     >
       Energy {credits.balance}
       <span className="font-semibold opacity-70">/ {credits.periodGrant}</span>

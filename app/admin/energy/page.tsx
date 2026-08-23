@@ -4,8 +4,6 @@ import { requireAdminSession } from "@/lib/auth-server";
 import { listCreditLedger } from "@/lib/data/credits";
 
 const REASON_LABELS: Record<string, string> = {
-  play_stake: "Play ante",
-  play_win: "Play payout",
   generate_deck: "Generate deck",
   generate_quiz: "Generate quiz",
   generate_refund: "Generate refund",
@@ -20,7 +18,9 @@ const POOL_LABELS: Record<string, string> = {
 
 export default async function AdminEnergyPage() {
   await requireAdminSession();
-  const rows = await listCreditLedger(200);
+  const rows = (await listCreditLedger(200)).filter(
+    (row) => row.reason !== "play_stake" && row.reason !== "play_win",
+  );
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 px-5 py-10">
@@ -30,8 +30,7 @@ export default async function AdminEnergyPage() {
         </Link>
         <h1 className="text-3xl font-black tracking-tight">Energy ledger</h1>
         <p className="text-slate-600">
-          Recent grants, spends, and admin adjustments — including play antes
-          (play_stake) and win payouts (play_win).
+          Recent grants, generation spends, and admin adjustments.
         </p>
       </header>
 

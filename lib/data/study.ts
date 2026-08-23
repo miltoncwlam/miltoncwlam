@@ -1,6 +1,7 @@
 import "server-only";
 
 import { pool } from "@/lib/db";
+import { rememberStreak } from "@/lib/data/streaks";
 import { applySm2, defaultSrsState } from "@/lib/study/sm2";
 import { shuffleIds } from "@/lib/study/shuffle";
 import type { CardRating, StudySession } from "@/lib/types/flashcard";
@@ -275,6 +276,7 @@ export async function rateAndAdvance(input: {
       [input.sessionId, input.userId, nextIndex],
     );
     await client.query("commit");
+    await rememberStreak(input.userId);
     return nextIndex;
   } catch (error) {
     await client.query("rollback");

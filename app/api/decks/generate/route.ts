@@ -46,6 +46,7 @@ import {
   TOPIC_SOURCE_MIME,
   UnrelatedSourceError,
 } from "@/lib/llm/generate-flashcards";
+import { OPENROUTER_ROUTE_BUDGET_MS } from "@/lib/llm/openrouter-retry";
 import { mergeGeneratedDecks } from "@/lib/llm/merge-decks";
 import { assertEnoughCards } from "@/lib/llm/parse-deck-json";
 import { listOpenRouterFreeModels } from "@/lib/llm/openrouter-models";
@@ -240,6 +241,7 @@ async function generateFromLongText(
 }
 
 export async function POST(request: Request) {
+  const deadlineAt = Date.now() + OPENROUTER_ROUTE_BUDGET_MS;
   let deckId: string | undefined;
   let userId: string | undefined;
   let spentTextAmount = 0;
@@ -376,6 +378,7 @@ export async function POST(request: Request) {
     const generationOptions = {
       provider,
       model,
+      deadlineAt,
       cardCount: input.cardCount,
       difficulty: input.difficulty,
       language: input.language,

@@ -16,6 +16,22 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      { source: "/city/:path*", destination: "/decks", permanent: false },
+      { source: "/play-lab", destination: "/decks", permanent: false },
+      {
+        source: "/decks/:deckId/play/:path*",
+        destination: "/decks/:deckId",
+        permanent: false,
+      },
+      {
+        source: "/decks/:deckId/play",
+        destination: "/decks/:deckId",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);
