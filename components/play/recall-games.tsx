@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { gradeTypedAnswerAction } from "@/lib/actions/games";
-import { shortTarget } from "@/lib/play/answers";
+import { shortTarget, typedMatches } from "@/lib/play/answers";
 import type { Flashcard } from "@/lib/types/flashcard";
 
 import { InkStoneSvg } from "./play-art";
@@ -52,6 +52,13 @@ export function TypeAnswerGame({
     setWhy(message);
   }
 
+  function finishHit(nextSource: "exact" | "ai") {
+    setFeedback(true);
+    setSource(nextSource);
+    setWhy(null);
+    setScore((n) => n + 1);
+  }
+
   return (
     <PlayShell
       clock={false}
@@ -80,6 +87,10 @@ export function TypeAnswerGame({
             finishMiss(missWhy(card));
             return;
           }
+          if (typedMatches(typed, card)) {
+            finishHit("exact");
+            return;
+          }
           setChecking(true);
           void gradeTypedAnswerAction({
             deckId,
@@ -87,14 +98,11 @@ export function TypeAnswerGame({
             typed,
           })
             .then((result) => {
-              setFeedback(result.ok);
-              setSource(result.source);
-              setWhy(
-                result.ok
-                  ? result.why
-                  : missWhy(card) + (result.why ? ` — ${result.why}` : ""),
-              );
-              if (result.ok) setScore((n) => n + 1);
+              if (result.ok) {
+                finishHit(result.source === "ai" ? "ai" : "exact");
+                return;
+              }
+              finishMiss(missWhy(card));
             })
             .catch(() => {
               finishMiss(shortTarget(card) ?? missWhy(card));

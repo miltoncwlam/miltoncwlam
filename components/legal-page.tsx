@@ -8,7 +8,7 @@ export function LegalBlocks({ blocks }: { blocks: LegalBlock[] }) {
     <>
       {blocks.map((block) => (
         <section key={block.heading}>
-          <h2 className="font-[family-name:var(--font-instrument)] text-[length:clamp(1.35rem,2.4vw,1.6rem)] font-normal text-[var(--ink)]">
+          <h2 className="font-display text-[length:clamp(1.35rem,2.4vw,1.6rem)] font-semibold leading-tight tracking-tight text-[var(--ink)]">
             {block.heading}
           </h2>
           {block.paragraphs.map((paragraph) => (

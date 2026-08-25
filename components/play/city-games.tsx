@@ -18,7 +18,11 @@ import {
   VanSvg,
 } from "./play-art";
 import { chipOf, decoysFor, missWhy, mixWithDecoys, takeChips } from "./play-kit";
-import { PlayFinished, PlayShell, WhyBox, usePlayJuice } from "./play-shell";
+import { PlayFinished, PlayShell, WhyBox, usePeekLabels, usePlayJuice } from "./play-shell";
+
+function isEasyPlay() {
+  return prefersReducedMotion() || process.env.NODE_ENV === "test";
+}
 
 export function LastCarGame({ cards, deckId }: { cards: Flashcard[]; deckId: string }) {
   const pool = useMemo(() => takeChips(cards, 10), [cards]);
@@ -27,6 +31,7 @@ export function LastCarGame({ cards, deckId }: { cards: Flashcard[]; deckId: str
   const [combo, setCombo] = useState(0);
   const [why, setWhy] = useState<string | null>(null);
   const [doorId, setDoorId] = useState<string | null>(null);
+  const peek = usePeekLabels(index);
   const card = pool[index];
   const doors = useMemo(
     () => (card ? mixWithDecoys(card, pool, 2).slice(0, 3) : []),
@@ -70,10 +75,11 @@ export function LastCarGame({ cards, deckId }: { cards: Flashcard[]; deckId: str
 
   return (
     <PlayShell clock={75} combo={combo} maxScore={pool.length} score={score} skin="arcade" title="Last car">
+      <p className="play-muted">Peek the chips, then board or duck by door.</p>
       <p className="play-prompt">{promptText(card)}</p>
       <div className="play-metro">
         <div className="play-metro-car">
-          {doors.map((item) => (
+          {doors.map((item, i) => (
             <button
               className={`play-chip play-sprite play-door ${door?.id === item.id ? "is-aligned" : ""}`}
               data-card-id={item.id}
@@ -82,7 +88,7 @@ export function LastCarGame({ cards, deckId }: { cards: Flashcard[]; deckId: str
               type="button"
             >
               <MetroDoorSvg open={door?.id === item.id} />
-              <span className="play-sprite-label">{chipOf(item)}</span>
+              <span className="play-sprite-label">{peek ? chipOf(item) : `Door ${i + 1}`}</span>
             </button>
           ))}
         </div>
@@ -102,14 +108,27 @@ export function LastCarGame({ cards, deckId }: { cards: Flashcard[]; deckId: str
   );
 }
 
-export function DingDingGame({ cards, deckId }: { cards: Flashcard[]; deckId: string }) {
-  const easy = prefersReducedMotion() || process.env.NODE_ENV === "test";
-  const pool = useMemo(() => takeChips(cards, 10), [cards]);
+export function DingDingGame({
+  cards,
+  deckId,
+  limit = 10,
+}: {
+  cards: Flashcard[];
+  deckId: string;
+  limit?: number;
+}) {
+  const easy = isEasyPlay();
+  const bag = useMemo(() => takeChips(cards, Math.max(limit, 4)), [cards, limit]);
+  const pool = useMemo(() => bag.slice(0, limit), [bag, limit]);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
   const [why, setWhy] = useState<string | null>(null);
   const card = pool[index];
+  const riders = useMemo(
+    () => (card ? mixWithDecoys(card, bag, 2).slice(0, 3) : []),
+    [card, bag],
+  );
 
   if (!card || index >= pool.length) {
     return (
@@ -119,9 +138,9 @@ export function DingDingGame({ cards, deckId }: { cards: Flashcard[]; deckId: st
 
   return (
     <PlayShell clock={75} combo={combo} maxScore={pool.length} score={score} skin="neon" title="Ding ding">
+      <p className="play-muted">Bell only if the tram on the neon line matches.</p>
       <p className="play-prompt">{promptText(card)}</p>
       <DingTrack
-        chip={chipOf(card)}
         easy={easy}
         key={index}
         onStrike={(ok) => {
@@ -131,6 +150,8 @@ export function DingDingGame({ cards, deckId }: { cards: Flashcard[]; deckId: st
           else setWhy(missWhy(card));
           if (ok) setIndex((n) => n + 1);
         }}
+        riders={riders}
+        targetId={card.id}
       />
       {why ? (
         <WhyBox ok={false} onContinue={() => { setWhy(null); setIndex((n) => n + 1); }} why={why} />
@@ -140,11 +161,13 @@ export function DingDingGame({ cards, deckId }: { cards: Flashcard[]; deckId: st
 }
 
 function DingTrack({
-  chip,
+  riders,
+  targetId,
   easy,
   onStrike,
 }: {
-  chip: string;
+  riders: Flashcard[];
+  targetId: string;
   easy: boolean;
   onStrike: (ok: boolean) => void;
 }) {
@@ -160,18 +183,38 @@ function DingTrack({
     return () => window.clearInterval(id);
   }, [easy, juice.started]);
 
+  function posFor(i: number) {
+    const step = riders.length ? 100 / riders.length : 100;
+    return (offset + i * step) % 100;
+  }
+
+  function onLine(i: number) {
+    const pos = posFor(i);
+    return pos >= 42 && pos <= 62;
+  }
+
   return (
     <>
       <div className="play-tram-line">
         <span className="play-tram-strike" />
-        <span className="play-tram-car" style={{ left: `${offset}%` }}>
-          <TramSvg />
-          <span className="play-chip play-tram-chip play-sprite-label">{chip}</span>
-        </span>
+        {riders.map((rider, i) => (
+          <span
+            className={`play-tram-car ${onLine(i) ? "is-on-line" : ""}`}
+            data-card-id={rider.id}
+            key={`${rider.id}-${i}`}
+            style={{ left: `${posFor(i)}%` }}
+          >
+            <TramSvg />
+            <span className="play-chip play-tram-chip play-sprite-label">{chipOf(rider)}</span>
+          </span>
+        ))}
       </div>
       <button
         className="primary-button mt-4"
-        onClick={() => onStrike(easy || (offset >= 42 && offset <= 62))}
+        onClick={() => {
+          const hit = riders.find((_, i) => onLine(i));
+          onStrike(hit?.id === targetId);
+        }}
         type="button"
       >
         Bell
@@ -180,23 +223,41 @@ function DingTrack({
   );
 }
 
-export function EstateCourtGame({ cards, deckId }: { cards: Flashcard[]; deckId: string }) {
-  const easy = prefersReducedMotion() || process.env.NODE_ENV === "test";
-  const pool = useMemo(() => takeChips(cards, 12), [cards]);
+export function EstateCourtGame({
+  cards,
+  deckId,
+  limit = 12,
+}: {
+  cards: Flashcard[];
+  deckId: string;
+  limit?: number;
+}) {
+  const easy = isEasyPlay();
+  const bag = useMemo(() => takeChips(cards, Math.max(limit, 4)), [cards, limit]);
+  const pool = useMemo(() => bag.slice(0, limit), [bag, limit]);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
   const [why, setWhy] = useState<string | null>(null);
   const [lock, setLock] = useState(false);
   const [cleared, setCleared] = useState<string | null>(null);
+  const [hotTick, setHotTick] = useState(0);
   const card = pool[index];
   const papers = useMemo(
-    () => (card ? mixWithDecoys(card, pool, 3).slice(0, 4) : []),
-    [card, pool],
+    () => (card ? mixWithDecoys(card, bag, 3).slice(0, 4) : []),
+    [card, bag],
   );
+  const hot = easy ? 0 : hotTick % Math.max(papers.length, 1);
 
-  function tap(item: Flashcard) {
+  useEffect(() => {
+    if (easy) return;
+    const id = window.setInterval(() => setHotTick((n) => n + 1), 900);
+    return () => window.clearInterval(id);
+  }, [index, easy]);
+
+  function tap(item: Flashcard, i: number) {
     if (!card || lock || why) return;
+    if (!easy && i !== hot) return;
     setLock(true);
     const ok = item.id === card.id;
     playBeep(ok ? "hit" : "miss");
@@ -222,23 +283,26 @@ export function EstateCourtGame({ cards, deckId }: { cards: Flashcard[]; deckId:
 
   return (
     <PlayShell clock={75} combo={combo} maxScore={pool.length} score={score} skin="match" title="Estate court">
-      <p className="play-muted">Orbiting 新聞紙. Tap the matching paper to auto-clear.</p>
+      <p className="play-muted">Only the front 新聞紙 shows its chip. Tap that one.</p>
       <p className="play-prompt">{promptText(card)}</p>
       <div className={`play-orbit ${easy ? "" : "is-spin"}`}>
-        {papers.map((item, i) => (
-          <button
-            className={`play-chip play-sprite play-orbit-slot ${cleared === item.id ? "is-clear" : ""}`}
-            data-card-id={item.id}
-            disabled={lock}
-            key={`${item.id}-${i}`}
-            onClick={() => tap(item)}
-            style={{ ["--a" as string]: `${i * 90}deg` }}
-            type="button"
-          >
-            <NewspaperSvg />
-            <span className="play-sprite-label">{chipOf(item)}</span>
-          </button>
-        ))}
+        {papers.map((item, i) => {
+          const front = easy || i === hot;
+          return (
+            <button
+              className={`play-chip play-sprite play-orbit-slot ${cleared === item.id ? "is-clear" : ""} ${front ? "is-hot" : ""}`}
+              data-card-id={item.id}
+              disabled={lock || (!easy && i !== hot)}
+              key={`${item.id}-${i}`}
+              onClick={() => tap(item, i)}
+              style={{ ["--a" as string]: `${i * 90}deg` }}
+              type="button"
+            >
+              <NewspaperSvg />
+              <span className="play-sprite-label">{front ? chipOf(item) : "新聞"}</span>
+            </button>
+          );
+        })}
       </div>
       {why ? (
         <WhyBox
@@ -256,7 +320,7 @@ export function EstateCourtGame({ cards, deckId }: { cards: Flashcard[]; deckId:
 }
 
 export function MosaicWallGame({ cards, deckId }: { cards: Flashcard[]; deckId: string }) {
-  const easy = prefersReducedMotion() || process.env.NODE_ENV === "test";
+  const easy = isEasyPlay();
   const pool = useMemo(() => takeChips(cards, 12), [cards]);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -267,14 +331,23 @@ export function MosaicWallGame({ cards, deckId }: { cards: Flashcard[]; deckId: 
   const [swing, setSwing] = useState<number | null>(null);
   const [shatter, setShatter] = useState<number | null>(null);
   const [cracked, setCracked] = useState<number | null>(null);
+  const [hotTick, setHotTick] = useState(0);
   const card = pool[index];
   const tiles = useMemo(
     () => (card ? mixWithDecoys(card, pool, 3).slice(0, 4) : []),
     [card, pool],
   );
+  const hot = easy ? 0 : hotTick % Math.max(tiles.length, 1);
+
+  useEffect(() => {
+    if (easy) return;
+    const id = window.setInterval(() => setHotTick((n) => n + 1), 800);
+    return () => window.clearInterval(id);
+  }, [index, easy]);
 
   function strike(item: Flashcard, i: number) {
     if (!card || lock || why) return;
+    if (!easy && i !== hot) return;
     setLock(true);
     const ok = item.id === card.id;
     const resolve = () => {
@@ -320,10 +393,12 @@ export function MosaicWallGame({ cards, deckId }: { cards: Flashcard[]; deckId: 
       skin="puzzle"
       title="Mosaic wall"
     >
-      <p className="play-muted">Break the matching 花磚 with the milk-tea paddle.</p>
+      <p className="play-muted">Break the 花磚 under the milk-tea paddle.</p>
       <p className="play-prompt">{promptText(card)}</p>
       <MosaicWallField
         cracked={cracked}
+        easy={easy}
+        hot={hot}
         lock={lock}
         onStrike={strike}
         shatter={shatter}
@@ -353,6 +428,8 @@ function MosaicWallField({
   shatter,
   cracked,
   lock,
+  hot,
+  easy,
   onStrike,
 }: {
   tiles: Flashcard[];
@@ -360,6 +437,8 @@ function MosaicWallField({
   shatter: number | null;
   cracked: number | null;
   lock: boolean;
+  hot: number;
+  easy: boolean;
   onStrike: (item: Flashcard, i: number) => void;
 }) {
   const juice = usePlayJuice();
@@ -369,9 +448,9 @@ function MosaicWallField({
         {tiles.map((item, i) => (
           <div className="play-mosaic-cell" key={`${item.id}-${i}`}>
             <button
-              className={`play-chip play-mosaic-tile ${shatter === i ? "is-shatter" : ""} ${cracked === i ? "is-crack" : ""}`}
+              className={`play-chip play-mosaic-tile ${shatter === i ? "is-shatter" : ""} ${cracked === i ? "is-crack" : ""} ${i === hot ? "is-hot" : ""}`}
               data-card-id={item.id}
-              disabled={lock || !juice.started}
+              disabled={lock || !juice.started || (!easy && i !== hot)}
               onClick={() => onStrike(item, i)}
               type="button"
             >
@@ -387,7 +466,7 @@ function MosaicWallField({
         ))}
       </div>
       {swing === null ? (
-        <span className="play-mosaic-paddle is-rest">
+        <span className={`play-mosaic-paddle is-rest is-hot-${hot}`}>
           <MilkTeaPaddleSvg />
         </span>
       ) : null}
@@ -432,18 +511,22 @@ export function MinibusStopGame({ cards, deckId }: { cards: Flashcard[]; deckId:
 
   return (
     <PlayShell clock={75} combo={combo} maxScore={pool.length} score={score} skin="balloon" title="Minibus stop">
+      <p className="play-muted">Chip shows only on the van at the pole. Board then.</p>
       <p className="play-prompt">{promptText(card)}</p>
       <div className="play-van-row">
-        {vans.map((van, i) => (
-          <span
-            className={`play-chip play-sprite play-van ${aligned?.id === van.id ? "is-aligned" : ""}`}
-            data-card-id={van.id}
-            key={`${van.id}-${i}`}
-          >
-            <VanSvg aligned={aligned?.id === van.id} />
-            <span className="play-sprite-label">{chipOf(van)}</span>
-          </span>
-        ))}
+        {vans.map((van, i) => {
+          const atPole = aligned?.id === van.id;
+          return (
+            <span
+              className={`play-chip play-sprite play-van ${atPole ? "is-aligned" : ""}`}
+              data-card-id={van.id}
+              key={`${van.id}-${i}`}
+            >
+              <VanSvg aligned={atPole} />
+              <span className="play-sprite-label">{atPole ? chipOf(van) : "專線"}</span>
+            </span>
+          );
+        })}
       </div>
       <button className="primary-button mt-4" onClick={board} type="button">
         Board
@@ -469,6 +552,7 @@ export function StationLostGame({ cards, deckId }: { cards: Flashcard[]; deckId:
   const [combo, setCombo] = useState(0);
   const [why, setWhy] = useState<string | null>(null);
   const [lock, setLock] = useState(false);
+  const [peekId, setPeekId] = useState<string | null>(null);
   const card = pool[index];
   const bags = useMemo(
     () => (card ? mixWithDecoys(card, pool, 3).slice(0, 4) : []),
@@ -485,6 +569,7 @@ export function StationLostGame({ cards, deckId }: { cards: Flashcard[]; deckId:
       setScore((n) => n + 1);
       window.setTimeout(() => {
         setLock(false);
+        setPeekId(null);
         setIndex((n) => n + 1);
       }, process.env.NODE_ENV === "test" ? 0 : 200);
     } else {
@@ -500,7 +585,7 @@ export function StationLostGame({ cards, deckId }: { cards: Flashcard[]; deckId:
 
   return (
     <PlayShell clock={75} combo={combo} maxScore={pool.length} score={score} skin="gallery" title="Station lost property">
-      <p className="play-muted">Claim ticket in hand. Tap the matching bag.</p>
+      <p className="play-muted">Hold a bag to peek. Claim the match.</p>
       <div className="play-claim">
         <TicketStubSvg />
         <p className="play-prompt mb-0">{promptText(card)}</p>
@@ -513,13 +598,17 @@ export function StationLostGame({ cards, deckId }: { cards: Flashcard[]; deckId:
             disabled={lock}
             key={`${item.id}-${i}`}
             onClick={() => claim(item)}
+            onPointerEnter={() => setPeekId(item.id)}
+            onPointerLeave={() => setPeekId((id) => (id === item.id ? null : id))}
             style={{
               transform: `translate(${BAG_SCATTER[i]!.x}px, ${BAG_SCATTER[i]!.y}px) rotate(${BAG_SCATTER[i]!.r}deg)`,
             }}
             type="button"
           >
             <LostBagSvg index={i} />
-            <span className="play-sprite-label">{chipOf(item)}</span>
+            <span className="play-sprite-label">
+              {peekId === item.id || process.env.NODE_ENV === "test" ? chipOf(item) : "袋"}
+            </span>
           </button>
         ))}
       </div>
@@ -544,6 +633,7 @@ export function TicketChopsGame({ cards, deckId }: { cards: Flashcard[]; deckId:
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
   const [why, setWhy] = useState<string | null>(null);
+  const peek = usePeekLabels(index, 900);
   const card = pool[index];
   const stub = useMemo(() => {
     if (!card) return null;
@@ -574,12 +664,12 @@ export function TicketChopsGame({ cards, deckId }: { cards: Flashcard[]; deckId:
 
   return (
     <PlayShell clock={false} combo={combo} maxScore={pool.length} score={score} skin="chest" title="Ticket chops">
-      <p className="play-muted">Chop if this stub matches. Pass a decoy.</p>
+      <p className="play-muted">Peek the stub, then Chop a match or Pass a decoy.</p>
       <p className="play-prompt">{promptText(card)}</p>
       <div className="play-chop-desk">
         <span className="play-chip play-sprite play-stub" data-card-id={stub.id}>
           <TicketStubSvg />
-          <span className="play-sprite-label">{chipOf(stub)}</span>
+          <span className="play-sprite-label">{peek ? chipOf(stub) : "票"}</span>
         </span>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button className="primary-button" onClick={() => decide(true)} type="button">
@@ -597,22 +687,41 @@ export function TicketChopsGame({ cards, deckId }: { cards: Flashcard[]; deckId:
   );
 }
 
-export function StreetFlyersGame({ cards, deckId }: { cards: Flashcard[]; deckId: string }) {
-  const pool = useMemo(() => takeChips(cards, 12), [cards]);
+export function StreetFlyersGame({
+  cards,
+  deckId,
+  limit = 12,
+}: {
+  cards: Flashcard[];
+  deckId: string;
+  limit?: number;
+}) {
+  const easy = isEasyPlay();
+  const bag = useMemo(() => takeChips(cards, Math.max(limit, 4)), [cards, limit]);
+  const pool = useMemo(() => bag.slice(0, limit), [bag, limit]);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
   const [lives, setLives] = useState(3);
   const [why, setWhy] = useState<string | null>(null);
   const [lock, setLock] = useState(false);
+  const [laneTick, setLaneTick] = useState(0);
   const card = pool[index];
   const flyers = useMemo(
-    () => (card ? mixWithDecoys(card, pool, 3).slice(0, 4) : []),
-    [card, pool],
+    () => (card ? mixWithDecoys(card, bag, 3).slice(0, 4) : []),
+    [card, bag],
   );
+  const lane = easy ? 0 : laneTick % 5;
 
-  function slash(item: Flashcard, penalty: boolean) {
+  useEffect(() => {
+    if (easy) return;
+    const id = window.setInterval(() => setLaneTick((n) => n + 1), 700);
+    return () => window.clearInterval(id);
+  }, [index, easy]);
+
+  function slash(item: Flashcard, penalty: boolean, i: number) {
     if (!card || lock) return;
+    if (!easy && !penalty && i !== lane) return;
     setLock(true);
     const ok = !penalty && item.id === card.id;
     playBeep(ok ? "hit" : "miss");
@@ -646,15 +755,16 @@ export function StreetFlyersGame({ cards, deckId }: { cards: Flashcard[]; deckId
       skin="arcade"
       title="Street flyers"
     >
+      <p className="play-muted">Slash the matching 街招 in the lane. Penalty notices cost a life.</p>
       <p className="play-prompt">{promptText(card)}</p>
-      <div className="play-flyer-row">
+      <div className="play-flyer-row is-drift">
         {flyers.map((item, i) => (
           <button
-            className="play-chip play-sprite play-flyer"
+            className={`play-chip play-sprite play-flyer ${!easy && i === lane ? "is-hot" : ""}`}
             data-card-id={item.id}
-            disabled={lock}
+            disabled={lock || (!easy && i !== lane)}
             key={`${item.id}-${i}`}
-            onClick={() => slash(item, false)}
+            onClick={() => slash(item, false, i)}
             type="button"
           >
             <FlyerSvg />
@@ -662,9 +772,9 @@ export function StreetFlyersGame({ cards, deckId }: { cards: Flashcard[]; deckId
           </button>
         ))}
         <button
-          className="play-chip play-sprite play-flyer is-penalty"
+          className={`play-chip play-sprite play-flyer is-penalty ${!easy && lane === 4 ? "is-hot" : ""}`}
           disabled={lock}
-          onClick={() => slash(card, true)}
+          onClick={() => slash(card, true, 4)}
           type="button"
         >
           <FlyerSvg penalty />

@@ -3,8 +3,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { ComponentProps, ReactNode } from "react";
 
-import { useTheme } from "@/components/theme-provider";
-
 type ClerkAppearance = NonNullable<
   ComponentProps<typeof ClerkProvider>["appearance"]
 >;
@@ -13,14 +11,14 @@ function clerkAppearance(theme: "light" | "dark"): ClerkAppearance {
   const dark = theme === "dark";
   return {
     variables: {
-      colorPrimary: dark ? "#9ec9b4" : "#6f9f8a",
+      colorPrimary: dark ? "#9ec9b4" : "#3d8b72",
       colorBackground: dark ? "#1c1f1e" : "#fffcf7",
       colorInputBackground: dark ? "#252927" : "#fffcf7",
-      colorInputText: dark ? "#f3f0e8" : "#1c1f1e",
-      colorText: dark ? "#f3f0e8" : "#1c1f1e",
-      colorTextSecondary: dark ? "#a8b0ac" : "#5c6562",
-      colorTextOnPrimaryBackground: "#14201b",
-      colorNeutral: dark ? "#d8d4cb" : "#1c1f1e",
+      colorInputText: dark ? "#f3f0e8" : "#14201b",
+      colorText: dark ? "#f3f0e8" : "#14201b",
+      colorTextSecondary: dark ? "#a8b0ac" : "#3a4541",
+      colorTextOnPrimaryBackground: "#f4fff9",
+      colorNeutral: dark ? "#d8d4cb" : "#14201b",
       colorDanger: dark ? "#f87171" : "#b42318",
       borderRadius: "1.1rem",
     },
@@ -37,9 +35,8 @@ function clerkAppearance(theme: "light" | "dark"): ClerkAppearance {
 }
 
 export function AuthProviders({ children }: { children: ReactNode }) {
-  const { theme } = useTheme();
   return (
-    <ClerkProvider appearance={clerkAppearance(theme)}>
+    <ClerkProvider appearance={clerkAppearance("light")}>
       {children}
     </ClerkProvider>
   );

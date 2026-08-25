@@ -162,7 +162,9 @@
     "swipeHint": "Desliza para cambiar de tarjeta",
     "cardOf": "Tarjeta {current} de {total}",
     "speakPrompt": "Leer pregunta",
-    "speakAnswer": "Leer respuesta"
+    "speakAnswer": "Leer respuesta",
+    "showHint": "Mostrar pista",
+    "hideHint": "Ocultar pista"
   },
   "share": {
     "title": "Compartir solo lectura",
@@ -287,9 +289,9 @@
   },
   "play": {
     "backToDeck": "Volver al mazo",
-    "eyebrow": "Hong Kong city play",
+    "eyebrow": "Hong Kong play",
     "title": "Jugar · {deck}",
-    "subtitle": "Fifteen city games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
+    "subtitle": "Fifteen themed games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
     "dueCards": "Usando pendientes ({count}) · Ver todas",
     "dueToday": "Solo las de hoy",
     "youWon": "Has ganado",
@@ -317,7 +319,7 @@
     "reveal": "Revelar",
     "gotIt": "Lo acerté",
     "groups": {
-      "city": "City",
+      "city": "Themed",
       "campus": "Campus"
     },
     "templates": {
@@ -484,5 +486,9 @@
       "needChips": "Need 4 short play terms (not essays).",
       "needBins": "Need two labelled groups with two cards each."
     }
+  },
+  "streak": {
+    "label": "Streak {count}",
+    "title": "{count}-day streak. Longest: {longest}."
   }
 }

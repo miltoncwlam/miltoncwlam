@@ -162,7 +162,9 @@
     "swipeHint": "밀어 카드를 바꾸세요",
     "cardOf": "{current} / {total}번째 카드",
     "speakPrompt": "문제 읽기",
-    "speakAnswer": "답 읽기"
+    "speakAnswer": "답 읽기",
+    "showHint": "힌트 보기",
+    "hideHint": "힌트 숨기기"
   },
   "share": {
     "title": "읽기 전용 공유",
@@ -287,9 +289,9 @@
   },
   "play": {
     "backToDeck": "덱으로",
-    "eyebrow": "Hong Kong city play",
+    "eyebrow": "Hong Kong play",
     "title": "플레이 · {deck}",
-    "subtitle": "Fifteen city games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
+    "subtitle": "Fifteen themed games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
     "dueCards": "기한 카드 사용({count}) · 전체 보기",
     "dueToday": "오늘 기한만",
     "youWon": "승리",
@@ -317,7 +319,7 @@
     "reveal": "정답 보기",
     "gotIt": "맞혔어요",
     "groups": {
-      "city": "City",
+      "city": "Themed",
       "campus": "Campus"
     },
     "templates": {
@@ -484,5 +486,9 @@
       "needChips": "Need 4 short play terms (not essays).",
       "needBins": "Need two labelled groups with two cards each."
     }
+  },
+  "streak": {
+    "label": "Streak {count}",
+    "title": "{count}-day streak. Longest: {longest}."
   }
 }

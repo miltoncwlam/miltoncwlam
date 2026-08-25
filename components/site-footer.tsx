@@ -9,19 +9,10 @@ export async function SiteFooter() {
   return (
     <footer className="site-footer mt-auto">
       <div className="mx-auto flex max-w-6xl flex-col gap-3 px-5 py-8 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-muted">
-          © {new Date().getFullYear()} {LEGAL.productName}. A{" "}
-          <a
-            className="link-accent"
-            href="https://sayo.ai"
-            rel="noreferrer"
-            target="_blank"
-          >
-            Sayo Academy
-          </a>{" "}
-          product. {t("rights")}
+        <p className="text-sm text-[var(--ink)]">
+          © {new Date().getFullYear()} {LEGAL.productName}. {t("rights")}
         </p>
-        <nav className="site-footer-nav flex flex-wrap gap-4 text-sm font-semibold">
+        <nav className="site-footer-nav flex flex-wrap gap-4 font-sans text-[13px] font-medium">
           <Link className="link-accent" href="/privacy">
             {t("privacy")}
           </Link>

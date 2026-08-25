@@ -162,7 +162,9 @@
     "swipeHint": "スワイプでカード切替",
     "cardOf": "{current} / {total} 枚目",
     "speakPrompt": "問題を読み上げ",
-    "speakAnswer": "答えを読み上げ"
+    "speakAnswer": "答えを読み上げ",
+    "showHint": "ヒントを表示",
+    "hideHint": "ヒントを隠す"
   },
   "share": {
     "title": "読み取り専用共有",
@@ -287,9 +289,9 @@
   },
   "play": {
     "backToDeck": "デッキに戻る",
-    "eyebrow": "Hong Kong city play",
+    "eyebrow": "Hong Kong play",
     "title": "プレイ · {deck}",
-    "subtitle": "Fifteen city games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
+    "subtitle": "Fifteen themed games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
     "dueCards": "期限カードを使用（{count}）· すべて表示",
     "dueToday": "今日の期限のみ",
     "youWon": "勝ち",
@@ -317,7 +319,7 @@
     "reveal": "答えを見る",
     "gotIt": "できた",
     "groups": {
-      "city": "City",
+      "city": "Themed",
       "campus": "Campus"
     },
     "templates": {
@@ -484,5 +486,9 @@
       "needChips": "Need 4 short play terms (not essays).",
       "needBins": "Need two labelled groups with two cards each."
     }
+  },
+  "streak": {
+    "label": "Streak {count}",
+    "title": "{count}-day streak. Longest: {longest}."
   }
 }

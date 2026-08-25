@@ -4,6 +4,7 @@ import { ENCYCLOPEDIA_FEATURED_PACKS } from "@/lib/data/community-packs/encyclop
 import { mcqStyleRules } from "@/lib/llm/parse-deck-json";
 import { parseGeneratedDeck } from "@/lib/llm/parse-deck-json";
 import {
+  answersMatch,
   buildQuizChoices,
   quizExplanation,
   resolveCorrectChoice,
@@ -142,6 +143,13 @@ describe("MCQ generation parse", () => {
     expect(rules).toMatch(/hint/i);
     expect(rules).not.toMatch(/back = correct option text \(and brief why\)/);
     expect(rules).toMatch(/match one option exactly/i);
+  });
+});
+
+describe("answersMatch", () => {
+  it("treats accented and unaccented spellings as the same", () => {
+    expect(answersMatch("Brasilia", "Brasília")).toBe(true);
+    expect(answersMatch("Sao Paulo", "São Paulo")).toBe(true);
   });
 });
 

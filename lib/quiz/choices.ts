@@ -16,6 +16,8 @@ export type AnswerKind = "number" | "definition" | "name";
 export function normalizeAnswer(value: string) {
   return value
     .trim()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
     .toLowerCase()
     .replace(/[.。!！?？]+$/g, "")
     .replace(/\s+/g, " ");

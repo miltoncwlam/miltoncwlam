@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { categoryBins, categoryOf, promptText } from "@/lib/play/answers";
 import { playBeep } from "@/lib/play/juice";
@@ -68,7 +68,25 @@ export function GroupSortGame({
       skin="sort"
       title="Homework trays"
     >
+      <p className="play-muted">Flick the paper into a tray, or tap a tray.</p>
       <p className="play-prompt">{promptText(current)}</p>
+      <SortPaper
+        current={current}
+        onPick={(ok) => {
+          if (ok) {
+            setScore((n) => n + 1);
+            if (queue[0]?.id === current.id) setQueue((list) => list.slice(1));
+            else setRedo((list) => list.slice(1));
+            setWhy(null);
+          } else {
+            setWhy(missWhy(current));
+            if (queue[0]?.id === current.id) {
+              setQueue((list) => list.slice(1));
+              setRedo((list) => [...list, current]);
+            }
+          }
+        }}
+      />
       <div className="play-tray-row">
         {bins.map(([name]) => (
           <TrayButton
@@ -112,6 +130,7 @@ function TrayButton({
   return (
     <button
       className="play-choice play-bin play-sprite play-tray"
+      data-tray={name}
       onClick={() => {
         if (!juice.started) return;
         const ok = categoryOf(current) === name;
@@ -122,6 +141,53 @@ function TrayButton({
     >
       <TraySvg />
       <span className="play-sprite-label">{name}</span>
+    </button>
+  );
+}
+
+function SortPaper({
+  current,
+  onPick,
+}: {
+  current: Flashcard;
+  onPick: (ok: boolean) => void;
+}) {
+  const juice = usePlayJuice();
+  const origin = useRef<{ x: number; y: number } | null>(null);
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+
+  return (
+    <button
+      className="play-sort-paper"
+      onPointerDown={(event) => {
+        if (!juice.started) return;
+        origin.current = { x: event.clientX, y: event.clientY };
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }}
+      onPointerMove={(event) => {
+        if (!origin.current) return;
+        setPos({
+          x: event.clientX - origin.current.x,
+          y: event.clientY - origin.current.y,
+        });
+      }}
+      onPointerUp={(event) => {
+        if (!origin.current) return;
+        origin.current = null;
+        setPos(null);
+        const hit = document
+          .elementsFromPoint(event.clientX, event.clientY)
+          .find((node) => node instanceof HTMLElement && node.dataset.tray);
+        const name = hit instanceof HTMLElement ? hit.dataset.tray : undefined;
+        if (!name) return;
+        const ok = categoryOf(current) === name;
+        playBeep(ok ? "hit" : "miss");
+        onPick(ok);
+      }}
+      style={pos ? { transform: `translate(${pos.x}px, ${pos.y}px)` } : undefined}
+      type="button"
+    >
+      Flick
     </button>
   );
 }

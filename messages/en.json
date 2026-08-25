@@ -25,6 +25,7 @@
     "continue": "Sign in",
     "createAccount": "Create account",
     "agree": "By continuing, you agree to our <terms>Terms</terms> and <privacy>Privacy Policy</privacy>.",
+    "agree": "By continuing, you agree to our <terms>Terms</terms> and <privacy>Privacy Policy</privacy>.",
     "authNote": "Sign in with email through Clerk. You can create an account yourself."
   },
   "auth": {
@@ -163,7 +164,9 @@
     "swipeHint": "Swipe to change cards",
     "cardOf": "Card {current} of {total}",
     "speakPrompt": "Speak prompt",
-    "speakAnswer": "Speak answer"
+    "speakAnswer": "Speak answer",
+    "showHint": "Show hint",
+    "hideHint": "Hide hint"
   },
   "share": {
     "title": "Read-only sharing",
@@ -288,9 +291,9 @@
   },
   "play": {
     "backToDeck": "Back to deck",
-    "eyebrow": "Hong Kong city play",
+    "eyebrow": "Hong Kong play",
     "title": "Play · {deck}",
-    "subtitle": "Fifteen city games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
+    "subtitle": "Fifteen themed games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
     "dueCards": "Using due cards ({count}) · Show all",
     "dueToday": "Due today only",
     "youWon": "You won",
@@ -318,7 +321,7 @@
     "reveal": "Reveal",
     "gotIt": "I got it",
     "groups": {
-      "city": "City",
+      "city": "Themed",
       "campus": "Campus"
     },
     "templates": {
@@ -338,7 +341,7 @@
       "type-the-answer": {
         "name": "Ink well",
         "blurb": "Write the term before the 揮春 ink dries.",
-        "howTo": "Type the term and chop. Empty ink does not count. A miss shows the chip and hint."
+        "howTo": "Type the term and chop, then stamp the 揮春 before the seal dries. Empty ink does not count."
       },
       "spell-the-word": {
         "name": "Spell the word",
@@ -367,7 +370,7 @@
       "group-sort": {
         "name": "Homework trays",
         "blurb": "Flick papers into labelled classroom trays.",
-        "howTo": "Read the prompt only. Flick it into the right tray. Misses go to a redo stack."
+        "howTo": "Flick the paper into a tray, or tap a tray. Misses go to a redo stack."
       },
       "odd-one-out": {
         "name": "Odd one out",
@@ -396,7 +399,7 @@
       "win-or-lose": {
         "name": "Detention hall",
         "blurb": "Three late slips. Streak of facts, not a gameshow.",
-        "howTo": "Three late slips. Keys A–C. A miss stamps WhyBox on the slip."
+        "howTo": "Slips drift across the desk. Stamp one in the window. Keys A–C. A miss shows WhyBox."
       },
       "speaking-cards": {
         "name": "Speaking cards",
@@ -405,7 +408,7 @@
       "whack-a-mole": {
         "name": "Pop-quiz desks",
         "blurb": "Only a standing student is hittable. Chips hide when seated.",
-        "howTo": "Hit the standing student with the matching chip. Seated desks do not score."
+        "howTo": "A standing desk peeks its chip briefly. Hit the match. Seated desks do not score."
       },
       "balloon-pop": {
         "name": "Balloon pop",
@@ -418,7 +421,7 @@
       "maze-chase": {
         "name": "Prefect’s corridor",
         "blurb": "Late for assembly. Four coloured doors. Avoid the prefect.",
-        "howTo": "Move to the door that matches the prompt. Wrong door warps you. Wait for the countdown."
+        "howTo": "Chips flash on the colour doors, then hide. Walk to the matching door. Avoid the prefect."
       },
       "airplane": {
         "name": "Airplane",
@@ -435,47 +438,47 @@
       "gate-dash": {
         "name": "Gate dash",
         "blurb": "Paper-plane a covered footbridge. Tap a sign to fly the plane into that gate.",
-        "howTo": "Tap a shop sign to fly the plane into that gate, or press 1 / 2 / 3."
+        "howTo": "Signs flash chips, then go blank. Tap a lane or press 1 / 2 / 3 to fly."
       },
       "last-car": {
         "name": "Last car",
         "blurb": "Last train of the night. Board the matching door, duck the rest.",
-        "howTo": "Swipe up or tap Board for the matching door. Duck a wrong one."
+        "howTo": "Peek the door chips, then Board the matching door or Duck a wrong one."
       },
       "ding-ding": {
         "name": "Ding ding",
         "blurb": "Tap when the matching tram-bell chip crosses the strike line.",
-        "howTo": "Tap Bell when the chip hits the neon line. Reduced motion skips the beat window."
+        "howTo": "Two or three trams ride the line. Bell only if the tram on the neon line matches the prompt."
       },
       "estate-court": {
         "name": "Estate court",
         "blurb": "Sitting-out area. Right cards orbit as 新聞紙 and auto-clear matches.",
-        "howTo": "Papers orbit. Tap the matching 新聞紙 to auto-clear. Wrong papers bump you."
+        "howTo": "Only the front 新聞紙 shows its chip. Tap that paper. Wrong papers bump you."
       },
       "mosaic-wall": {
         "name": "Mosaic wall",
         "blurb": "Cha chaan teng 花磚. Break the matching tile with a milk-tea paddle.",
-        "howTo": "Break the matching mosaic tile. A wrong tile cracks the glass."
+        "howTo": "Break the 花磚 under the milk-tea paddle. A wrong tile cracks the glass."
       },
       "minibus-stop": {
         "name": "Minibus stop",
         "blurb": "Tap Board when the matching-chip van lines up with the pole.",
-        "howTo": "Wait until the matching van lines up, then tap Board."
+        "howTo": "A van only shows its chip at the pole. Board in that window."
       },
       "station-lost": {
         "name": "Station lost property",
         "blurb": "Claim ticket in hand. Tap the matching bag in the jumble.",
-        "howTo": "Your prompt is the claim ticket. Tap the matching bag in the jumble."
+        "howTo": "Hold a bag to peek the chip, then claim the match in the jumble."
       },
       "ticket-chops": {
         "name": "Ticket chops",
         "blurb": "Chop if the stub matches. Pass a decoy.",
-        "howTo": "One stub at a time. Chop a match, Pass a decoy. No loot boxes."
+        "howTo": "The stub peeks then blanks. Chop a match, Pass a decoy. No loot boxes."
       },
       "street-flyers": {
         "name": "Street flyers",
         "blurb": "Slash only the matching 街招. Penalty notices cost a life.",
-        "howTo": "Slash the matching flyer. A red penalty notice costs a life."
+        "howTo": "Flyers drift. Slash the matching 街招 in the lane. A red penalty notice costs a life."
       }
     },
     "howToSkip": "Got it",
@@ -485,5 +488,9 @@
       "needChips": "Need 4 short play terms (not essays).",
       "needBins": "Need two labelled groups with two cards each."
     }
+  },
+  "streak": {
+    "label": "Streak {count}",
+    "title": "{count}-day streak. Longest: {longest}."
   }
 }

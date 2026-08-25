@@ -24,6 +24,12 @@ vi.mock("@/lib/data/credits", async (importOriginal) => {
   };
 });
 
+vi.mock("@/lib/data/streaks", () => ({
+  rememberStreak: vi.fn(async () => undefined),
+  touchStreak: vi.fn(async () => undefined),
+  getStreak: vi.fn(async () => ({ current: 0, longest: 0, activeToday: false })),
+}));
+
 import { PLAY_STAKE_LIMIT_HOUR } from "@/lib/credits/play";
 import { completeGameRun, listClassRunsForDeck, startGameRun } from "@/lib/data/games";
 

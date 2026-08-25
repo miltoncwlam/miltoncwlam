@@ -269,7 +269,7 @@ export function CreateDeckForm({
       await new Promise((resolve) => window.setTimeout(resolve, 250));
       setPhase("done");
       const got = result.cardCount;
-      const want = result.requestedCardCount ?? Number(payload.cardCount) || 10;
+      const want = (result.requestedCardCount ?? Number(payload.cardCount)) || 10;
       if (got && got < want) {
         setLabel(tg("shortfall", { got, want }));
         await new Promise((resolve) => window.setTimeout(resolve, 1400));

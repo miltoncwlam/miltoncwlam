@@ -58,6 +58,20 @@ function isTestEnv() {
   return process.env.NODE_ENV === "test";
 }
 
+/** Labels flash, then hide. Tests hide at once; reduced-motion keeps labels. */
+export function usePeekLabels(resetKey: unknown, ms = 1200) {
+  const reduce = prefersReducedMotion();
+  const test = isTestEnv();
+  const [hiddenFor, setHiddenFor] = useState<unknown>(null);
+  useEffect(() => {
+    if (reduce && !test) return;
+    const id = window.setTimeout(() => setHiddenFor(resetKey), test ? 0 : ms);
+    return () => window.clearTimeout(id);
+  }, [resetKey, ms, reduce, test]);
+  if (reduce && !test) return true;
+  return hiddenFor !== resetKey;
+}
+
 export function PlayOptionsProvider({
   value,
   children,
@@ -251,7 +265,7 @@ export function PlayShell({
 
   return (
     <PlayJuiceContext.Provider value={juice}>
-      <section className={`play-stage play-stage--${skin} play-stage--city study-mobile mx-auto max-w-2xl`}>
+      <section className={`play-stage play-stage--${skin} play-stage--activities study-mobile mx-auto max-w-2xl`}>
         <div className="play-hud">
           <h2 className="play-hud-title">{heading}</h2>
           <div className="flex items-center gap-2">

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ENCYCLOPEDIA_FEATURED_PACKS } from "@/lib/data/community-packs/encyclopedia-featured";
 import { ENCYCLOPEDIA_GENERAL_PACKS } from "@/lib/data/community-packs/encyclopedia-general";
 import { COMMUNITY_SEED_PACKS } from "@/lib/data/community-packs";
+import { missWhy } from "@/components/play/play-kit";
 import { playChip, shortTarget, typedMatches } from "@/lib/play/answers";
 import {
   catalogReason,
@@ -85,6 +86,24 @@ describe("play templates", () => {
     expect(catalogReason("gate-dash", deck)).toBeNull();
     expect(catalogReason("group-sort", deck)).toBeNull();
     expect(templateReason("airplane", deck)).toBeNull();
+  });
+
+  it("accepts typed answers that only differ by accents", () => {
+    const card: Flashcard = {
+      ...chipDeck(1)[0]!,
+      front: "What is the capital of Brazil?",
+      back: "Brasília",
+      hint: "Brasília",
+    };
+    expect(typedMatches("Brasilia", card)).toBe(true);
+    expect(missWhy(card)).toBe("Brasília");
+    expect(missWhy(card)).not.toMatch(/—/);
+  });
+
+  it("keeps miss copy to the short answer, not the long hint", () => {
+    const card = chipDeck(1)[0]!;
+    expect(missWhy(card)).toBe("Term0");
+    expect(missWhy(card).length).toBeLessThan(40);
   });
 
   it("types a short encyclopedia answer when one exists", () => {

@@ -2,9 +2,9 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
 import { EnergyBadge } from "@/components/energy-badge";
+import { StreakBadge } from "@/components/streak-badge";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { SignOutButton } from "@/components/sign-out-button";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import type { AppSession } from "@/lib/auth-server";
 import { isAdminUser } from "@/lib/auth-server";
@@ -16,19 +16,19 @@ export async function AppHeader({ session }: { session: AppSession | null }) {
 
   return (
     <header className="app-header">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-4">
+      <div className="mx-auto flex min-h-14 max-w-6xl items-center justify-between gap-3 px-5">
         <Link className="app-brand" href="/">
           <span className="brand-mark">S</span>
           HK Study A
         </Link>
         <nav
-          className="flex flex-wrap items-center justify-end gap-3"
+          className="flex flex-wrap items-center justify-end gap-2 font-sans text-[13px] font-medium"
           aria-label={t("primary")}
         >
-          <ThemeToggle />
           <LocaleSwitcher />
           {signedIn && session ? (
             <>
+              <StreakBadge userId={session.user.id} />
               <EnergyBadge userId={session.user.id} />
               <Button asChild variant="ghost">
                 <Link href="/decks">{t("myDecks")}</Link>

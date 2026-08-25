@@ -18,41 +18,24 @@ const ThemeContext = createContext<{
   toggleTheme: () => void;
 } | null>(null);
 
-function detectTheme(): Theme {
-  if (typeof window === "undefined") return "light";
-  const stored = window.localStorage.getItem("study-a-theme");
-  if (stored === "dark" || stored === "light") return stored;
-  return "dark";
-}
-
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("dark");
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    queueMicrotask(() => {
-      const fromDom = document.documentElement.dataset.theme;
-      const initial =
-        fromDom === "dark" || fromDom === "light" ? fromDom : detectTheme();
-      setTheme(initial);
-      setReady(true);
-      document.documentElement.dataset.theme = initial;
-    });
+    document.documentElement.dataset.theme = "light";
+    try {
+      window.localStorage.setItem("study-a-theme", "light");
+    } catch {
+      // Ignore private-mode storage.
+    }
+    queueMicrotask(() => setReady(true));
   }, []);
 
-  useEffect(() => {
-    if (!ready) return;
-    document.documentElement.dataset.theme = theme;
-    window.localStorage.setItem("study-a-theme", theme);
-  }, [theme, ready]);
-
-  const toggleTheme = useCallback(() => {
-    setTheme((current) => (current === "dark" ? "light" : "dark"));
-  }, []);
+  const toggleTheme = useCallback(() => undefined, []);
 
   const value = useMemo(
-    () => ({ theme, ready, toggleTheme }),
-    [theme, ready, toggleTheme],
+    () => ({ theme: "light" as const, ready, toggleTheme }),
+    [ready, toggleTheme],
   );
 
   return (
@@ -63,7 +46,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 export function useTheme() {
   const ctx = useContext(ThemeContext);
   if (!ctx) {
-    return { theme: "dark" as const, ready: false, toggleTheme: () => undefined };
+    return { theme: "light" as const, ready: false, toggleTheme: () => undefined };
   }
   return ctx;
 }

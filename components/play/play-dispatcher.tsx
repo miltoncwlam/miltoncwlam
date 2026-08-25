@@ -27,10 +27,12 @@ function GameFor({
   cards,
   deckId,
   template,
+  limit,
 }: {
   cards: Flashcard[];
   deckId: string;
   template: PlayTemplateId;
+  limit?: number;
 }) {
   const resolved = resolvePlayTemplate(template);
   switch (resolved) {
@@ -51,9 +53,9 @@ function GameFor({
     case "last-car":
       return <LastCarGame cards={cards} deckId={deckId} />;
     case "ding-ding":
-      return <DingDingGame cards={cards} deckId={deckId} />;
+      return <DingDingGame cards={cards} deckId={deckId} limit={limit} />;
     case "estate-court":
-      return <EstateCourtGame cards={cards} deckId={deckId} />;
+      return <EstateCourtGame cards={cards} deckId={deckId} limit={limit} />;
     case "mosaic-wall":
       return <MosaicWallGame cards={cards} deckId={deckId} />;
     case "minibus-stop":
@@ -63,7 +65,7 @@ function GameFor({
     case "ticket-chops":
       return <TicketChopsGame cards={cards} deckId={deckId} />;
     case "street-flyers":
-      return <StreetFlyersGame cards={cards} deckId={deckId} />;
+      return <StreetFlyersGame cards={cards} deckId={deckId} limit={limit} />;
     default:
       return <p className="empty-state">Unknown activity.</p>;
   }
@@ -77,15 +79,17 @@ export function PlayDispatcher({
   homeHref,
   replayHref,
   classLinkId,
+  limit,
 }: {
   cards: Flashcard[];
   deckId: string;
   template: PlayTemplateId;
+  limit?: number;
 } & PlayOptions) {
   return (
     <PlayOptionsProvider value={{ readOnly, homeHref, replayHref, deckId, template, classLinkId }}>
       <PlayStakeGate deckId={deckId} template={template}>
-        <GameFor cards={cards} deckId={deckId} template={template} />
+        <GameFor cards={cards} deckId={deckId} limit={limit} template={template} />
       </PlayStakeGate>
     </PlayOptionsProvider>
   );

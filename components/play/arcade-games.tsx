@@ -8,7 +8,7 @@ import type { Flashcard } from "@/lib/types/flashcard";
 
 import { GhostSvg, HeroSvg, PlaneSvg, ShopSignSvg } from "./play-art";
 import { chipOf, missWhy, mixWithDecoys, takeChips } from "./play-kit";
-import { PlayFinished, PlayShell, WhyBox, usePlayJuice } from "./play-shell";
+import { PlayFinished, PlayShell, WhyBox, usePeekLabels, usePlayJuice } from "./play-shell";
 
 const MAZE = [
   "###########",
@@ -113,6 +113,7 @@ export function MazeChaseGame({
   const [combo, setCombo] = useState(0);
   const [iframeUntil, setIframeUntil] = useState(0);
   const [why, setWhy] = useState<string | null>(null);
+  const peek = usePeekLabels(index, 1000);
   const card = pool[index];
   const choices = useMemo(() => {
     if (!card) return [];
@@ -257,7 +258,7 @@ export function MazeChaseGame({
                   }`}
                   key={`${r}-${c}`}
                   style={exit ? { background: exit.color } : undefined}
-                  title={exit?.label}
+                  title={peek ? exit?.label : undefined}
                 >
                   {here ? <HeroSvg /> : foe ? <GhostSvg /> : ""}
                 </div>
@@ -270,7 +271,7 @@ export function MazeChaseGame({
         {choices.map((exit) => (
           <li key={exit.card.id}>
             <span className="play-legend-swatch" style={{ background: exit.color }} />
-            <span className="play-chip">{exit.label}</span>
+            <span className="play-chip">{peek ? exit.label : "·"}</span>
           </li>
         ))}
       </ul>
@@ -319,6 +320,7 @@ export function GateDashGame({
   const [why, setWhy] = useState<string | null>(null);
   const [lock, setLock] = useState(false);
   const [lane, setLane] = useState<number | null>(null);
+  const peek = usePeekLabels(index);
   const card = pool[index];
   const gates = useMemo(
     () => (card ? mixWithDecoys(card, pool, 2).slice(0, 3) : []),
@@ -380,7 +382,7 @@ export function GateDashGame({
       skin="plane"
       title="Gate dash"
     >
-      <p className="play-muted">Tap a shop sign to fly the plane into that gate.</p>
+      <p className="play-muted">Signs flash, then go blank. Fly by lane or press 1 / 2 / 3.</p>
       <p className="play-prompt">{promptText(card)}</p>
       <div className="play-sky play-gate-sky">
         <span className={`play-gate-plane ${lane === null ? "" : `is-fly is-lane-${lane}`}`}>
@@ -398,7 +400,7 @@ export function GateDashGame({
             type="button"
           >
             <ShopSignSvg n={i + 1} />
-            <span className="play-sprite-label">{chipOf(gate)}</span>
+            <span className="play-sprite-label">{peek ? chipOf(gate) : `${i + 1}`}</span>
           </button>
         ))}
       </div>

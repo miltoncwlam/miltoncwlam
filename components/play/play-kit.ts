@@ -1,5 +1,5 @@
-import { playChip, promptText } from "@/lib/play/answers";
-import { quizExplanation } from "@/lib/quiz/choices";
+import { playChip, promptText, shortTarget } from "@/lib/play/answers";
+import { PLAY_TERM_MAX_CHARS } from "@/lib/play/term";
 import { shuffleList } from "@/lib/study/shuffle";
 import type { Flashcard } from "@/lib/types/flashcard";
 
@@ -18,10 +18,14 @@ export function mixWithDecoys(card: Flashcard, pool: Flashcard[], n = 3) {
   return shuffleList([card, ...decoysFor(card, pool, n)]);
 }
 
+function clipMiss(value: string) {
+  const text = value.trim();
+  if (text.length <= PLAY_TERM_MAX_CHARS) return text;
+  return `${text.slice(0, PLAY_TERM_MAX_CHARS - 1).trim()}…`;
+}
+
 export function missWhy(card: Flashcard) {
-  const chip = playChip(card) ?? card.back;
-  const hint = quizExplanation(card) ?? card.hint;
-  return hint ? `${chip} — ${hint}` : chip;
+  return playChip(card) ?? shortTarget(card) ?? clipMiss(card.back);
 }
 
 export function promptOf(card: Flashcard) {

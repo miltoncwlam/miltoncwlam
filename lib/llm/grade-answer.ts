@@ -31,16 +31,12 @@ export async function gradeTypedAnswer(input: {
     return { ok: true, why: "Exact match.", source: "exact" };
   }
   if (!isOpenRouterConfigured()) {
-    return {
-      ok: false,
-      why: input.card.back,
-      source: "reject",
-    };
+    return { ok: false, why: "", source: "reject" };
   }
 
   const modelId = await resolveOpenRouterFreeModel();
   if (!modelId) {
-    return { ok: false, why: input.card.back, source: "reject" };
+    return { ok: false, why: "", source: "reject" };
   }
 
   try {
@@ -60,6 +56,6 @@ JSON only.`,
       source: "ai",
     };
   } catch {
-    return { ok: false, why: input.card.back, source: "reject" };
+    return { ok: false, why: "", source: "reject" };
   }
 }

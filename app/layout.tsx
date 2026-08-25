@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { DM_Sans, Instrument_Serif } from "next/font/google";
+import { Fraunces, Inter, Montserrat } from "next/font/google";
+import Script from "next/script";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 
@@ -11,17 +12,21 @@ import { ToastProvider } from "@/components/toast-provider";
 import { getSession } from "@/lib/auth-server";
 import "./globals.css";
 
-const display = Instrument_Serif({
+const display = Fraunces({
   variable: "--font-instrument",
   subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
+  axes: ["SOFT", "WONK"],
 });
 
-const sans = DM_Sans({
+const sans = Inter({
   variable: "--font-dm",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+});
+
+const label = Montserrat({
+  variable: "--font-montserrat",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -29,7 +34,7 @@ export const metadata: Metadata = {
     default: "HK Study A · AI Flashcards",
     template: "%s · HK Study A",
   },
-  description: "A Sayo Academy study tool. Turn notes and documents into interactive flashcards.",
+  description: "Turn notes and documents into interactive flashcards with AI.",
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
@@ -40,17 +45,14 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang={locale}
+      data-theme="light"
       suppressHydrationWarning
-      className={`${display.variable} ${sans.variable} h-full antialiased`}
+      className={`${display.variable} ${sans.variable} ${label.variable} h-full antialiased`}
     >
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("study-a-theme");if(t!=="dark"&&t!=="light"){t="dark";}document.documentElement.dataset.theme=t;}catch(e){}})();`,
-          }}
-        />
-      </head>
       <body className="flex min-h-full flex-col bg-[var(--background)] text-[var(--foreground)]">
+        <Script id="theme-init" strategy="beforeInteractive">
+          {`(function(){try{localStorage.setItem("study-a-theme","light");}catch(e){}document.documentElement.dataset.theme="light";})();`}
+        </Script>
         <ThemeProvider>
           <AuthProviders>
             <NextIntlClientProvider locale={locale} messages={messages}>

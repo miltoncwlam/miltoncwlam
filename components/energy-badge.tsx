@@ -3,9 +3,15 @@ import { getOrRefreshCredits } from "@/lib/data/credits";
 import { cn } from "@/lib/utils";
 
 export async function EnergyBadge({ userId }: { userId: string }) {
-  const credits = await getOrRefreshCredits(userId);
   const className =
     "inline-flex items-center gap-1 rounded-md border border-input bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground";
+  let credits;
+  try {
+    credits = await getOrRefreshCredits(userId);
+  } catch {
+    // The global header must stay available during transient database outages.
+    return null;
+  }
 
   if (credits.isUnlimited) {
     return (

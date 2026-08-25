@@ -10,7 +10,7 @@ Turn notes, PDFs, and photos into interactive flashcards. Built with **Next.js 1
 - AI generation via **OpenRouter** (DeepSeek, Qwen, and other catalog models)
 - Collectible-style flip cards with Hard / OK / Easy ratings
 - Shuffle, restart, and saved study progress
-- **Play:** 15 Hong Kong city/campus games on the same cards
+- **Play:** 15 themed games on the same cards
 - Weekly **energy** for generation and play (not money; see Energy below)
 - Read-only share and embed links (anonymous study/play; signed-in users can save study progress)
 - Class links copy a deck into a learner library and can lock one activity
@@ -106,6 +106,8 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+**Agents:** keep this server on. If port 3000 is empty, run `npm run dev` again — do not wait to be asked. Do not switch ports (Clerk allowlist is `localhost:3000`).
 
 ## Scripts
 

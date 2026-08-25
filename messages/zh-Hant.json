@@ -162,7 +162,9 @@
     "swipeHint": "滑動可換卡",
     "cardOf": "第 {current} / {total} 張",
     "speakPrompt": "朗讀題目",
-    "speakAnswer": "朗讀答案"
+    "speakAnswer": "朗讀答案",
+    "showHint": "顯示提示",
+    "hideHint": "隱藏提示"
   },
   "share": {
     "title": "唯讀分享",
@@ -287,9 +289,9 @@
   },
   "play": {
     "backToDeck": "返回牌組",
-    "eyebrow": "香港城市遊戲",
+    "eyebrow": "香港遊戲",
     "title": "遊戲 · {deck}",
-    "subtitle": "Fifteen city games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
+    "subtitle": "Fifteen themed games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
     "dueCards": "使用到期卡片（{count}）· 顯示全部",
     "dueToday": "只顯示今日到期",
     "youWon": "你贏了",
@@ -317,7 +319,7 @@
     "reveal": "揭曉",
     "gotIt": "我答對了",
     "groups": {
-      "city": "市區",
+      "city": "主題",
       "campus": "校園"
     },
     "templates": {
@@ -484,5 +486,9 @@
       "needChips": "Need 4 short play terms (not essays).",
       "needBins": "Need two labelled groups with two cards each."
     }
+  },
+  "streak": {
+    "label": "連續 {count} 日",
+    "title": "已連續 {count} 日。最長 {longest} 日。"
   }
 }

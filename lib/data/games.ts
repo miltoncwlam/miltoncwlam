@@ -7,6 +7,7 @@ import {
   getOrRefreshCredits,
   refundCredits,
 } from "@/lib/data/credits";
+import { rememberStreak } from "@/lib/data/streaks";
 import { pool } from "@/lib/db";
 import type { PlayTemplateId } from "@/lib/play/templates";
 
@@ -165,6 +166,7 @@ export async function completeGameRun(input: {
         JSON.stringify({ payout }),
       ],
     );
+    await rememberStreak(input.userId);
     return mapRow(updated.rows[0]);
   }
 
@@ -182,6 +184,7 @@ export async function completeGameRun(input: {
       JSON.stringify({ stake: 0, payout: 0, clientKey: input.clientKey ?? "" }),
     ],
   );
+  await rememberStreak(input.userId);
   return mapRow(inserted.rows[0]);
 }
 

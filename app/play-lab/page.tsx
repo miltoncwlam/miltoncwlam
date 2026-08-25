@@ -10,6 +10,7 @@ import {
 import type { Flashcard } from "@/lib/types/flashcard";
 
 const LAB = [
+  ["What is the capital of Brazil?", "Brasília"],
   ["Harbour tram", "叮叮"],
   ["Red public light bus", "紅van"],
   ["Sitting-out area", "休憩處"],

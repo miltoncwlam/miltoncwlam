@@ -124,7 +124,7 @@ async function playRound(template: PlayCatalogId, node: HTMLElement) {
       continue;
     }
     const check = buttons.find((button) =>
-      /^(Check|Chop|Bell|Board|Duck)$/.test(button.textContent ?? ""),
+      /^(Check|Chop|Bell|Board|Duck|Stamp)$/.test(button.textContent ?? ""),
     );
     const input = node.querySelector("input:not([disabled])") as
       | HTMLInputElement
@@ -202,13 +202,14 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.unstubAllGlobals();
   for (const item of live.splice(0)) {
     act(() => item.root.unmount());
     item.node.remove();
   }
 });
 
-describe("15 city games", () => {
+describe("15 play games", () => {
   it("unlocks the catalog on a chip deck", () => {
     expect(PLAY_CATALOG_IDS).toHaveLength(15);
     expect(cards.every((card) => playChip(card))).toBe(true);
@@ -295,7 +296,7 @@ describe("15 city games", () => {
     expect(node.textContent ?? "").toMatch(/Continue|Twin|Gate|Term|You won|Round over|\d+\/\d+/);
   });
 
-  it("keeps city stages off a 2x2 quiz bank", async () => {
+  it("keeps skill games off a 2x2 quiz bank", async () => {
     const estate = await mount("estate-court");
     expect(estate.querySelector(".play-orbit")).toBeTruthy();
     expect(estate.querySelectorAll(".play-orbit-slot")).toHaveLength(4);
@@ -316,6 +317,9 @@ describe("15 city games", () => {
     expect(gate.querySelector(".play-gate-plane")).toBeTruthy();
     expect(gate.querySelectorAll(".play-gate")).toHaveLength(3);
 
+    const ding = await mount("ding-ding");
+    expect(ding.querySelectorAll(".play-tram-car").length).toBeGreaterThanOrEqual(2);
+
     const hall = await mount("win-or-lose");
     expect(hall.querySelectorAll(".play-choice.play-slip")).toHaveLength(3);
     expect(hall.textContent ?? "").toMatch(/Keys A–C/);
@@ -325,7 +329,7 @@ describe("15 city games", () => {
     const grade = await import("@/lib/actions/games");
     vi.mocked(grade.gradeTypedAnswerAction).mockResolvedValueOnce({
       ok: false,
-      why: "Not quite.",
+      why: "Term0",
       source: "reject",
     });
     const node = await mount("type-the-answer");
@@ -342,7 +346,11 @@ describe("15 city games", () => {
     if (chop) click(chop);
     await settle();
     await wait(20);
-    expect(node.textContent ?? "").toMatch(/Miss|Not quite|Term/);
+    const copy = node.textContent ?? "";
+    expect(copy).toMatch(/Miss/);
+    expect(copy).toMatch(/Term\d/);
+    expect(copy).not.toMatch(/Term\d — Term\d/);
+    expect(copy).not.toMatch(/H{20}/);
   });
 });
 
@@ -367,10 +375,52 @@ describe("study wrap-to-fit", () => {
       );
     });
     const face = node.querySelector(".study-card-back");
-    const hintNode = node.querySelector(".card-hint");
     expect(face).toBeTruthy();
+    expect(node.querySelector(".card-hint")).toBeNull();
+    const showHint = [...node.querySelectorAll("button")].find(
+      (button) => button.textContent === "Show hint",
+    );
+    expect(showHint).toBeTruthy();
+    click(showHint as HTMLButtonElement);
+    await settle();
+    const hintNode = node.querySelector(".card-hint");
     expect(hintNode?.textContent).toContain("H");
     const style = hintNode ? getComputedStyle(hintNode) : null;
     expect(style?.overflowY === "auto" || style?.overflow === "auto" || true).toBe(true);
+  });
+
+  it("does not start a second Speak request while the first is loading", async () => {
+    const node = document.createElement("div");
+    document.body.appendChild(node);
+    const root = createRoot(node);
+    live.push({ root, node });
+    let release: ((value: Response) => void) | undefined;
+    const fetchMock = vi.fn(
+      () =>
+        new Promise<Response>((resolve) => {
+          release = resolve;
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    await act(async () => {
+      root.render(
+        <NextIntlClientProvider locale="en" messages={en}>
+          <FlashCard back="Berlin" flipped={false} front="Capital?" onFlip={() => undefined} />
+        </NextIntlClientProvider>,
+      );
+    });
+    const speak = [...node.querySelectorAll("button")].find(
+      (button) => button.textContent === "Speak prompt",
+    );
+    expect(speak).toBeTruthy();
+    click(speak as HTMLButtonElement);
+    click(speak as HTMLButtonElement);
+    click(speak as HTMLButtonElement);
+    await settle();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      release?.(new Response(new Blob(["x"]), { status: 200 }));
+    });
+    vi.unstubAllGlobals();
   });
 });

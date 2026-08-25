@@ -12,15 +12,11 @@ export default async function Home() {
 
   return (
     <main className="landing-shell">
-      <section className="landing-hero relative min-h-[calc(100vh-73px)]">
+      <section className="landing-hero relative min-h-[calc(100vh-3.5rem)]">
         <div className="landing-hero-glow" aria-hidden />
         <div className="landing-hero-grid">
           <div className="landing-hero-copy">
-            <p className="landing-kicker motion-fade-up">
-              <a href="https://sayo.ai" rel="noreferrer" target="_blank">
-                A Sayo Academy product
-              </a>
-            </p>
+            <p className="landing-kicker motion-fade-up">{t("eyebrow")}</p>
             <p className="landing-brand motion-fade-up">HK Study A</p>
             <h1 className="landing-title motion-fade-up motion-delay-1">
               {t.rich("title", {
@@ -36,7 +32,7 @@ export default async function Home() {
           </div>
           <div className="landing-hero-card" aria-hidden="true">
             <span className="card-rarity">HK STUDY A</span>
-            <span className="text-sm font-semibold uppercase tracking-widest text-[var(--muted)]">
+            <span className="font-label text-[0.6875rem] font-medium uppercase tracking-[0.22em] text-[var(--muted)]">
               Biology
             </span>
             <strong className="landing-hero-card-q">What powers the cell?</strong>

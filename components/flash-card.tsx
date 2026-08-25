@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import type { AppLocale } from "@/lib/i18n/locales";
@@ -45,30 +45,84 @@ function normalizeAnswer(value: string) {
 export function useCardSpeech() {
   const locale = useLocale() as AppLocale;
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const objectUrlRef = useRef<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const generationRef = useRef(0);
+  const activeTextRef = useRef<string | null>(null);
+  const busyRef = useRef(false);
+  const [busy, setBusy] = useState(false);
 
-  return async function speak(text: string) {
-    if (typeof window === "undefined" || !text.trim()) return;
+  useEffect(() => {
+    return () => {
+      generationRef.current += 1;
+      abortRef.current?.abort();
+      audioRef.current?.pause();
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    };
+  }, []);
+
+  async function speak(text: string) {
+    const trimmed = text.trim();
+    if (typeof window === "undefined" || !trimmed) return;
+    // Extra clicks while the same line is loading or playing must not queue.
+    if (busyRef.current && activeTextRef.current === trimmed) return;
+
+    generationRef.current += 1;
+    const generation = generationRef.current;
+    abortRef.current?.abort();
     audioRef.current?.pause();
     audioRef.current = null;
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+
+    activeTextRef.current = trimmed;
+    busyRef.current = true;
+    setBusy(true);
+    const abort = new AbortController();
+    abortRef.current = abort;
 
     try {
       const response = await fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, locale }),
+        body: JSON.stringify({ text: trimmed, locale }),
+        signal: abort.signal,
       });
-      if (!response.ok) return;
+      if (!response.ok || generation !== generationRef.current) return;
 
       const blob = await response.blob();
+      if (generation !== generationRef.current) return;
+
       const url = URL.createObjectURL(blob);
+      objectUrlRef.current = url;
       const audio = new Audio(url);
       audioRef.current = audio;
-      audio.onended = () => URL.revokeObjectURL(url);
+      const finish = () => {
+        if (generation !== generationRef.current) return;
+        if (objectUrlRef.current === url) {
+          URL.revokeObjectURL(url);
+          objectUrlRef.current = null;
+        }
+        audioRef.current = null;
+        busyRef.current = false;
+        activeTextRef.current = null;
+        setBusy(false);
+      };
+      audio.onended = finish;
+      audio.onerror = finish;
       await audio.play();
     } catch {
-      // Ignore playback errors (autoplay blocks, network, etc.)
+      if (generation === generationRef.current) {
+        busyRef.current = false;
+        activeTextRef.current = null;
+        setBusy(false);
+      }
     }
-  };
+  }
+
+  return { speak, busy };
 }
 
 export function FlashCard({
@@ -104,7 +158,8 @@ export function FlashCard({
 }) {
   const t = useTranslations("study");
   const credit = formatImageCredit(imageAttribution);
-  const speak = useCardSpeech();
+  const { speak, busy } = useCardSpeech();
+  const [hintOpen, setHintOpen] = useState(false);
   const meta = typeMeta(cardType);
   const isMcq = cardType === "mcq" && Boolean(options?.length);
   const answered = selectedOption != null;
@@ -116,6 +171,10 @@ export function FlashCard({
           normalizeAnswer(option) === normalizeAnswer(back) &&
           normalizeAnswer(option) === normalizeAnswer(selectedOption),
       ));
+
+  useEffect(() => {
+    setHintOpen(false);
+  }, [front, back, index]);
 
   return (
     <div className="mx-auto w-full max-w-md space-y-3 text-left">
@@ -189,9 +248,6 @@ export function FlashCard({
                 <span className="tcg-art-badge">REVEAL</span>
               </span>
               <span className="card-content tcg-move">{back}</span>
-              {hint ? (
-                <span className="card-hint tcg-weakness">{hint}</span>
-              ) : null}
               {answered ? (
                 <span className="card-hint tcg-weakness">
                   {correct ? "Correct" : `Your pick: ${selectedOption}`}
@@ -206,8 +262,22 @@ export function FlashCard({
         <p className="text-center text-[11px] text-muted-foreground">{credit}</p>
       ) : null}
 
+      {hint && hintOpen ? (
+        <p className="card-hint tcg-weakness">{hint}</p>
+      ) : null}
+
       <div className="study-card-controls flex flex-wrap items-center justify-center gap-3">
+        {hint ? (
+          <Button
+            onClick={() => setHintOpen((open) => !open)}
+            type="button"
+            variant="secondary"
+          >
+            {hintOpen ? t("hideHint") : t("showHint")}
+          </Button>
+        ) : null}
         <Button
+          disabled={busy}
           onClick={() => speak(flipped ? back : front)}
           type="button"
           variant="secondary"

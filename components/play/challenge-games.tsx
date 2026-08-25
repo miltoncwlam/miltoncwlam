@@ -86,9 +86,9 @@ export function WinOrLoseGame({
       skin="arena"
       title="Detention hall"
     >
-      <p className="play-muted">Three late slips. Keys A–C.</p>
+      <p className="play-muted">Slips drift. Stamp one in the window. Keys A–C.</p>
       <p className="play-prompt">{promptText(card)}</p>
-      <div className="play-slip-row">
+      <div className="play-slip-row is-drift">
         {choices.map((choice, i) => (
           <button
             className="play-choice play-sprite play-slip"
@@ -183,6 +183,7 @@ function DeskField({
   const addTime = juice.addTime;
   const [up, setUp] = useState<number[]>([]);
   const [hit, setHit] = useState<number | null>(null);
+  const [chipUp, setChipUp] = useState<number[]>([]);
   const hitRef = useRef(false);
   const onResultRef = useRef(onResult);
   useLayoutEffect(() => {
@@ -208,7 +209,13 @@ function DeskField({
       const others = desks.map((_, i) => i).filter((i) => i !== correct);
       const other = others[tick % Math.max(others.length, 1)] ?? correct;
       lastCorrect = showCorrect;
-      setUp(showCorrect ? [correct] : [other]);
+      const standing = showCorrect ? [correct] : [other];
+      setUp(standing);
+      setChipUp(standing);
+      window.setTimeout(() => {
+        if (hitRef.current) return;
+        setChipUp([]);
+      }, process.env.NODE_ENV === "test" ? 0 : 380);
       tick += 1;
     };
     const first = window.setTimeout(pop, 0);
@@ -241,7 +248,7 @@ function DeskField({
             <span className="play-mole">
               <MoleSvg squash={hit === i} />
             </span>
-            {standing ? (
+            {standing && chipUp.includes(i) ? (
               <span className="play-mole-label play-chip">{chipOf(desk)}</span>
             ) : (
               <span className="play-mole-label is-seated"> </span>
