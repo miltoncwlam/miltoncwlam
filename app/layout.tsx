@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans, Instrument_Serif } from "next/font/google";
+import Script from "next/script";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 
@@ -43,14 +44,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${display.variable} ${sans.variable} h-full antialiased`}
     >
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("study-a-theme");if(t!=="dark"&&t!=="light"){t="dark";}document.documentElement.dataset.theme=t;}catch(e){}})();`,
-          }}
-        />
-      </head>
       <body className="flex min-h-full flex-col bg-[var(--background)] text-[var(--foreground)]">
+        <Script id="theme-init" strategy="beforeInteractive">
+          {`(function(){try{var t=localStorage.getItem("study-a-theme");if(t!=="dark"&&t!=="light"){t="dark";}document.documentElement.dataset.theme=t;}catch(e){}})();`}
+        </Script>
         <ThemeProvider>
           <AuthProviders>
             <NextIntlClientProvider locale={locale} messages={messages}>
