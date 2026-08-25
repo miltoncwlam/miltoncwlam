@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -34,10 +34,6 @@ export function AccountTutorial({ userId }: { userId: string }) {
   const [step, setStep] = useState(0);
 
   const open = !closed && (replay || !seen);
-  if (!open) return null;
-
-  const id = STEP_IDS[step] ?? STEP_IDS[0];
-  const last = step >= STEP_IDS.length - 1;
 
   function closeTour() {
     try {
@@ -46,10 +42,40 @@ export function AccountTutorial({ userId }: { userId: string }) {
       // ignore
     }
     setClosed(true);
-    if (replay) {
-      router.replace("/decks");
-    }
+    if (!replay) return;
+    const next = new URL(window.location.href);
+    next.searchParams.delete("tour");
+    const href = `${next.pathname}${next.search}${next.hash}` || "/decks";
+    window.history.replaceState(null, "", href);
+    router.replace(href);
   }
+
+  useEffect(() => {
+    if (!open) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      try {
+        localStorage.setItem(tutorialStorageKey(userId), "1");
+      } catch {
+        // ignore
+      }
+      setClosed(true);
+      if (replay) {
+        const next = new URL(window.location.href);
+        next.searchParams.delete("tour");
+        const href = `${next.pathname}${next.search}${next.hash}` || "/decks";
+        window.history.replaceState(null, "", href);
+        router.replace(href);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, replay, router, userId]);
+
+  if (!open) return null;
+
+  const id = STEP_IDS[step] ?? STEP_IDS[0];
+  const last = step >= STEP_IDS.length - 1;
 
   return (
     <div className="account-tutorial" role="presentation">

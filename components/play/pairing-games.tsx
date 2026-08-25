@@ -87,10 +87,10 @@ function MatchingPairsStudy({
             <button
               className={`play-choice w-full ${picked === card.id ? "is-picked" : ""}`}
               key={`l-${card.id}`}
-              onClick={() => setPicked(card.id)}
+              onClick={() => setPicked((id) => (id === card.id ? null : card.id))}
               type="button"
             >
-              {promptOf(card)}
+              <span className="play-choice-text">{promptOf(card)}</span>
             </button>
           ))}
         </div>
@@ -116,7 +116,7 @@ function MatchingPairsStudy({
               }}
               type="button"
             >
-              {chipOf(card)}
+              <span className="play-choice-text">{chipOf(card)}</span>
             </button>
           ))}
         </div>

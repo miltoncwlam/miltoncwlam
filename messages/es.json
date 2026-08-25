@@ -323,7 +323,7 @@
     "eyebrowPublic": "Play",
     "title": "Jugar · {deck}",
     "subtitle": "Fifteen themed games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
-    "subtitlePublic": "Two study games on the same cards: flip to match, or type the answer. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
+    "subtitlePublic": "Two study games on the same cards: match questions to answers, or type the answer. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
     "dueCards": "Usando pendientes ({count}) · Ver todas",
     "dueToday": "Solo las de hoy",
     "youWon": "Has ganado",

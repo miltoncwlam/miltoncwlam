@@ -323,7 +323,7 @@
     "eyebrowPublic": "Play",
     "title": "플레이 · {deck}",
     "subtitle": "Fifteen themed games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
-    "subtitlePublic": "Two study games on the same cards: flip to match, or type the answer. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
+    "subtitlePublic": "Two study games on the same cards: match questions to answers, or type the answer. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
     "dueCards": "기한 카드 사용({count}) · 전체 보기",
     "dueToday": "오늘 기한만",
     "youWon": "승리",
