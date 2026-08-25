@@ -289,9 +289,11 @@
   },
   "play": {
     "backToDeck": "Volver al mazo",
-    "eyebrow": "Play",
+    "eyebrow": "Hong Kong play",
+    "eyebrowPublic": "Play",
     "title": "Jugar · {deck}",
-    "subtitle": "Two study games on the same cards: flip to match, or type the answer. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
+    "subtitle": "Fifteen themed games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
+    "subtitlePublic": "Two study games on the same cards: flip to match, or type the answer. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
     "dueCards": "Usando pendientes ({count}) · Ver todas",
     "dueToday": "Solo las de hoy",
     "youWon": "Has ganado",
@@ -330,18 +332,18 @@
         "blurb": "Toca un término y luego su definición."
       },
       "matching-pairs": {
-        "name": "Matching pairs",
-        "blurb": "Flip two cards. Pair the prompt with the answer.",
-        "howTo": "Flip two cards. A match stays open. A miss closes both."
+        "name": "Twin lanterns",
+        "blurb": "Pair Mid-Autumn lanterns on the harbourfront.",
+        "howTo": "Flip two lanterns. A match stays lit. A miss goes dark and a decoy slides in."
       },
       "find-the-match": {
         "name": "Encuentra la pareja",
         "blurb": "Toca la respuesta hasta vaciar el banco."
       },
       "type-the-answer": {
-        "name": "Type the answer",
-        "blurb": "Read the prompt and type the answer.",
-        "howTo": "Type the term, then check. An empty answer does not count."
+        "name": "Ink well",
+        "blurb": "Write the term before the 揮春 ink dries.",
+        "howTo": "Type the term and chop. Empty ink does not count. A miss shows the chip and hint."
       },
       "spell-the-word": {
         "name": "Deletrear",

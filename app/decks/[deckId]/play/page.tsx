@@ -7,9 +7,10 @@ import { getDeckWithCards } from "@/lib/data/decks";
 import { listDueCardIds } from "@/lib/data/study";
 import { classAssignFromQuery, classJoinPath, playAssignSearch } from "@/lib/play/activity";
 import { templatesForDeck } from "@/lib/play/eligibility";
+import { isPublicPlayCatalog } from "@/lib/play/templates";
 import { PLAY_SKIN_EMOJI, PLAY_SKINS } from "@/lib/play/worlds";
 
-const GROUPS = ["pairing", "recall"] as const;
+const GROUPS = ["city", "campus"] as const;
 
 export default async function DeckPlayPage({
   params,
@@ -47,9 +48,9 @@ export default async function DeckPlayPage({
         ← {t("backToDeck")}
       </Link>
       <div className="mt-6 mb-8">
-        <p className="eyebrow">{t("eyebrow")}</p>
+        <p className="eyebrow">{t(isPublicPlayCatalog() ? "eyebrowPublic" : "eyebrow")}</p>
         <h1 className="page-title">{t("title", { deck: deck.title })}</h1>
-        <p className="page-subtitle">{t("subtitle")}</p>
+        <p className="page-subtitle">{t(isPublicPlayCatalog() ? "subtitlePublic" : "subtitle")}</p>
         <p className="mt-3 text-sm">
           {assign.dueOnly ? (
             <Link className="text-button" href={`/decks/${deck.id}/play${playAssignSearch({ ...assign, dueOnly: false })}`}>

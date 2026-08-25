@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { ENCYCLOPEDIA_FEATURED_PACKS } from "@/lib/data/community-packs/encyclopedia-featured";
+import { ENCYCLOPEDIA_GENERAL_PACKS } from "@/lib/data/community-packs/encyclopedia-general";
 import { COMMUNITY_SEED_PACKS } from "@/lib/data/community-packs";
 import { missWhy } from "@/components/play/play-kit";
 import { playChip, shortTarget, typedMatches } from "@/lib/play/answers";
@@ -9,7 +10,7 @@ import {
   templateReason,
   unlockedCatalogCount,
 } from "@/lib/play/eligibility";
-import { PLAY_CATALOG_IDS, PLAY_TEMPLATES, PLAY_TEMPLATE_IDS, resolvePlayTemplate } from "@/lib/play/templates";
+import { PLAY_CATALOG_IDS, PLAY_TEMPLATES, PLAY_TEMPLATE_IDS, playCatalogIds, resolvePlayTemplate } from "@/lib/play/templates";
 import type { CommunitySeedPack } from "@/lib/data/community-packs/types";
 import type { Flashcard } from "@/lib/types/flashcard";
 
@@ -68,22 +69,28 @@ describe("play templates", () => {
     expect(new Set(slugs).size).toBe(slugs.length);
   });
 
-  it("ships a 2-game catalog and keeps retired ids for old runs", () => {
-    expect(PLAY_TEMPLATES).toHaveLength(2);
-    expect(PLAY_CATALOG_IDS).toHaveLength(2);
-    expect(PLAY_TEMPLATE_IDS.length).toBeGreaterThan(2);
+  it("ships a 15-game catalog and keeps retired ids for old runs", () => {
+    expect(PLAY_TEMPLATES).toHaveLength(15);
+    expect(PLAY_CATALOG_IDS).toHaveLength(15);
+    expect(PLAY_TEMPLATE_IDS.length).toBeGreaterThan(15);
     expect(resolvePlayTemplate("crossword")).toBe("type-the-answer");
-    expect(resolvePlayTemplate("airplane")).toBe("matching-pairs");
-    expect(resolvePlayTemplate("speaking-cards")).toBe("type-the-answer");
-    expect(resolvePlayTemplate("gate-dash")).toBe("matching-pairs");
+    expect(resolvePlayTemplate("airplane")).toBe("gate-dash");
+    expect(resolvePlayTemplate("speaking-cards")).toBe("study");
     expect(resolvePlayTemplate("match-up")).toBe("matching-pairs");
+    expect(playCatalogIds(false)).toHaveLength(15);
+    expect(playCatalogIds(true)).toHaveLength(2);
+    expect(playCatalogIds(true)).toEqual(["matching-pairs", "type-the-answer"]);
+    expect(resolvePlayTemplate("airplane", true)).toBe("matching-pairs");
+    expect(resolvePlayTemplate("speaking-cards", true)).toBe("type-the-answer");
+    expect(resolvePlayTemplate("gate-dash", true)).toBe("matching-pairs");
   });
 
-  it("unlocks both games on a 10-card chip-only deck", () => {
+  it("unlocks at least 10 of 15 on a 10-card chip-only deck", () => {
     const deck = chipDeck(10);
-    expect(unlockedCatalogCount(deck)).toBe(2);
+    expect(unlockedCatalogCount(deck)).toBeGreaterThanOrEqual(10);
     expect(catalogReason("matching-pairs", deck)).toBeNull();
-    expect(catalogReason("type-the-answer", deck)).toBeNull();
+    expect(catalogReason("gate-dash", deck)).toBeNull();
+    expect(catalogReason("group-sort", deck)).toBeNull();
     expect(templateReason("airplane", deck)).toBeNull();
   });
 
@@ -117,9 +124,12 @@ describe("play templates", () => {
     expect(typedMatches(target, card)).toBe(true);
   });
 
-  it("maps retired sort rooms onto matching pairs", () => {
-    expect(resolvePlayTemplate("group-sort")).toBe("matching-pairs");
-    expect(templateReason("group-sort", chipDeck(10))).toBeNull();
+  it("gives general packs categories for homework trays", () => {
+    const matter = ENCYCLOPEDIA_GENERAL_PACKS.find(
+      (pack) => pack.slug === "ency-magnets",
+    )!;
+    const list = asCards(matter);
+    expect(templateReason("group-sort", list)).toBeNull();
   });
 });
 

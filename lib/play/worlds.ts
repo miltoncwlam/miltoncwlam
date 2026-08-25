@@ -57,7 +57,7 @@ export const PLAY_SKINS: Record<PlayTemplateId, PlaySkin> = {
 
 export const PLAY_SKIN_EMOJI: Record<PlaySkin, string> = {
   match: "📰",
-  flip: "🃏",
+  flip: "🏮",
   mole: "🪑",
   balloon: "🚐",
   chest: "🎫",
@@ -67,7 +67,7 @@ export const PLAY_SKIN_EMOJI: Record<PlaySkin, string> = {
   arena: "📝",
   gallery: "🧳",
   sort: "📂",
-  spell: "⌨️",
+  spell: "🖌️",
   puzzle: "🧱",
   talk: "🗣️",
   arcade: "🌃",

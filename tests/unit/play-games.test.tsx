@@ -138,7 +138,7 @@ async function playRound(template: PlayCatalogId, node: HTMLElement) {
         setter?.call(input, "Term0");
         input.dispatchEvent(new Event("input", { bubbles: true }));
       });
-      const submit = buttons.find((button) => button.textContent === "Check");
+      const submit = buttons.find((button) => button.textContent === "Chop");
       if (submit) click(submit);
       continue;
     }
@@ -209,16 +209,28 @@ afterEach(() => {
   }
 });
 
-describe("play games", () => {
+describe("15 play games", () => {
   it("unlocks the catalog on a chip deck", () => {
-    expect(PLAY_CATALOG_IDS).toHaveLength(2);
+    expect(PLAY_CATALOG_IDS).toHaveLength(15);
     expect(cards.every((card) => playChip(card))).toBe(true);
     for (const id of PLAY_CATALOG_IDS) {
       expect(catalogReason(id, cards), id).toBeNull();
     }
   });
 
-  it("renders matching pairs and type-the-answer", async () => {
+  it("renders every catalog game as a playable stage", async () => {
+    const timed = new Set([
+      "maze-chase",
+      "whack-a-mole",
+      "gate-dash",
+      "last-car",
+      "ding-ding",
+      "estate-court",
+      "mosaic-wall",
+      "minibus-stop",
+      "station-lost",
+      "street-flyers",
+    ]);
     for (const id of PLAY_CATALOG_IDS) {
       const node = await mount(id);
       const text = node.textContent ?? "";
@@ -228,17 +240,92 @@ describe("play games", () => {
         node.querySelector(".play-stage, .play-finish"),
         id,
       ).toBeTruthy();
+      if (node.querySelector(".play-stage") && timed.has(id)) {
+        expect(node.querySelector(".play-hud-score")?.textContent ?? "", id).toMatch(
+          /\d+s/,
+        );
+      }
     }
   }, 30_000);
 
-  it("plays through type-the-answer without crashing", async () => {
-    const node = await mount("type-the-answer");
-    await playRound("type-the-answer", node);
-    await settle();
-    expect(finished(node)).toBe(true);
+  it("plays through skill games without crashing", async () => {
+    const mustFinish: PlayCatalogId[] = [
+      "type-the-answer",
+      "group-sort",
+      "win-or-lose",
+      "gate-dash",
+      "station-lost",
+      "ticket-chops",
+    ];
+    for (const id of mustFinish) {
+      const node = await mount(id);
+      await playRound(id, node);
+      await settle();
+      expect(finished(node), id).toBe(true);
+    }
   }, 60_000);
 
-  it("shows WhyBox after a typed miss", async () => {
+  it("hides the answer on homework trays", async () => {
+    const node = await mount("group-sort");
+    expect(node.textContent ?? "").not.toContain("Term0");
+    expect(node.textContent ?? "").toContain("What is term");
+  });
+
+  it("does not score a seated pop-quiz desk", async () => {
+    const node = await mount("whack-a-mole");
+    const seated = node.querySelector(".play-hole:not(.is-up)") as HTMLButtonElement | null;
+    const scoreBefore = node.querySelector(".play-hud-score")?.textContent ?? "";
+    if (seated) click(seated);
+    await settle();
+    expect(node.querySelector(".play-hud-score")?.textContent ?? "").toBe(scoreBefore);
+  });
+
+  it("does not move the corridor until the board is shown", async () => {
+    const node = await mount("maze-chase");
+    const grid = node.querySelector(".play-maze-grid");
+    expect(grid).toBeTruthy();
+    expect(grid?.getAttribute("data-started")).toBe("1");
+  });
+
+  it("lets gate dash select a card id", async () => {
+    const node = await mount("gate-dash");
+    const gate = node.querySelector("[data-card-id]") as HTMLButtonElement | null;
+    expect(gate?.dataset.cardId).toBeTruthy();
+    if (gate) click(gate);
+    await settle();
+    expect(node.textContent ?? "").toMatch(/Continue|Twin|Gate|Term|You won|Round over|\d+\/\d+/);
+  });
+
+  it("keeps skill games off a 2x2 quiz bank", async () => {
+    const estate = await mount("estate-court");
+    expect(estate.querySelector(".play-orbit")).toBeTruthy();
+    expect(estate.querySelectorAll(".play-orbit-slot")).toHaveLength(4);
+
+    const station = await mount("station-lost");
+    expect(station.querySelector(".play-claim")).toBeTruthy();
+    expect(station.querySelector(".play-jumble")).toBeTruthy();
+    expect(station.querySelectorAll(".play-bag")).toHaveLength(4);
+
+    const chops = await mount("ticket-chops");
+    const labels = enabledButtons(chops).map((button) => button.textContent);
+    expect(labels).toContain("Chop");
+    expect(labels).toContain("Pass");
+    expect(chops.querySelectorAll(".play-stub")).toHaveLength(1);
+    expect(chops.querySelectorAll(".play-choice")).toHaveLength(1);
+
+    const gate = await mount("gate-dash");
+    expect(gate.querySelector(".play-gate-plane")).toBeTruthy();
+    expect(gate.querySelectorAll(".play-gate")).toHaveLength(3);
+
+    const ding = await mount("ding-ding");
+    expect(ding.querySelectorAll(".play-tram-car").length).toBeGreaterThanOrEqual(2);
+
+    const hall = await mount("win-or-lose");
+    expect(hall.querySelectorAll(".play-choice.play-slip")).toHaveLength(3);
+    expect(hall.textContent ?? "").toMatch(/Keys A–C/);
+  });
+
+  it("shows WhyBox after an ink-well miss", async () => {
     const grade = await import("@/lib/actions/games");
     vi.mocked(grade.gradeTypedAnswerAction).mockResolvedValueOnce({
       ok: false,
@@ -255,8 +342,8 @@ describe("play games", () => {
       setter?.call(input, "nope");
       input.dispatchEvent(new Event("input", { bubbles: true }));
     });
-    const check = enabledButtons(node).find((button) => button.textContent === "Check");
-    if (check) click(check);
+    const chop = enabledButtons(node).find((button) => button.textContent === "Chop");
+    if (chop) click(chop);
     await settle();
     await wait(20);
     const copy = node.textContent ?? "";

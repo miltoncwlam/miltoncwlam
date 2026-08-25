@@ -1458,9 +1458,11 @@ html[data-theme="dark"] .secondary-button {
   color: var(--play-ink);
 }
 .play-stage--flip {
-  --play-ink: #16324f;
-  --play-muted: rgb(22 50 79 / 70%);
-  background: linear-gradient(180deg, #f4f7fb 0%, #e6eef6 100%);
+  background:
+    radial-gradient(circle at 16% 10%, #ffb347 0 2px, transparent 3px),
+    radial-gradient(circle at 78% 16%, #ffe08a 0 1.5px, transparent 3px),
+    radial-gradient(circle at 42% 6%, #fff 0 1px, transparent 2px),
+    linear-gradient(180deg, #071018 0%, #14233a 40%, #241428 58%, #0a1a22 100%);
 }
 .play-stage--match {
   background:
@@ -1491,9 +1493,9 @@ html[data-theme="dark"] .secondary-button {
     linear-gradient(160deg, #12363a, #1b2a28 50%, #2e2418);
 }
 .play-stage--spell {
-  --play-ink: #16324f;
-  --play-muted: rgb(22 50 79 / 70%);
-  background: linear-gradient(180deg, #f7f5f0 0%, #ece7dc 100%);
+  background:
+    radial-gradient(circle at 50% 80%, #4a5560, transparent 40%),
+    linear-gradient(180deg, #243044, #151b24);
 }
 .play-stage--puzzle {
   background:
@@ -1856,16 +1858,18 @@ html[data-theme="dark"] .secondary-button {
 }
 
 .play-flip-back {
-  background: linear-gradient(180deg, #2f5d9a, #1e3d6b);
-  box-shadow: 0 8px 0 #16324f;
-  color: #fff;
+  background:
+    repeating-linear-gradient(45deg, #2b1d12 0 8px, #3d2919 8px 16px),
+    radial-gradient(circle at 30% 20%, #c4a574, #6f4b2b);
+  box-shadow: 0 10px 0 #1a120c;
+  color: #f6e7c8;
 }
 
 .play-flip-front {
-  background: #fff;
-  color: #16324f;
+  background: linear-gradient(180deg, #fffaf0, #efe3cc);
+  color: #1c1f1e;
   transform: rotateY(180deg);
-  box-shadow: 0 8px 0 #c5d0de;
+  box-shadow: 0 10px 0 #b9a078;
 }
 
 .play-flip.is-matched .play-flip-front {

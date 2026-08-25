@@ -1,13 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { gradeTypedAnswerAction } from "@/lib/actions/games";
 import { shortTarget, typedMatches } from "@/lib/play/answers";
 import type { Flashcard } from "@/lib/types/flashcard";
 
+import { InkStoneSvg } from "./play-art";
 import { missWhy, promptOf, takeChips } from "./play-kit";
 import { PlayFinished, PlayShell, WhyBox } from "./play-shell";
+
+const DRY_MS = 18_000;
 
 export function TypeAnswerGame({
   cards,
@@ -24,7 +27,13 @@ export function TypeAnswerGame({
   const [why, setWhy] = useState<string | null>(null);
   const [source, setSource] = useState<"exact" | "ai" | "reject" | null>(null);
   const [checking, setChecking] = useState(false);
+  const [dried, setDried] = useState(false);
   const card = pool[index];
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setDried(true), DRY_MS);
+    return () => window.clearTimeout(id);
+  }, [index]);
 
   if (!card || index >= pool.length) {
     return (
@@ -53,23 +62,18 @@ export function TypeAnswerGame({
   return (
     <PlayShell
       clock={false}
+      extra={dried ? "dried" : "ink wet"}
       maxScore={pool.length}
       score={score}
       skin="spell"
-      title="Type the answer"
+      title="Ink well"
     >
-      <div className="play-board">
+      <div className="play-board play-ink-well">
+        <InkStoneSvg />
         <p className="play-muted">
           {index + 1} / {pool.length}
         </p>
-        {card.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            alt=""
-            className="mx-auto mt-3 max-h-40 rounded-2xl object-contain"
-            src={card.imageUrl}
-          />
-        ) : null}
+        <div className={`play-ink-drop ${dried ? "is-dry" : ""}`} aria-hidden />
         <h2 className="play-prompt mb-0 mt-3">{promptOf(card)}</h2>
       </div>
       <form
@@ -79,6 +83,10 @@ export function TypeAnswerGame({
           if (feedback !== null || checking) return;
           const typed = value.trim();
           if (!typed) return;
+          if (dried) {
+            finishMiss(missWhy(card));
+            return;
+          }
           if (typedMatches(typed, card)) {
             finishHit("exact");
             return;
@@ -108,7 +116,7 @@ export function TypeAnswerGame({
           className="play-input"
           disabled={feedback !== null || checking}
           onChange={(event) => setValue(event.target.value)}
-          placeholder="Type the answer"
+          placeholder="Write the term"
           value={value}
         />
         {feedback === null ? (
@@ -117,7 +125,7 @@ export function TypeAnswerGame({
             disabled={checking || !value.trim()}
             type="submit"
           >
-            {checking ? "Checking…" : "Check"}
+            {checking ? "Checking…" : "Chop"}
           </button>
         ) : (
           <WhyBox
@@ -127,6 +135,7 @@ export function TypeAnswerGame({
               setWhy(null);
               setSource(null);
               setValue("");
+              setDried(false);
               setIndex((n) => n + 1);
             }}
             source={source ?? undefined}
