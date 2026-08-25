@@ -159,7 +159,12 @@ export function FlashCard({
   const t = useTranslations("study");
   const credit = formatImageCredit(imageAttribution);
   const { speak, busy } = useCardSpeech();
-  const [hintOpen, setHintOpen] = useState(false);
+  const cardKey = `${index}\0${front}\0${back}`;
+  const [hintState, setHintState] = useState({ key: cardKey, open: false });
+  if (hintState.key !== cardKey) {
+    setHintState({ key: cardKey, open: false });
+  }
+  const hintOpen = hintState.key === cardKey && hintState.open;
   const meta = typeMeta(cardType);
   const isMcq = cardType === "mcq" && Boolean(options?.length);
   const answered = selectedOption != null;
@@ -171,10 +176,6 @@ export function FlashCard({
           normalizeAnswer(option) === normalizeAnswer(back) &&
           normalizeAnswer(option) === normalizeAnswer(selectedOption),
       ));
-
-  useEffect(() => {
-    setHintOpen(false);
-  }, [front, back, index]);
 
   return (
     <div className="mx-auto w-full max-w-md space-y-3 text-left">
@@ -269,7 +270,12 @@ export function FlashCard({
       <div className="study-card-controls flex flex-wrap items-center justify-center gap-3">
         {hint ? (
           <Button
-            onClick={() => setHintOpen((open) => !open)}
+            onClick={() =>
+              setHintState((state) => ({
+                key: cardKey,
+                open: state.key === cardKey ? !state.open : true,
+              }))
+            }
             type="button"
             variant="secondary"
           >

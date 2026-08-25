@@ -54,11 +54,11 @@ export function resolveOpenRouterModel(requested?: string | null): string {
   return getLLMConfig().openrouter.model || DEFAULT_OPENROUTER_MODEL;
 }
 
-export function assertLLMReady(_provider?: LLMProvider): LLMProvider {
+export function assertLLMReady(provider: LLMProvider = "openrouter"): LLMProvider {
   if (!getLLMConfig().openrouter.apiKey) {
     throw new Error("Missing API key for OpenRouter. Add OPENROUTER_API_KEY to .env.local.");
   }
-  return "openrouter";
+  return provider;
 }
 
 export function isKnownPaidModel(modelId: string): boolean {

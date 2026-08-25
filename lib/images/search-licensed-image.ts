@@ -3,6 +3,40 @@ import { licenseIsConfirmed, type ImageAttribution } from "@/lib/images/license"
 export const LICENSED_IMAGE_USER_AGENT =
   "StudyA/0.1 (educational flashcards; https://github.com/flashcard-generator)";
 const MAX_BYTES = 4 * 1024 * 1024;
+const QUERY_STOP = new Set([
+  "a",
+  "an",
+  "the",
+  "and",
+  "or",
+  "of",
+  "to",
+  "in",
+  "on",
+  "for",
+  "with",
+  "from",
+  "that",
+  "this",
+  "what",
+  "which",
+  "into",
+  "onto",
+  "over",
+  "under",
+  "about",
+  "image",
+  "photo",
+  "picture",
+  "file",
+  "svg",
+  "png",
+  "jpg",
+  "jpeg",
+  "webp",
+  "commons",
+  "wikimedia",
+]);
 
 export function isAllowedImageMime(contentType: string) {
   const mime = contentType.split(";")[0].trim().toLowerCase();
@@ -19,6 +53,88 @@ export type FoundLicensedImage = {
   contentType: string;
   attribution: ImageAttribution;
 };
+
+export function normalizeSearchText(value: string) {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function queryTokens(query: string): string[] {
+  return normalizeSearchText(query)
+    .split(" ")
+    .filter((token) => token.length >= 2 && !QUERY_STOP.has(token));
+}
+
+export function titleMatchScore(title: string, query: string): number {
+  const tokens = queryTokens(query);
+  if (!tokens.length) return 0;
+  const hay = normalizeSearchText(title);
+  const hits = tokens.filter((token) => hay.includes(token)).length;
+  return hits / tokens.length;
+}
+
+export function rankHitsByTitle<T>(
+  items: T[],
+  query: string,
+  titleOf: (item: T) => string,
+): T[] {
+  return items
+    .map((item) => ({ item, score: titleMatchScore(titleOf(item), query) }))
+    .filter(({ score }) => score >= 0.34)
+    .sort((a, b) => b.score - a.score)
+    .map(({ item }) => item);
+}
+
+function looksLikeQuestion(text: string) {
+  const trimmed = text.trim();
+  return (
+    /[?]/.test(trimmed) ||
+    /^(what|who|when|where|why|how|which|name|define|explain)\b/i.test(trimmed)
+  );
+}
+
+function shortNounPhrase(text: string): string | null {
+  const first = text.split(/[.;\n]/)[0]?.trim() ?? "";
+  if (!first || looksLikeQuestion(first)) return null;
+  const words = first.split(/\s+/).filter(Boolean);
+  if (words.length === 0 || words.length > 8) return null;
+  if (first.length > 80) return null;
+  return words.slice(0, 6).join(" ");
+}
+
+export function imageSearchQueryForCard(card: {
+  imageSearchQuery?: string | null;
+  imagePrompt?: string | null;
+  front?: string | null;
+  back?: string | null;
+  artKey?: string | null;
+}): string | null {
+  const explicit = (card.imageSearchQuery || card.imagePrompt || "").trim();
+  if (explicit && !looksLikeQuestion(explicit)) {
+    return explicit.slice(0, 80);
+  }
+  const fromBack = shortNounPhrase(card.back ?? "");
+  if (fromBack) return fromBack.slice(0, 80);
+  const last = card.artKey?.split(/[/:]/).pop()?.replace(/[-_]+/g, " ").trim();
+  if (last && last.length >= 3 && last.length <= 40 && !looksLikeQuestion(last)) {
+    return last.slice(0, 80);
+  }
+  return null;
+}
+
+export function queryFallbacks(query: string): string[] {
+  const trimmed = query.trim();
+  const tokens = queryTokens(trimmed);
+  const out = [trimmed];
+  if (tokens.length >= 3) out.push(tokens.slice(0, 2).join(" "));
+  if (tokens.length >= 2) out.push(tokens[0]!);
+  return [...new Set(out.filter(Boolean))];
+}
 
 async function fetchJson(url: string): Promise<unknown> {
   const response = await fetch(url, {
@@ -72,7 +188,7 @@ export async function searchCommons(
       generator: "search",
       gsrsearch: query,
       gsrnamespace: "6",
-      gsrlimit: "8",
+      gsrlimit: "16",
       prop: "imageinfo",
       iiprop: "url|mime|extmetadata",
       iiurlwidth: "1280",
@@ -82,7 +198,7 @@ export async function searchCommons(
     query?: { pages?: Record<string, CommonsPage> };
   } | null;
   const pages = Object.values(payload?.query?.pages ?? {});
-  for (const page of pages) {
+  for (const page of rankHitsByTitle(pages, query, (item) => item.title ?? "")) {
     const info = page.imageinfo?.[0];
     const fileUrl = info?.url;
     if (!fileUrl || !isAllowedImageMime(info?.mime ?? "")) continue;
@@ -138,13 +254,17 @@ export async function searchOpenverse(
     "https://api.openverse.org/v1/images/?" +
     new URLSearchParams({
       q: query,
-      page_size: "8",
+      page_size: "16",
       license: "cc0,pdm,by,by-sa",
       license_type: "commercial",
     }).toString();
 
   const payload = (await fetchJson(url)) as { results?: OpenverseHit[] } | null;
-  for (const hit of payload?.results ?? []) {
+  for (const hit of rankHitsByTitle(
+    payload?.results ?? [],
+    query,
+    (item) => item.title ?? "",
+  )) {
     const license = [hit.license, hit.license_version].filter(Boolean).join(" ");
     if (
       !licenseIsConfirmed({
@@ -179,15 +299,19 @@ export async function findLicensedWebImage(
 ): Promise<FoundLicensedImage | null> {
   const q = query.trim().slice(0, 120);
   if (!q) return null;
-  try {
-    const fromCommons = await searchCommons(q);
-    if (fromCommons) return fromCommons;
-  } catch {
-    // Commons timeout or network — try Openverse next.
+  for (const variant of queryFallbacks(q)) {
+    try {
+      const fromCommons = await searchCommons(variant);
+      if (fromCommons) return fromCommons;
+    } catch {
+      // Commons timeout or network — try Openverse next.
+    }
+    try {
+      const fromOpenverse = await searchOpenverse(variant);
+      if (fromOpenverse) return fromOpenverse;
+    } catch {
+      // try the next shorter query
+    }
   }
-  try {
-    return await searchOpenverse(q);
-  } catch {
-    return null;
-  }
+  return null;
 }

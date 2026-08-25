@@ -22,9 +22,6 @@ export default async function DeckPlayTemplatePage({
   const query = await searchParams;
   if (!isPlayTemplateId(template)) notFound();
   const resolved = resolvePlayTemplate(template);
-  if (resolved === "study") {
-    redirect(`/decks/${deckId}/study`);
-  }
   if (resolved && resolved !== template) {
     const assign = classAssignFromQuery({ ...query, activity: resolved });
     redirect(`/decks/${deckId}/play/${resolved}${playAssignSearch(assign)}`);

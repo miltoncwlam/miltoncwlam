@@ -1,9 +1,8 @@
 import type { Flashcard } from "@/lib/types/flashcard";
 
-import { categoryBins, chipCards } from "./answers";
+import { chipCards } from "./answers";
 import {
   PLAY_TEMPLATES,
-  isPlayCatalogId,
   resolvePlayTemplate,
   type PlayCatalogId,
   type PlayTemplateId,
@@ -18,19 +17,16 @@ export function templateReason(
   cards: Flashcard[],
 ): PlayBlockReason | null {
   const resolved = resolvePlayTemplate(id);
-  if (!resolved || resolved === "study") return "needCards";
+  if (!resolved) return "needCards";
   return catalogReason(resolved, cards);
 }
 
 export function catalogReason(
-  id: PlayCatalogId,
+  _id: PlayCatalogId,
   cards: Flashcard[],
 ): PlayBlockReason | null {
   if (cards.length < CHIP_FLOOR) return "needCards";
   const chips = chipCards(cards);
-  if (id === "group-sort") {
-    return categoryBins(cards).length >= 2 ? null : "needBins";
-  }
   return chips.length >= CHIP_FLOOR ? null : "needChips";
 }
 
@@ -56,11 +52,6 @@ export function blockedCopy(reason: PlayBlockReason) {
   }
 }
 
-export function playableTemplateId(
-  value: string,
-): PlayCatalogId | "study" | null {
-  if (!isPlayCatalogId(value) && resolvePlayTemplate(value) == null) {
-    return null;
-  }
+export function playableTemplateId(value: string): PlayCatalogId | null {
   return resolvePlayTemplate(value);
 }

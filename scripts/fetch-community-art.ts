@@ -4,6 +4,7 @@ import { Pool } from "pg";
 import { ENCYCLOPEDIA_FEATURED_PACKS } from "../lib/data/community-packs/encyclopedia-featured";
 import {
   findLicensedWebImage,
+  imageSearchQueryForCard,
   isAllowedImageMime,
 } from "../lib/images/search-licensed-image";
 import type { ImageAttribution } from "../lib/images/license";
@@ -134,7 +135,7 @@ async function main() {
 
     for (const [index, card] of pack.cards.entries()) {
       const artKey = card.artKey;
-      const query = card.imageSearchQuery || card.front;
+      const query = imageSearchQueryForCard(card);
       if (!query) continue;
       const cacheKey = artKey || `${pack.slug}:${index}`;
       const already = existingByOrder.get(index);

@@ -50,6 +50,7 @@ import { mergeGeneratedDecks } from "@/lib/llm/merge-decks";
 import { assertEnoughCards } from "@/lib/llm/parse-deck-json";
 import { listOpenRouterFreeModels } from "@/lib/llm/openrouter-models";
 import { resolveLicensedImage } from "@/lib/images/resolve-licensed-image";
+import { imageSearchQueryForCard } from "@/lib/images/search-licensed-image";
 import {
   deleteDeckMedia,
   deleteSourceMedia,
@@ -136,7 +137,7 @@ async function attachLicensedWebImages(input: {
   let imagesAttached = 0;
 
   for (const [index, card] of input.cards.entries()) {
-    const query = card.imageSearchQuery?.trim() || card.imagePrompt?.trim();
+    const query = imageSearchQueryForCard(card);
     if (!query) {
       cards.push(card);
       continue;

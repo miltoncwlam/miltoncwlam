@@ -113,7 +113,7 @@ Every card must include "type".`;
 
 function imagePromptRules(include: boolean | undefined) {
   if (!include) return "";
-  return `For a card about a concrete visible thing (planet, organ, animal, plant, landmark, tool, map), add "imageSearchQuery": 2–6 English nouns for a photo search (example: "Saturn rings"). Omit imageSearchQuery for abstract ideas (algebra steps, grammar, dates, theorems, feelings). Never search for celebrities, brands, or copyrighted characters.`;
+  return `Always add "imageSearchQuery" when the answer names a visible thing (planet, organ, animal, plant, landmark, tool, map, food, flag, building, chemical, or a named object). Use 2–6 English nouns; prefer the common name of the thing on the back (example: back "Mars" → "Mars planet"). Omit only for purely abstract cards (algebra steps, grammar rules, dates with no object, theorems, feelings). When unsure on science, geography, history, or biology, include a query. Never search for living celebrities, brands, or copyrighted characters.`;
 }
 
 function generationInstructions(options: GenerationOptions) {

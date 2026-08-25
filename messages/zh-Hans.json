@@ -289,9 +289,9 @@
   },
   "play": {
     "backToDeck": "返回牌组",
-    "eyebrow": "Hong Kong play",
+    "eyebrow": "练习",
     "title": "游戏 · {deck}",
-    "subtitle": "Fifteen themed games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
+    "subtitle": "同一副卡只有两种练习：翻卡配对和打字作答。一局会用每周额度；50%+ 会退回，全对双倍。",
     "dueCards": "使用到期卡片（{count}）· 显示全部",
     "dueToday": "只显示今日到期",
     "youWon": "你赢了",
@@ -320,7 +320,9 @@
     "gotIt": "我答对了",
     "groups": {
       "city": "Themed",
-      "campus": "Campus"
+      "campus": "Campus",
+      "pairing": "翻卡",
+      "recall": "打字"
     },
     "templates": {
       "match-up": {
@@ -328,18 +330,18 @@
         "blurb": "先点词语，再点定义。"
       },
       "matching-pairs": {
-        "name": "Twin lanterns",
-        "blurb": "Pair Mid-Autumn lanterns on the harbourfront.",
-        "howTo": "Flip two lanterns. A match stays lit. A miss goes dark and a decoy slides in."
+        "name": "配对翻卡",
+        "blurb": "翻两张卡，把题目和答案配成一对。",
+        "howTo": "翻两张卡。对了就留着。错了会盖回去。"
       },
       "find-the-match": {
         "name": "找出配对",
         "blurb": "点选对应答案，直到全部配完。"
       },
       "type-the-answer": {
-        "name": "Ink well",
-        "blurb": "Write the term before the 揮春 ink dries.",
-        "howTo": "Type the term and chop. Empty ink does not count. A miss shows the chip and hint."
+        "name": "输入答案",
+        "blurb": "看题目，打出答案。",
+        "howTo": "输入词语再核对。空白不算。"
       },
       "spell-the-word": {
         "name": "拼字",

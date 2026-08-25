@@ -185,8 +185,7 @@ export function PlayShell({
   const catalogId = options.template
     ? resolvePlayTemplate(options.template)
     : null;
-  const i18nId =
-    catalogId && catalogId !== "study" ? catalogId : options.template;
+  const i18nId = catalogId ?? options.template;
   const heading = i18nId ? t(`templates.${i18nId}.name`) : title;
   const [remaining, setRemaining] = useState(initial);
   const comboRef = useRef(combo ?? 0);

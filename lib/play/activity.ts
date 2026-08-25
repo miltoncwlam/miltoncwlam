@@ -77,7 +77,6 @@ export function classJoinPath(deckId: string, assign: ClassAssign) {
   const query = playAssignSearch(assign);
   if (assign.activity) {
     const resolved = resolvePlayTemplate(assign.activity);
-    if (resolved === "study") return `/decks/${deckId}/study${query}`;
     const activity = resolved ?? assign.activity;
     return `/decks/${deckId}/play/${activity}${query}`;
   }

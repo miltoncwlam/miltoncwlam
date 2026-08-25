@@ -83,7 +83,7 @@ export async function moderateDeckForCommunity(input: {
   const heuristic = heuristicGate(input.title, input.cards);
   if (heuristic && !heuristic.ok) return heuristic;
 
-  const provider = assertLLMReady(pickProvider());
+  assertLLMReady(pickProvider());
 
   const sample = input.cards.slice(0, 12).map((card, index) => ({
     n: index + 1,

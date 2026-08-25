@@ -289,9 +289,9 @@
   },
   "play": {
     "backToDeck": "返回牌組",
-    "eyebrow": "香港遊戲",
+    "eyebrow": "遊戲",
     "title": "遊戲 · {deck}",
-    "subtitle": "Fifteen themed games on the same cards. A round uses weekly allowance; score 50%+ to get it back, and a perfect run returns double.",
+    "subtitle": "同一副卡只有兩種練習：翻卡配對和打字作答。一局會用每週額度；50%+ 會退回，全對雙倍。",
     "dueCards": "使用到期卡片（{count}）· 顯示全部",
     "dueToday": "只顯示今日到期",
     "youWon": "你贏了",
@@ -320,7 +320,9 @@
     "gotIt": "我答對了",
     "groups": {
       "city": "主題",
-      "campus": "校園"
+      "campus": "校園",
+      "pairing": "翻卡",
+      "recall": "打字"
     },
     "templates": {
       "match-up": {
@@ -328,18 +330,18 @@
         "blurb": "先點詞語，再點定義。"
       },
       "matching-pairs": {
-        "name": "雙花燈",
-        "blurb": "海濱配對花燈。",
-        "howTo": "翻兩盞燈。對了就亮著。錯了會暗，再滑入一盞誘餌。"
+        "name": "配對翻卡",
+        "blurb": "翻兩張卡，把題目和答案配成一對。",
+        "howTo": "翻兩張卡。對了就留著。錯了會蓋回去。"
       },
       "find-the-match": {
         "name": "找出配對",
         "blurb": "點選對應答案，直到全部配完。"
       },
       "type-the-answer": {
-        "name": "揮春墨",
-        "blurb": "墨未乾前記下詞語。",
-        "howTo": "輸入詞語再蓋印。空白不算。錯了會顯示便條和提示。"
+        "name": "輸入答案",
+        "blurb": "看題目，打出答案。",
+        "howTo": "輸入詞語再核對。空白不算。"
       },
       "spell-the-word": {
         "name": "拼字",

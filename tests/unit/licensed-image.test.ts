@@ -5,7 +5,12 @@ import {
   isPublicDomainOrCc0,
   licenseIsConfirmed,
 } from "@/lib/images/license";
-import { isAllowedImageMime } from "@/lib/images/search-licensed-image";
+import {
+  imageSearchQueryForCard,
+  isAllowedImageMime,
+  queryFallbacks,
+  titleMatchScore,
+} from "@/lib/images/search-licensed-image";
 
 describe("licenseIsConfirmed", () => {
   it("accepts CC0 and public domain without an artist", () => {
@@ -56,5 +61,45 @@ describe("licenseIsConfirmed", () => {
     expect(
       formatImageCredit({ source: "ai", license: "AI-generated" }),
     ).toBe("AI-generated");
+  });
+});
+
+describe("image search queries", () => {
+  it("ranks Commons titles by overlap with the query", () => {
+    expect(titleMatchScore("File:Mars Hubble.jpg", "Mars planet")).toBeGreaterThan(
+      titleMatchScore("File:Random street.jpg", "Mars planet"),
+    );
+    expect(titleMatchScore("File:Random street.jpg", "Mars planet")).toBe(0);
+    expect(queryFallbacks("Saturn rings photo")[0]).toBe("Saturn rings photo");
+  });
+
+  it("never uses a long question as the search query", () => {
+    expect(
+      imageSearchQueryForCard({
+        front: "What is the fourth planet from the Sun?",
+        back: "Mars",
+      }),
+    ).toBe("Mars");
+    expect(
+      imageSearchQueryForCard({
+        imageSearchQuery: "What is photosynthesis?",
+        front: "What is photosynthesis?",
+        back: "The process plants use to make food from sunlight",
+      }),
+    ).toBeNull();
+    expect(
+      imageSearchQueryForCard({
+        imageSearchQuery: "Mars planet",
+        front: "What is the fourth planet from the Sun?",
+        back: "Mars",
+      }),
+    ).toBe("Mars planet");
+    expect(
+      imageSearchQueryForCard({
+        artKey: "ency-solar/mars",
+        front: "What is the fourth planet from the Sun?",
+        back: "The red planet that is fourth from the Sun in our solar system",
+      }),
+    ).toBe("mars");
   });
 });
