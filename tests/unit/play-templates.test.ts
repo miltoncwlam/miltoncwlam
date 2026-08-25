@@ -6,7 +6,7 @@ import { COMMUNITY_SEED_PACKS } from "@/lib/data/community-packs";
 import { shortTarget, spellingWord, typedMatches } from "@/lib/play/answers";
 import { templateReason, templatesForDeck } from "@/lib/play/eligibility";
 import { buildCrossword, buildWordsearch } from "@/lib/play/puzzles";
-import { PLAY_TEMPLATE_IDS } from "@/lib/play/templates";
+import { PLAY_CATALOG_IDS, PLAY_TEMPLATE_IDS } from "@/lib/play/templates";
 import type { CommunitySeedPack } from "@/lib/data/community-packs/types";
 import type { Flashcard } from "@/lib/types/flashcard";
 
@@ -47,17 +47,13 @@ describe("play templates", () => {
     expect(new Set(slugs).size).toBe(slugs.length);
   });
 
-  it("unlocks classroom templates on an illustrated encyclopedia pack", () => {
+  it("unlocks the two core play activities on an illustrated encyclopedia pack", () => {
     const list = templatesForDeck(cards);
-    expect(list).toHaveLength(PLAY_TEMPLATE_IDS.length);
+    expect(list).toHaveLength(PLAY_CATALOG_IDS.length);
+    expect(templateReason("matching-pairs", cards)).toBeNull();
+    expect(templateReason("type-the-answer", cards)).toBeNull();
     expect(templateReason("match-up", cards)).toBeNull();
-    expect(templateReason("group-sort", cards)).toBeNull();
-    expect(templateReason("image-quiz", cards)).toBeNull();
-    expect(templateReason("maze-chase", cards)).toBeNull();
-    expect(templateReason("airplane", cards)).toBeNull();
-    expect(templateReason("labelled-diagram", cards)).toBeNull();
-    expect(templateReason("label-match", cards)).toBeNull();
-    expect(templateReason("true-or-false", cards)).toBeNull();
+    expect(templateReason("hangman", cards)).toBeNull();
   });
 
   it("types a short encyclopedia answer", () => {
@@ -80,12 +76,12 @@ describe("play templates", () => {
     }
   });
 
-  it("gives general packs categories for group sort", () => {
+  it("gives general packs enough cards for matching pairs", () => {
     const matter = ENCYCLOPEDIA_GENERAL_PACKS.find(
       (pack) => pack.slug === "ency-magnets",
     )!;
     const list = asCards(matter);
-    expect(templateReason("group-sort", list)).toBeNull();
+    expect(templateReason("matching-pairs", list)).toBeNull();
   });
 });
 

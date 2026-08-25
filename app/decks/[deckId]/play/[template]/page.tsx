@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { PlayDispatcher } from "@/components/play/play-dispatcher";
 import { requireSession } from "@/lib/auth-server";
@@ -7,7 +7,7 @@ import { getDeckWithCards } from "@/lib/data/decks";
 import { listDueCardIds } from "@/lib/data/study";
 import { classAssignFromQuery, playAssignSearch } from "@/lib/play/activity";
 import { templateReason } from "@/lib/play/eligibility";
-import { isPlayTemplateId } from "@/lib/play/templates";
+import { isPlayTemplateId, resolvePlayTemplate } from "@/lib/play/templates";
 
 export default async function DeckPlayTemplatePage({
   params,
@@ -17,9 +17,20 @@ export default async function DeckPlayTemplatePage({
   searchParams: Promise<{ t?: string; due?: string; lock?: string; class?: string }>;
 }) {
   const session = await requireSession();
-  const { deckId, template } = await params;
+  const { deckId, template: rawTemplate } = await params;
   const query = await searchParams;
-  if (!isPlayTemplateId(template)) notFound();
+  if (!isPlayTemplateId(rawTemplate)) notFound();
+  const template = resolvePlayTemplate(rawTemplate);
+  if (!template) notFound();
+  if (template !== rawTemplate) {
+    const rest = new URLSearchParams();
+    if (query.t) rest.set("t", query.t);
+    if (query.due) rest.set("due", query.due);
+    if (query.lock) rest.set("lock", query.lock);
+    if (query.class) rest.set("class", query.class);
+    const suffix = rest.size ? `?${rest.toString()}` : "";
+    redirect(`/decks/${deckId}/play/${template}${suffix}`);
+  }
 
   const deck = await getDeckWithCards(deckId, session.user.id);
   if (!deck || deck.generationStatus !== "complete" || !deck.cards.length) {

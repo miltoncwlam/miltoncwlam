@@ -9,15 +9,7 @@ import { classAssignFromQuery, classJoinPath, playAssignSearch } from "@/lib/pla
 import { templatesForDeck } from "@/lib/play/eligibility";
 import { PLAY_SKIN_EMOJI, PLAY_SKINS } from "@/lib/play/worlds";
 
-const GROUPS = [
-  "pairing",
-  "recall",
-  "classify",
-  "picture",
-  "quiz",
-  "puzzle",
-  "arcade",
-] as const;
+const GROUPS = ["pairing", "recall"] as const;
 
 export default async function DeckPlayPage({
   params,

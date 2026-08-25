@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PlayDispatcher } from "@/components/play/play-dispatcher";
 import { ENCYCLOPEDIA_FEATURED_PACKS } from "@/lib/data/community-packs/encyclopedia-featured";
 import { ENCYCLOPEDIA_GENERAL_PACKS } from "@/lib/data/community-packs/encyclopedia-general";
-import { PLAY_TEMPLATE_IDS, type PlayTemplateId } from "@/lib/play/templates";
+import { PLAY_CATALOG_IDS, type PlayTemplateId } from "@/lib/play/templates";
 import { templateReason } from "@/lib/play/eligibility";
 import type { CommunitySeedPack } from "@/lib/data/community-packs/types";
 import type { Flashcard } from "@/lib/types/flashcard";
@@ -276,22 +276,22 @@ afterEach(() => {
   }
 });
 
-describe("every classroom game", () => {
-  it("unlocks all 26 templates on a mixed encyclopedia deck", () => {
-    expect(PLAY_TEMPLATE_IDS).toHaveLength(26);
-    for (const id of PLAY_TEMPLATE_IDS) {
+describe("core play games", () => {
+  it("unlocks matching pairs and type the answer", () => {
+    expect(PLAY_CATALOG_IDS).toHaveLength(2);
+    for (const id of PLAY_CATALOG_IDS) {
       expect(templateReason(id, cards), id).toBeNull();
     }
   });
 
-  it("renders every template as a playable stage", async () => {
-    for (const id of PLAY_TEMPLATE_IDS) {
+  it("renders the two catalog games as playable stages", async () => {
+    for (const id of PLAY_CATALOG_IDS) {
       const node = await mount(id);
       const text = node.textContent ?? "";
       expect(text.includes("Anteing"), id).toBe(false);
       expect(text.length, id).toBeGreaterThan(8);
       expect(
-        node.querySelector(".play-stage, .play-finish, .play-xw, .play-ws, .play-mole-field, .play-sky, .play-maze-grid"),
+        node.querySelector(".play-stage, .play-finish"),
         id,
       ).toBeTruthy();
       if (node.querySelector(".play-stage")) {
@@ -302,40 +302,23 @@ describe("every classroom game", () => {
     }
   }, 30_000);
 
-  it("plays through every template without crashing", async () => {
-    const mustFinish: PlayTemplateId[] = [
-      "match-up",
-      "find-the-match",
-      "type-the-answer",
-      "true-or-false",
-      "open-the-box",
-      "group-sort",
-      "odd-one-out",
-      "rank-order",
-      "image-quiz",
-      "gameshow-quiz",
-      "win-or-lose",
-      "speaking-cards",
-      "complete-the-sentence",
-      "crossword",
-      "whack-a-mole",
-      "balloon-pop",
-      "speed-sort",
-    ];
-    const results: Record<string, string> = {};
-    for (const id of PLAY_TEMPLATE_IDS) {
+  it("plays through matching pairs and type the answer", async () => {
+    const mustFinish: PlayTemplateId[] = ["type-the-answer"];
+    for (const id of PLAY_CATALOG_IDS) {
       const node = await mount(id);
       await playRound(id, node);
       await settle();
       const text = node.textContent ?? "";
       expect(text.toLowerCase().includes("unknown activity"), id).toBe(false);
-      results[id] = finished(node) ? "finished" : "interactive";
       if (mustFinish.includes(id)) {
-        expect(results[id], id).toBe("finished");
-      } else {
-        expect(results[id], id).toMatch(/finished|interactive/);
+        expect(finished(node), id).toBe(true);
       }
     }
-    expect(Object.keys(results)).toHaveLength(26);
   }, 60_000);
+
+  it("sends retired rooms to a core game", async () => {
+    const node = await mount("match-up");
+    expect(node.querySelector(".play-stage, .play-finish")).toBeTruthy();
+    expect(node.textContent ?? "").toMatch(/Matching pairs|0 misses/i);
+  });
 });
