@@ -7,6 +7,7 @@ import {
   disableSharingAction,
   enableSharingAction,
 } from "@/lib/actions/sharing";
+import { withBrowserOrigin } from "@/lib/app-url";
 import { PLAY_TEMPLATES, isPublicPlayCatalog } from "@/lib/play/templates";
 
 export function ShareControls({
@@ -25,16 +26,20 @@ export function ShareControls({
 
   const [activity, setActivity] = useState("matching-pairs");
   const token = link?.split("/share/")[1] ?? null;
+  const origin = link ? new URL(link).origin : appUrl;
   const activityLink = token
-    ? `${appUrl}/share/${token}?activity=${activity}`
+    ? `${origin}/share/${token}?activity=${activity}`
     : null;
   const embedSnippet = token
-    ? `<iframe src="${appUrl}/embed/${token}?mode=${activity}" title="HK Study A" width="100%" height="520" style="border:0;border-radius:16px;" loading="lazy" referrerpolicy="no-referrer"></iframe>`
+    ? `<iframe src="${origin}/embed/${token}?mode=${activity}" title="HK Study A" width="100%" height="520" style="border:0;border-radius:16px;" loading="lazy" referrerpolicy="no-referrer"></iframe>`
     : null;
 
   function createOrRotate() {
     startTransition(async () => {
-      const nextLink = await enableSharingAction(deckId);
+      const nextLink = withBrowserOrigin(
+        await enableSharingAction(deckId),
+        window.location.origin,
+      );
       setLink(nextLink);
       setShared(true);
       try {
@@ -94,7 +99,7 @@ export function ShareControls({
             {activityLink}
           </p>
           <p className="break-all rounded-lg bg-white p-3 text-xs text-indigo-700">
-            {appUrl}/share/{token}?mode=quiz
+            {origin}/share/{token}?mode=quiz
           </p>
         </div>
       ) : null}

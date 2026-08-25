@@ -341,7 +341,7 @@
     "timeUp": "Time!",
     "stakeReturned": "Allowance returned — nice run.",
     "anteKept": "The weekly allowance stays spent.",
-    "payoutProfit": "+{payout} allowance back · +{net}",
+    "payoutProfit": "+{payout} allowance back · +{net} bonus",
     "payoutEven": "+{payout} allowance back",
     "payoutLoss": "{stake} allowance used",
     "exactMatch": "Exact match",

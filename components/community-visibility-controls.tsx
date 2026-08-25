@@ -8,6 +8,7 @@ import {
   setUnlistedAction,
   submitPublicAction,
 } from "@/lib/actions/community";
+import { withBrowserOrigin } from "@/lib/app-url";
 import { appealRejectedPublishAction } from "@/lib/actions/social";
 import type { DeckVisibility, ModerationStatus } from "@/lib/types/flashcard";
 
@@ -74,7 +75,10 @@ export function CommunityVisibilityControls({
           disabled={isPending}
           onClick={() =>
             startTransition(async () => {
-              const url = await setUnlistedAction(deckId);
+              const url = withBrowserOrigin(
+                await setUnlistedAction(deckId),
+                window.location.origin,
+              );
               setShareUrl(url);
               setMessage(t("unlisted"));
             })
@@ -91,7 +95,9 @@ export function CommunityVisibilityControls({
               setMessage(t("submitting"));
               const result = await submitPublicAction(deckId);
               if (result.ok) {
-                setShareUrl(result.shareUrl);
+                setShareUrl(
+                  withBrowserOrigin(result.shareUrl, window.location.origin),
+                );
                 setMessage(t("approved"));
               } else {
                 setMessage(

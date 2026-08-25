@@ -2,6 +2,8 @@ import "server-only";
 
 import { z } from "zod";
 
+import { publicAppUrl } from "@/lib/app-url";
+
 const optionalSecret = z.preprocess(
   (value) => (value === "" ? undefined : value),
   z.string().min(1).optional(),
@@ -35,6 +37,7 @@ const parsed = envSchema.parse(process.env);
 
 export const env = {
   ...parsed,
+  NEXT_PUBLIC_APP_URL: publicAppUrl(),
   supabaseBrowserKey: parsed.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
   supabaseSecretKey: parsed.SUPABASE_SECRET_KEY,
 };

@@ -562,11 +562,7 @@ export function CreateDeckForm({
                 <option value="mcq">{t("styleMcq")}</option>
               </select>
             </div>
-          ) : (
-            <p className="self-end rounded-xl bg-muted px-3 py-3 text-sm text-muted-foreground">
-              {t("quizModeNote")}
-            </p>
-          )}
+          ) : null}
           <div className="space-y-2">
             <Label>{t("difficulty")}</Label>
             <select
@@ -596,6 +592,11 @@ export function CreateDeckForm({
             </select>
           </div>
         </div>
+        {createMode === "quiz" ? (
+          <p className="rounded-xl border border-border bg-secondary px-3 py-3 text-sm text-secondary-foreground">
+            {t("quizModeNote")}
+          </p>
+        ) : null}
 
         <Button className="w-full" disabled={pending || overBalance} type="submit">
           {t("generate")}

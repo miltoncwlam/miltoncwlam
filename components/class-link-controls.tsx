@@ -7,6 +7,7 @@ import {
   createClassLinkAction,
   revokeClassLinkAction,
 } from "@/lib/actions/class-links";
+import { withBrowserOrigin } from "@/lib/app-url";
 import { PLAY_TEMPLATES, isPublicPlayCatalog } from "@/lib/play/templates";
 
 export function ClassLinkControls({
@@ -82,11 +83,14 @@ export function ClassLinkControls({
         disabled={pending}
         onClick={() =>
           startTransition(async () => {
-            const link = await createClassLinkAction(deckId, {
-              activity: activity || undefined,
-              dueOnly,
-              locked: Boolean(activity) && locked,
-            });
+            const link = withBrowserOrigin(
+              await createClassLinkAction(deckId, {
+                activity: activity || undefined,
+                dueOnly,
+                locked: Boolean(activity) && locked,
+              }),
+              window.location.origin,
+            );
             setFreshLink(link);
             try {
               await navigator.clipboard.writeText(link);
