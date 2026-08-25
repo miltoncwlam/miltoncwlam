@@ -285,7 +285,37 @@
     "title": "设置",
     "signedIn": "已登录为 {email}。密码与电邮登录在下方管理。",
     "deleteTitle": "删除账户",
-    "deleteBody": "删除账户只能通过电邮申请。请写信至 {email}，我们会删除你的账户资料。"
+    "deleteBody": "删除账户只能通过电邮申请。请写信至 {email}，我们会删除你的账户资料。",
+    "replayTutorial": "再看一次教程"
+  },
+  "tutorial": {
+    "skip": "跳过",
+    "next": "下一步",
+    "back": "上一步",
+    "done": "知道了",
+    "stepOf": "第 {current} / {total} 步",
+    "steps": {
+      "welcome": {
+        "title": "欢迎来到你的牌库",
+        "body": "新账户从这里开始。之后建立的每一副牌组都会出现在这页。"
+      },
+      "create": {
+        "title": "建立牌组",
+        "body": "粘贴笔记、输入主题，或上传 PDF。如果只想先试学习和游戏，也可以先做一副样本牌。"
+      },
+      "study": {
+        "title": "学习",
+        "body": "先翻牌，再评 Hard / OK / Easy。较难的卡会较快再出现。"
+      },
+      "play": {
+        "title": "游戏",
+        "body": "配对：左边点问题，右边点答案，答对两边会消失。打字：输入词语后按 Check。接近的答案要 AI 回 yes 才算。"
+      },
+      "quiz": {
+        "title": "测验与分享",
+        "body": "Quiz battle 用来测回忆。准备好就可以用只读链接分享给同学。"
+      }
+    }
   },
   "play": {
     "backToDeck": "返回牌组",
@@ -313,7 +343,7 @@
     "payoutEven": "+{payout} allowance back",
     "payoutLoss": "{stake} allowance used",
     "exactMatch": "完全相符",
-    "aiAccepted": "AI 判定正确",
+    "aiAccepted": "接近正确",
     "niceHit": "答对了",
     "miss": "未答中",
     "speak": "朗读",
@@ -323,7 +353,7 @@
     "groups": {
       "city": "Themed",
       "campus": "Campus",
-      "pairing": "翻卡",
+      "pairing": "配对",
       "recall": "打字"
     },
     "templates": {

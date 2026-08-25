@@ -80,6 +80,17 @@ export function typedMatches(input: string, card: Flashcard) {
   return n.length >= 4 && (back === n || back.startsWith(`${n} `));
 }
 
+/** First word of the grader reply. Only `yes` counts as allowed. */
+export function parseAiAllowed(text: string) {
+  const word =
+    text
+      .trim()
+      .split(/\s+/)[0]
+      ?.replace(/[^a-zA-Z]/g, "")
+      .toLowerCase() ?? "";
+  return word === "yes";
+}
+
 export function clozeBlank(card: Flashcard): {
   sentence: string;
   answer: string;

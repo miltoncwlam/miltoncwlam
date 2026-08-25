@@ -87,6 +87,7 @@ describe("play templates", () => {
       "Matching pairs",
       "Type the answer",
     ]);
+    expect(playTemplates(true)[0]?.blurb).toMatch(/disappears/);
     expect(playTemplates(false)[0]?.name).toBe("Twin lanterns");
   });
 

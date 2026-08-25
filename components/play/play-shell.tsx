@@ -272,7 +272,7 @@ export function PlayShell({
 
   const howToText = publicCopy
     ? publicCopy.id === "matching-pairs"
-      ? "Flip two cards. A match stays open. A miss closes both."
+      ? "Tap a question on the left, then the answer on the right. A match disappears."
       : "Type the term, then check. An empty answer does not count."
     : i18nId
       ? t(`templates.${i18nId}.howTo`)
@@ -459,7 +459,7 @@ export function WhyBox({
   const label =
     source === "exact"
       ? t("exactMatch")
-      : source === "ai"
+      : source === "ai" && ok
         ? t("aiAccepted")
         : ok
           ? t("niceHit")
@@ -468,7 +468,7 @@ export function WhyBox({
   return (
     <div className="play-why space-y-3">
       <p className={ok ? "play-why-ok" : "play-why-miss play-stamp"}>
-        {ok ? label : `${label} · 印`}
+        {ok || isPublicPlayCatalog() ? label : `${label} · 印`}
       </p>
       {why ? <p className="play-muted">{why}</p> : null}
       <button className="primary-button" onClick={onContinue} type="button">

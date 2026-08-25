@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 
+import { AccountTutorial } from "@/components/account-tutorial";
 import { DeckCard } from "@/components/deck-card";
 import { createSampleDeckAction } from "@/lib/actions/decks";
 import { requireSession } from "@/lib/auth-server";
@@ -39,7 +41,7 @@ function asSort(value: string | undefined): LibrarySort {
 export default async function DecksPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string; sort?: string; folder?: string }>;
+  searchParams: Promise<{ filter?: string; sort?: string; folder?: string; tour?: string }>;
 }) {
   const session = await requireSession();
   const params = await searchParams;
@@ -51,9 +53,16 @@ export default async function DecksPage({
     listDeckFolders(session.user.id),
   ]);
   const t = await getTranslations("decks");
+  const tAccount = await getTranslations("account");
 
   return (
     <main className="page-shell">
+      <Suspense fallback={null}>
+        <AccountTutorial
+          key={params.tour === "1" ? "replay" : "auto"}
+          userId={session.user.id}
+        />
+      </Suspense>
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="eyebrow">{t("eyebrow")}</p>
@@ -144,6 +153,9 @@ export default async function DecksPage({
                 {t("sampleDeck")}
               </button>
             </form>
+            <Link className="text-button" href="/decks?tour=1">
+              {tAccount("replayTutorial")}
+            </Link>
           </div>
         </section>
       )}

@@ -287,7 +287,37 @@
     "title": "Settings",
     "signedIn": "Signed in as {email}. Password and email sign-in are managed below.",
     "deleteTitle": "Delete your account",
-    "deleteBody": "Account deletion is by email only. Write to {email} and we will delete your account data."
+    "deleteBody": "Account deletion is by email only. Write to {email} and we will delete your account data.",
+    "replayTutorial": "Show tutorial again"
+  },
+  "tutorial": {
+    "skip": "Skip",
+    "next": "Next",
+    "back": "Back",
+    "done": "Got it",
+    "stepOf": "Step {current} of {total}",
+    "steps": {
+      "welcome": {
+        "title": "Welcome to your library",
+        "body": "New accounts start here. This page is where every deck you create will live."
+      },
+      "create": {
+        "title": "Create a deck",
+        "body": "Paste notes, type a topic, or upload a PDF. Or make a sample deck first if you just want to try study and play."
+      },
+      "study": {
+        "title": "Study",
+        "body": "Flip the card, then rate Hard / OK / Easy. Hard cards come back sooner."
+      },
+      "play": {
+        "title": "Play",
+        "body": "Matching: tap a question on the left, then its answer on the right. A match disappears. Type the answer: type the term, then Check. Close matches need a yes from AI."
+      },
+      "quiz": {
+        "title": "Quiz and share",
+        "body": "Quiz battle tests recall. When you are ready, share a read-only link with class."
+      }
+    }
   },
   "play": {
     "backToDeck": "Back to deck",
@@ -315,7 +345,7 @@
     "payoutEven": "+{payout} allowance back",
     "payoutLoss": "{stake} allowance used",
     "exactMatch": "Exact match",
-    "aiAccepted": "AI accepted",
+    "aiAccepted": "Close match",
     "niceHit": "Nice hit",
     "miss": "Miss",
     "speak": "Speak",
@@ -325,7 +355,7 @@
     "groups": {
       "city": "Themed",
       "campus": "Campus",
-      "pairing": "Flip",
+      "pairing": "Match",
       "recall": "Type"
     },
     "templates": {

@@ -13,7 +13,12 @@ export function ClerkSignInPanel() {
 export function ClerkSignUpPanel() {
   return (
     <div className="clerk-auth-panel w-full">
-      <SignUp routing="path" path="/sign-up" signInUrl="/sign-in" />
+      <SignUp
+        fallbackRedirectUrl="/decks"
+        path="/sign-up"
+        routing="path"
+        signInUrl="/sign-in"
+      />
     </div>
   );
 }

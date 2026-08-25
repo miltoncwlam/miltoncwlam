@@ -1,17 +1,11 @@
 import "server-only";
 
-import { generateObject } from "ai";
-import { z } from "zod";
+import { generateText } from "ai";
 
-import { typedMatches } from "@/lib/play/answers";
+import { parseAiAllowed, shortTarget, typedMatches } from "@/lib/play/answers";
 import { getOpenRouterClient, isOpenRouterConfigured } from "@/lib/llm/config";
 import { resolveOpenRouterFreeModel } from "@/lib/llm/openrouter-models";
 import type { Flashcard } from "@/lib/types/flashcard";
-
-const gradeSchema = z.object({
-  correct: z.boolean(),
-  reason: z.string().min(1).max(160),
-});
 
 export type GradeResult = {
   ok: boolean;
@@ -40,19 +34,21 @@ export async function gradeTypedAnswer(input: {
   }
 
   try {
-    const result = await generateObject({
+    const result = await generateText({
       model: getOpenRouterClient()(modelId),
-      schema: gradeSchema,
       abortSignal: AbortSignal.timeout(12_000),
-      prompt: `Grade a flashcard answer. Accept synonyms, abbreviations, extra words, and equivalent meaning. Reject wrong facts.
+      prompt: `Is the student's answer allowed for this flashcard? Accept synonyms, abbreviations, extra words, and equivalent meaning. Reject wrong facts.
+Reply with one word only: yes or no.
 Prompt: ${input.card.front}
 Expected: ${input.card.back}
-Student: ${typed}
-JSON only.`,
+Student: ${typed}`,
     });
+    if (!parseAiAllowed(result.text)) {
+      return { ok: false, why: "", source: "reject" };
+    }
     return {
-      ok: result.object.correct,
-      why: result.object.reason,
+      ok: true,
+      why: shortTarget(input.card) ?? input.card.back,
       source: "ai",
     };
   } catch {

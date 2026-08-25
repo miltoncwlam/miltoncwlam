@@ -60,10 +60,10 @@ function TypeAnswerStudy({
     setWhy(message);
   }
 
-  function finishHit(nextSource: "exact" | "ai") {
+  function finishHit(nextSource: "exact" | "ai", message?: string | null) {
     setFeedback(true);
     setSource(nextSource);
-    setWhy(null);
+    setWhy(message ?? null);
     setScore((n) => n + 1);
   }
 
@@ -108,7 +108,10 @@ function TypeAnswerStudy({
           })
             .then((result) => {
               if (result.ok) {
-                finishHit(result.source === "ai" ? "ai" : "exact");
+                finishHit(
+                  result.source === "ai" ? "ai" : "exact",
+                  result.source === "ai" ? (result.why || missWhy(card)) : null,
+                );
                 return;
               }
               finishMiss(missWhy(card));
@@ -195,10 +198,10 @@ function TypeAnswerInkWell({
     setWhy(message);
   }
 
-  function finishHit(nextSource: "exact" | "ai") {
+  function finishHit(nextSource: "exact" | "ai", message?: string | null) {
     setFeedback(true);
     setSource(nextSource);
-    setWhy(null);
+    setWhy(message ?? null);
     setScore((n) => n + 1);
   }
 
@@ -242,7 +245,10 @@ function TypeAnswerInkWell({
           })
             .then((result) => {
               if (result.ok) {
-                finishHit(result.source === "ai" ? "ai" : "exact");
+                finishHit(
+                  result.source === "ai" ? "ai" : "exact",
+                  result.source === "ai" ? (result.why || missWhy(card)) : null,
+                );
                 return;
               }
               finishMiss(missWhy(card));

@@ -285,7 +285,37 @@
     "title": "설정",
     "signedIn": "{email}(으)로 로그인됨. 비밀번호와 이메일 로그인은 아래에서 관리합니다.",
     "deleteTitle": "계정 삭제",
-    "deleteBody": "계정 삭제는 이메일로만 요청할 수 있습니다. {email}로 연락하면 계정 데이터를 삭제합니다."
+    "deleteBody": "계정 삭제는 이메일로만 요청할 수 있습니다. {email}로 연락하면 계정 데이터를 삭제합니다.",
+    "replayTutorial": "튜토리얼 다시 보기"
+  },
+  "tutorial": {
+    "skip": "건너뛰기",
+    "next": "다음",
+    "back": "이전",
+    "done": "알겠어요",
+    "stepOf": "{current} / {total}",
+    "steps": {
+      "welcome": {
+        "title": "라이브러리에 오신 것을 환영합니다",
+        "body": "새 계정은 여기서 시작합니다. 만든 덱은 모두 이 페이지에 모입니다."
+      },
+      "create": {
+        "title": "덱 만들기",
+        "body": "노트를 붙여 넣거나, 주제를 입력하거나, PDF를 올리세요. 먼저 샘플 덱으로 학습과 플레이를 해볼 수 있습니다."
+      },
+      "study": {
+        "title": "학습",
+        "body": "카드를 뒤집은 뒤 Hard / OK / Easy를 고르세요. 어려운 카드는 더 빨리 다시 나옵니다."
+      },
+      "play": {
+        "title": "플레이",
+        "body": "매칭은 왼쪽 질문, 오른쪽 답. 맞으면 둘 다 사라집니다. 입력은 용어를 치고 Check. 비슷한 답은 AI가 yes일 때만 통과합니다."
+      },
+      "quiz": {
+        "title": "퀴즈와 공유",
+        "body": "Quiz battle로 기억을 확인하세요. 준비되면 읽기 전용 링크를 반에 보낼 수 있습니다."
+      }
+    }
   },
   "play": {
     "backToDeck": "덱으로",
@@ -313,7 +343,7 @@
     "payoutEven": "+{payout} allowance back",
     "payoutLoss": "{stake} allowance used",
     "exactMatch": "정확히 일치",
-    "aiAccepted": "AI가 정답으로 인정",
+    "aiAccepted": "가까운 답",
     "niceHit": "정답",
     "miss": "틀림",
     "speak": "읽기",
@@ -323,7 +353,7 @@
     "groups": {
       "city": "Themed",
       "campus": "Campus",
-      "pairing": "Flip",
+      "pairing": "짝맞추기",
       "recall": "Type"
     },
     "templates": {

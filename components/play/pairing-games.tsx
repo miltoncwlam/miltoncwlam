@@ -47,89 +47,80 @@ function MatchingPairsStudy({
   cards: Flashcard[];
   deckId: string;
 }) {
-  const pairs = useMemo(() => takeChips(cards, 6), [cards]);
-  const [tiles] = useState(() =>
-    shuffleList(
-      pairs.flatMap((card) => [
-        { id: `${card.id}-a`, cardId: card.id, text: faceText(promptOf(card)) },
-        { id: `${card.id}-b`, cardId: card.id, text: faceText(chipOf(card)) },
-      ]),
-    ),
-  );
-  const [open, setOpen] = useState<string[]>([]);
+  const pairs = useMemo(() => takeChips(cards, 8), [cards]);
+  const [left] = useState(() => shuffleList(pairs));
+  const [right] = useState(() => shuffleList(pairs));
+  const [picked, setPicked] = useState<string | null>(null);
   const [matched, setMatched] = useState<Set<string>>(new Set());
-  const [misses, setMisses] = useState(0);
-  const [wrong, setWrong] = useState<string[]>([]);
-  const [why, setWhy] = useState<string | null>(null);
+  const [wrong, setWrong] = useState(0);
 
   if (matched.size >= pairs.length) {
     return (
       <PlayFinished
         deckId={deckId}
         maxScore={pairs.length}
-        score={Math.max(0, pairs.length - misses)}
+        score={Math.max(0, pairs.length - wrong)}
         template="matching-pairs"
       />
     );
   }
 
+  const openLeft = left.filter((card) => !matched.has(card.id));
+  const openRight = right.filter((card) => !matched.has(card.id));
+
   return (
     <PlayShell
       clock={false}
-      extra={`${misses} misses`}
+      extra={`${wrong} misses`}
       maxScore={pairs.length}
       score={matched.size}
       skin="flip"
       title="Matching pairs"
     >
-      <p className="play-prompt">Flip two cards. Pair prompt with answer.</p>
-      <div className="play-flip-grid">
-        {tiles.map((tile) => {
-          const show = open.includes(tile.id) || matched.has(tile.cardId);
-          return (
+      <p className="play-prompt">Tap a question, then its answer. A match disappears.</p>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-2">
+          <p className="play-muted mb-0 text-center text-xs font-black uppercase tracking-widest">
+            Questions
+          </p>
+          {openLeft.map((card) => (
             <button
-              className={`play-flip ${show ? "is-open" : ""} ${matched.has(tile.cardId) ? "is-matched" : ""} ${wrong.includes(tile.id) ? "is-wrong" : ""}`}
-              disabled={show || Boolean(why)}
-              key={tile.id}
+              className={`play-choice w-full ${picked === card.id ? "is-picked" : ""}`}
+              key={`l-${card.id}`}
+              onClick={() => setPicked(card.id)}
+              type="button"
+            >
+              {promptOf(card)}
+            </button>
+          ))}
+        </div>
+        <div className="space-y-2">
+          <p className="play-muted mb-0 text-center text-xs font-black uppercase tracking-widest">
+            Answers
+          </p>
+          {openRight.map((card) => (
+            <button
+              className="play-choice w-full"
+              key={`r-${card.id}`}
               onClick={() => {
-                if (open.length === 2) return;
-                if (open.length === 1) {
-                  const first = tiles.find((item) => item.id === open[0]);
-                  if (first?.cardId === tile.cardId && first.id !== tile.id) {
-                    playBeep("hit");
-                    setMatched(new Set(matched).add(tile.cardId));
-                    setOpen([]);
-                    setWhy(null);
-                  } else {
-                    playBeep("miss");
-                    const missCard =
-                      pairs.find((item) => item.id === first?.cardId) ?? pairs[0]!;
-                    setOpen([open[0]!, tile.id]);
-                    setWrong([open[0]!, tile.id]);
-                    setMisses((value) => value + 1);
-                    setWhy(missWhy(missCard));
-                    window.setTimeout(() => {
-                      setOpen([]);
-                      setWrong([]);
-                    }, 700);
-                  }
+                if (!picked) return;
+                if (picked === card.id) {
+                  playBeep("hit");
+                  setMatched(new Set(matched).add(card.id));
+                  setPicked(null);
                 } else {
-                  setOpen([tile.id]);
+                  playBeep("miss");
+                  setWrong((n) => n + 1);
+                  setPicked(null);
                 }
               }}
               type="button"
             >
-              <span className="play-flip-inner">
-                <span className="play-flip-face play-flip-back">★</span>
-                <span className="play-flip-face play-flip-front">{tile.text}</span>
-              </span>
+              {chipOf(card)}
             </button>
-          );
-        })}
+          ))}
+        </div>
       </div>
-      {why ? (
-        <WhyBox ok={false} onContinue={() => setWhy(null)} why={why} />
-      ) : null}
     </PlayShell>
   );
 }

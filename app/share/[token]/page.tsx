@@ -120,7 +120,7 @@ export default async function SharedDeckPage({
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               {PLAY_TEMPLATES.map((item) => (
                 <Link
-                  className={`play-pick play-stage--${PLAY_SKINS[item.id]}`}
+                  className={`play-pick play-stage--${PLAY_SKINS[item.id]}${isPublicPlayCatalog() ? " is-public" : ""}`}
                   href={`${home}?activity=${item.id}`}
                   key={item.id}
                 >

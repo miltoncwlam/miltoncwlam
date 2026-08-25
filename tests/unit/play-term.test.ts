@@ -1,6 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { playChip } from "@/lib/play/answers";
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: () => undefined }),
+  useSearchParams: () => new URLSearchParams(),
+}));
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}));
+
+import { tutorialStorageKey } from "@/components/account-tutorial";
+import { parseAiAllowed, playChip } from "@/lib/play/answers";
 import { splitPlayTerm, tightenForChip } from "@/lib/play/term";
 import type { Flashcard } from "@/lib/types/flashcard";
 
@@ -75,5 +84,25 @@ describe("tightenForChip", () => {
     const result = tightenForChip("Saturn ice rock ring pieces");
     expect(result.back.length).toBeLessThanOrEqual(22);
     expect(result.hint).toBeTruthy();
+  });
+});
+
+describe("parseAiAllowed", () => {
+  it("treats yes as allowed", () => {
+    expect(parseAiAllowed("yes")).toBe(true);
+    expect(parseAiAllowed("Yes.")).toBe(true);
+  });
+
+  it("treats anything else as not allowed", () => {
+    expect(parseAiAllowed("no")).toBe(false);
+    expect(parseAiAllowed("allowed")).toBe(false);
+    expect(parseAiAllowed("yes but actually no")).toBe(true);
+    expect(parseAiAllowed("")).toBe(false);
+  });
+});
+
+describe("tutorialStorageKey", () => {
+  it("scopes the tour to the signed-in user", () => {
+    expect(tutorialStorageKey("user-1")).toBe("study-a-tutorial:user-1");
   });
 });

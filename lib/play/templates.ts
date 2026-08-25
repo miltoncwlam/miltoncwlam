@@ -224,7 +224,7 @@ const PUBLIC_TEMPLATES: PlayTemplateMeta[] = [
   {
     id: "matching-pairs",
     name: "Matching pairs",
-    blurb: "Flip two cards. Pair the prompt with the answer.",
+    blurb: "Tap a question, then its answer. A match disappears.",
     group: "pairing",
   },
   {

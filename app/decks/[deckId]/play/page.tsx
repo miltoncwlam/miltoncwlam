@@ -80,7 +80,7 @@ export default async function DeckPlayPage({
               {items.map((item) =>
                 item.blocked ? (
                   <div
-                    className={`play-pick is-blocked play-stage--${PLAY_SKINS[item.id]}`}
+                    className={`play-pick is-blocked play-stage--${PLAY_SKINS[item.id]}${isPublicPlayCatalog() ? " is-public" : ""}`}
                     key={item.id}
                   >
                     <p className="font-bold">
@@ -97,7 +97,7 @@ export default async function DeckPlayPage({
                   </div>
                 ) : (
                   <Link
-                    className={`play-pick play-stage--${PLAY_SKINS[item.id]}`}
+                    className={`play-pick play-stage--${PLAY_SKINS[item.id]}${isPublicPlayCatalog() ? " is-public" : ""}`}
                     href={`/decks/${deck.id}/play/${item.id}${dueQuery}`}
                     key={item.id}
                   >

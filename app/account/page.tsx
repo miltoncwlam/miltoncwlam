@@ -19,6 +19,11 @@ export default async function AccountPage() {
       <p className="page-subtitle">
         {t("signedIn", { email: session.user.email })}
       </p>
+      <p className="mt-3">
+        <Link className="text-button" href="/decks?tour=1">
+          {t("replayTutorial")}
+        </Link>
+      </p>
       <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
         <p className="font-bold text-slate-900">{t("deleteTitle")}</p>
         <p className="mt-1 text-sm text-slate-600">

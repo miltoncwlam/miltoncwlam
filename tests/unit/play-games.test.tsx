@@ -118,7 +118,7 @@ async function playRound(template: PlayCatalogId, node: HTMLElement) {
     const cont = buttons.find((button) => button.textContent === "Continue");
     if (cont) {
       if (template === "type-the-answer") {
-        expect(node.textContent ?? "").toMatch(/AI accepted|Exact match|Miss/);
+        expect(node.textContent ?? "").toMatch(/Close match|Exact match|Miss/);
       }
       click(cont);
       continue;

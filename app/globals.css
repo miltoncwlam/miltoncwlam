@@ -2052,6 +2052,40 @@ html[data-theme="dark"] .secondary-button {
 .play-why-ok { color: #9ec9b4; }
 .play-why-miss { color: #f0a0a8; }
 
+.play-stage.is-public .play-why {
+  background: #fff;
+  color: #16324f;
+  box-shadow: 0 8px 0 rgb(22 50 79 / 8%);
+}
+
+.play-stage.is-public .play-why-ok {
+  color: #0b6b45;
+}
+
+.play-stage.is-public .play-why-miss {
+  color: #b42318;
+}
+
+.play-stage.is-public .play-why .play-muted {
+  color: rgb(22 50 79 / 78%);
+}
+
+.play-stage.is-public .play-board {
+  background: #fff;
+  color: #16324f;
+  box-shadow: inset 0 0 0 2px rgb(22 50 79 / 12%), 0 10px 0 rgb(22 50 79 / 8%);
+}
+
+.play-pick.play-stage--flip.is-public,
+.play-pick.play-stage--spell.is-public {
+  color: #16324f;
+}
+
+.play-pick.play-stage--flip.is-public p:last-of-type,
+.play-pick.play-stage--spell.is-public p:last-of-type {
+  color: rgb(22 50 79 / 72%);
+}
+
 .play-why .play-muted {
   margin: 0.35rem 0 0;
   overflow-wrap: anywhere;
@@ -3166,6 +3200,33 @@ html[data-theme="dark"] .play-lantern-text {
 .play-mosaic-paddle.is-hot-1 { left: 74%; }
 .play-mosaic-paddle.is-hot-2 { left: 24%; }
 .play-mosaic-paddle.is-hot-3 { left: 74%; }
+
+.account-tutorial {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(20 32 27 / 48%);
+}
+
+.account-tutorial-card {
+  width: min(32rem, 100%);
+  border-radius: 1.5rem;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 1.5rem 1.5rem 1.25rem;
+  box-shadow: 0 24px 50px rgb(0 0 0 / 22%);
+}
+
+.account-tutorial-card .page-title {
+  font-size: 1.65rem;
+}
+
+.account-tutorial-card .page-subtitle {
+  color: var(--muted);
+}
 
 @media (prefers-reduced-motion: reduce) {
   .play-slip-row.is-drift .play-slip,
