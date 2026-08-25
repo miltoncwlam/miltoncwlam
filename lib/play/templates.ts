@@ -220,11 +220,26 @@ const LOCAL_TEMPLATES: PlayTemplateMeta[] = [
   },
 ];
 
-export const PLAY_TEMPLATES: PlayTemplateMeta[] = isPublicPlayCatalog()
-  ? LOCAL_TEMPLATES.filter((item) =>
-      (PLAY_PUBLIC_CATALOG_IDS as readonly string[]).includes(item.id),
-    )
-  : LOCAL_TEMPLATES;
+const PUBLIC_TEMPLATES: PlayTemplateMeta[] = [
+  {
+    id: "matching-pairs",
+    name: "Matching pairs",
+    blurb: "Flip two cards. Pair the prompt with the answer.",
+    group: "pairing",
+  },
+  {
+    id: "type-the-answer",
+    name: "Type the answer",
+    blurb: "Read the prompt and type the answer.",
+    group: "recall",
+  },
+];
+
+export function playTemplates(publicOnly = isPublicPlayCatalog()) {
+  return publicOnly ? PUBLIC_TEMPLATES : LOCAL_TEMPLATES;
+}
+
+export const PLAY_TEMPLATES: PlayTemplateMeta[] = playTemplates();
 
 export function isPlayCatalogId(value: string): value is PlayCatalogId {
   return (PLAY_CATALOG_IDS as readonly string[]).includes(value);

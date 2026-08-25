@@ -4,7 +4,7 @@ import { joinClassAction } from "@/lib/actions/class-links";
 import { requireSession } from "@/lib/auth-server";
 import { getClassLinkByToken } from "@/lib/data/class-links";
 import { classAssignFromQuery } from "@/lib/play/activity";
-import { isPlayTemplateId } from "@/lib/play/templates";
+import { isPlayTemplateId, isPublicPlayCatalog, PLAY_TEMPLATES, resolvePlayTemplate } from "@/lib/play/templates";
 import { getTranslations } from "next-intl/server";
 
 export default async function ClassJoinPage({
@@ -21,9 +21,15 @@ export default async function ClassJoinPage({
   const link = await getClassLinkByToken(token);
   if (!link || link.revoked_at) notFound();
   const assign = classAssignFromQuery(query);
-  const assignedName =
+  const resolved =
     assign.activity && isPlayTemplateId(assign.activity)
-      ? t(`templates.${assign.activity}.name`)
+      ? resolvePlayTemplate(assign.activity)
+      : null;
+  const assignedName =
+    resolved && resolved !== "study"
+      ? isPublicPlayCatalog()
+        ? (PLAY_TEMPLATES.find((item) => item.id === resolved)?.name ?? null)
+        : t(`templates.${resolved}.name`)
       : null;
 
   return (

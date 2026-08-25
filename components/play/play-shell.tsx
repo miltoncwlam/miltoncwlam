@@ -22,8 +22,12 @@ import {
   playBeep,
   prefersReducedMotion,
 } from "@/lib/play/juice";
-import type { PlayTemplateId } from "@/lib/play/templates";
-import { resolvePlayTemplate } from "@/lib/play/templates";
+import {
+  isPublicPlayCatalog,
+  PLAY_TEMPLATES,
+  resolvePlayTemplate,
+  type PlayTemplateId,
+} from "@/lib/play/templates";
 import type { PlaySkin } from "@/lib/play/worlds";
 
 export type PlayOptions = {
@@ -187,10 +191,15 @@ export function PlayShell({
     : null;
   const i18nId =
     catalogId && catalogId !== "study" ? catalogId : options.template;
-  const heading = i18nId ? t(`templates.${i18nId}.name`) : title;
+  const publicCopy = isPublicPlayCatalog()
+    ? PLAY_TEMPLATES.find((item) => item.id === catalogId)
+    : null;
+  const heading = publicCopy?.name ?? (i18nId ? t(`templates.${i18nId}.name`) : title);
   const [remaining, setRemaining] = useState(initial);
   const comboRef = useRef(combo ?? 0);
-  const howKey = i18nId ? `hk-play-how:${i18nId}` : "";
+  const howKey = i18nId
+    ? `${isPublicPlayCatalog() ? "play-how-public" : "hk-play-how"}:${i18nId}`
+    : "";
   const [howTo, setHowTo] = useState(() => {
     if (isTestEnv() || options.readOnly || !howKey) return false;
     try {
@@ -261,11 +270,17 @@ export function PlayShell({
     );
   }
 
-  const howToText = i18nId ? t(`templates.${i18nId}.howTo`) : "";
+  const howToText = publicCopy
+    ? publicCopy.id === "matching-pairs"
+      ? "Flip two cards. A match stays open. A miss closes both."
+      : "Type the term, then check. An empty answer does not count."
+    : i18nId
+      ? t(`templates.${i18nId}.howTo`)
+      : "";
 
   return (
     <PlayJuiceContext.Provider value={juice}>
-      <section className={`play-stage play-stage--${skin} play-stage--activities study-mobile mx-auto max-w-2xl`}>
+      <section className={`play-stage play-stage--${skin} play-stage--activities study-mobile mx-auto max-w-2xl${isPublicPlayCatalog() ? " is-public" : ""}`}>
         <div className="play-hud">
           <h2 className="play-hud-title">{heading}</h2>
           <div className="flex items-center gap-2">

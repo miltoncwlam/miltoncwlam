@@ -10,7 +10,9 @@ import { templatesForDeck } from "@/lib/play/eligibility";
 import { isPublicPlayCatalog } from "@/lib/play/templates";
 import { PLAY_SKIN_EMOJI, PLAY_SKINS } from "@/lib/play/worlds";
 
-const GROUPS = ["city", "campus"] as const;
+const GROUPS = isPublicPlayCatalog()
+  ? (["pairing", "recall"] as const)
+  : (["city", "campus"] as const);
 
 export default async function DeckPlayPage({
   params,
@@ -81,10 +83,16 @@ export default async function DeckPlayPage({
                     className={`play-pick is-blocked play-stage--${PLAY_SKINS[item.id]}`}
                     key={item.id}
                   >
-                    <p className="font-bold">{t(`templates.${item.id}.name`)}</p>
+                    <p className="font-bold">
+                      {isPublicPlayCatalog() ? item.name : t(`templates.${item.id}.name`)}
+                    </p>
                     <p className="mt-1 text-sm">{t(`blocked.${item.blocked}`)}</p>
                     <span className="play-pick-emoji" aria-hidden>
-                      {PLAY_SKIN_EMOJI[PLAY_SKINS[item.id]]}
+                      {isPublicPlayCatalog()
+                        ? item.id === "type-the-answer"
+                          ? "⌨️"
+                          : "🃏"
+                        : PLAY_SKIN_EMOJI[PLAY_SKINS[item.id]]}
                     </span>
                   </div>
                 ) : (
@@ -93,10 +101,18 @@ export default async function DeckPlayPage({
                     href={`/decks/${deck.id}/play/${item.id}${dueQuery}`}
                     key={item.id}
                   >
-                    <p className="font-bold">{t(`templates.${item.id}.name`)}</p>
-                    <p className="mt-1 text-sm">{t(`templates.${item.id}.blurb`)}</p>
+                    <p className="font-bold">
+                      {isPublicPlayCatalog() ? item.name : t(`templates.${item.id}.name`)}
+                    </p>
+                    <p className="mt-1 text-sm">
+                      {isPublicPlayCatalog() ? item.blurb : t(`templates.${item.id}.blurb`)}
+                    </p>
                     <span className="play-pick-emoji" aria-hidden>
-                      {PLAY_SKIN_EMOJI[PLAY_SKINS[item.id]]}
+                      {isPublicPlayCatalog()
+                        ? item.id === "type-the-answer"
+                          ? "⌨️"
+                          : "🃏"
+                        : PLAY_SKIN_EMOJI[PLAY_SKINS[item.id]]}
                     </span>
                   </Link>
                 ),

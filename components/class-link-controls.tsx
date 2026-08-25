@@ -7,7 +7,7 @@ import {
   createClassLinkAction,
   revokeClassLinkAction,
 } from "@/lib/actions/class-links";
-import { PLAY_TEMPLATES } from "@/lib/play/templates";
+import { PLAY_TEMPLATES, isPublicPlayCatalog } from "@/lib/play/templates";
 
 export function ClassLinkControls({
   deckId,
@@ -48,7 +48,7 @@ export function ClassLinkControls({
           <option value="">Any play activity</option>
           {PLAY_TEMPLATES.map((item) => (
             <option key={item.id} value={item.id}>
-              {t(`templates.${item.id}.name`)}
+              {isPublicPlayCatalog() ? item.name : t(`templates.${item.id}.name`)}
             </option>
           ))}
         </select>

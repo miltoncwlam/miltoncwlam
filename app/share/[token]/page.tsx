@@ -11,7 +11,7 @@ import { getSharedDeck } from "@/lib/data/shares";
 import { getLatestStudySession } from "@/lib/data/study";
 import { activityFromQuery } from "@/lib/play/activity";
 import { templateReason } from "@/lib/play/eligibility";
-import { PLAY_TEMPLATES } from "@/lib/play/templates";
+import { PLAY_TEMPLATES, isPublicPlayCatalog } from "@/lib/play/templates";
 import { PLAY_SKIN_EMOJI, PLAY_SKINS } from "@/lib/play/worlds";
 import { shuffleIds } from "@/lib/study/shuffle";
 import type { QuizSession } from "@/lib/types/flashcard";
@@ -124,8 +124,12 @@ export default async function SharedDeckPage({
                   href={`${home}?activity=${item.id}`}
                   key={item.id}
                 >
-                  <p className="font-bold">{t(`templates.${item.id}.name`)}</p>
-                  <p className="mt-1 text-sm">{t(`templates.${item.id}.blurb`)}</p>
+                  <p className="font-bold">
+                    {isPublicPlayCatalog() ? item.name : t(`templates.${item.id}.name`)}
+                  </p>
+                  <p className="mt-1 text-sm">
+                    {isPublicPlayCatalog() ? item.blurb : t(`templates.${item.id}.blurb`)}
+                  </p>
                   <span className="play-pick-emoji" aria-hidden>
                     {PLAY_SKIN_EMOJI[PLAY_SKINS[item.id]]}
                   </span>

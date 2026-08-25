@@ -1497,6 +1497,16 @@ html[data-theme="dark"] .secondary-button {
     radial-gradient(circle at 50% 80%, #4a5560, transparent 40%),
     linear-gradient(180deg, #243044, #151b24);
 }
+.play-stage--flip.is-public {
+  --play-ink: #16324f;
+  --play-muted: rgb(22 50 79 / 70%);
+  background: linear-gradient(180deg, #f4f7fb 0%, #e6eef6 100%);
+}
+.play-stage--spell.is-public {
+  --play-ink: #16324f;
+  --play-muted: rgb(22 50 79 / 70%);
+  background: linear-gradient(180deg, #f7f5f0 0%, #ece7dc 100%);
+}
 .play-stage--puzzle {
   background:
     repeating-conic-gradient(#2b2150 0% 25%, #1f1840 0% 50%) 50% / 28px 28px,
@@ -1874,6 +1884,18 @@ html[data-theme="dark"] .secondary-button {
 
 .play-flip.is-matched .play-flip-front {
   background: linear-gradient(180deg, #d7f5e4, #9ec9b4);
+}
+
+.play-stage--flip.is-public .play-flip-back {
+  background: linear-gradient(180deg, #2f5d9a, #1e3d6b);
+  box-shadow: 0 8px 0 #16324f;
+  color: #fff;
+}
+
+.play-stage--flip.is-public .play-flip-front {
+  background: #fff;
+  color: #16324f;
+  box-shadow: 0 8px 0 #c5d0de;
 }
 
 .play-maze-board {

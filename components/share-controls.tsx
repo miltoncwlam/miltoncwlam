@@ -7,7 +7,7 @@ import {
   disableSharingAction,
   enableSharingAction,
 } from "@/lib/actions/sharing";
-import { PLAY_TEMPLATES } from "@/lib/play/templates";
+import { PLAY_TEMPLATES, isPublicPlayCatalog } from "@/lib/play/templates";
 
 export function ShareControls({
   deckId,
@@ -85,7 +85,7 @@ export function ShareControls({
             >
               {PLAY_TEMPLATES.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {t(`templates.${item.id}.name`)}
+                  {isPublicPlayCatalog() ? item.name : t(`templates.${item.id}.name`)}
                 </option>
               ))}
             </select>

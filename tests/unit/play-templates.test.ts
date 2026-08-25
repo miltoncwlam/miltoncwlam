@@ -10,7 +10,7 @@ import {
   templateReason,
   unlockedCatalogCount,
 } from "@/lib/play/eligibility";
-import { PLAY_CATALOG_IDS, PLAY_TEMPLATES, PLAY_TEMPLATE_IDS, playCatalogIds, resolvePlayTemplate } from "@/lib/play/templates";
+import { PLAY_CATALOG_IDS, PLAY_TEMPLATES, PLAY_TEMPLATE_IDS, playCatalogIds, playTemplates, resolvePlayTemplate } from "@/lib/play/templates";
 import type { CommunitySeedPack } from "@/lib/data/community-packs/types";
 import type { Flashcard } from "@/lib/types/flashcard";
 
@@ -83,6 +83,11 @@ describe("play templates", () => {
     expect(resolvePlayTemplate("airplane", true)).toBe("matching-pairs");
     expect(resolvePlayTemplate("speaking-cards", true)).toBe("type-the-answer");
     expect(resolvePlayTemplate("gate-dash", true)).toBe("matching-pairs");
+    expect(playTemplates(true).map((item) => item.name)).toEqual([
+      "Matching pairs",
+      "Type the answer",
+    ]);
+    expect(playTemplates(false)[0]?.name).toBe("Twin lanterns");
   });
 
   it("unlocks at least 10 of 15 on a 10-card chip-only deck", () => {
