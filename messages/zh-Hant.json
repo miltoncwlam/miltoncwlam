@@ -4,7 +4,7 @@
   },
   "nav": {
     "myDecks": "我的牌組",
-    "createDeck": "建立牌組",
+    "createDeck": "建立筆記本",
     "signIn": "登入",
     "signUp": "註冊",
     "signOut": "登出",
@@ -37,10 +37,10 @@
   },
   "decks": {
     "eyebrow": "你的書庫",
-    "title": "閃卡牌組",
-    "subtitle": "建立、學習並分享 AI 閃卡。",
-    "newDeck": "新牌組",
-    "emptyTitle": "建立第一副牌組",
+    "title": "筆記本",
+    "subtitle": "讀取來源一次，再產生心智圖、學習筆記或試卷。",
+    "newDeck": "新筆記本",
+    "emptyTitle": "建立第一本筆記本",
     "emptyBody": "貼上筆記、上傳文件，或先用範例牌組試試。",
     "startCreating": "開始建立",
     "sampleDeck": "建立範例牌組",
@@ -50,14 +50,14 @@
     "shared": "已分享"
   },
   "create": {
-    "title": "把任何內容變成閃卡",
-    "subtitle": "貼上文字，或上傳 PDF、TXT、Markdown。也可建立範例牌組，無需 LLM 金鑰即可試用。",
+    "title": "把筆記變成學習工作室",
+    "subtitle": "加入主題、貼上文字或上傳來源。應用程式讀取後，你可產生心智圖、學習筆記或試卷。",
     "topic": "主題",
     "text": "文字",
     "file": "檔案",
     "topicLabel": "主題或科目",
     "topicPlaceholder": "例如：光合作用、第二次世界大戰、分數入門",
-    "topicHint": "只需輸入主題，AI 會直接生成適合學習的閃卡。",
+    "topicHint": "AI 會讀取主題並開啟筆記本，再從同一來源產生教材。",
     "uploadNeedsSecret": "檔案上傳需要在 .env.local 設定 SUPABASE_SECRET_KEY。文字生成仍可用。",
     "titleLabel": "牌組標題（選填）",
     "titlePlaceholder": "生物第四章",
@@ -96,7 +96,11 @@
     "url": "URL",
     "urlLabel": "URL",
     "urlPlaceholder": "https://…",
-    "urlHint": "URL / YouTube"
+    "urlHint": "URL / YouTube",
+    "readSource": "讀取來源",
+    "sourceRetention": "Source retention",
+    "retention24h": "Keep 24 hours",
+    "retentionKeep": "Keep until I delete the notebook"
   },
   "generation": {
     "eyebrow": "正在建立牌組",
@@ -524,5 +528,54 @@
   "streak": {
     "label": "連續 {count} 日",
     "title": "已連續 {count} 日。最長 {longest} 日。"
+  },
+  "studio": {
+    "eyebrow": "工作室",
+    "title": "從這個來源產生教材",
+    "subtitle": "同一份筆記，三種學習工具。再產生一次會覆蓋舊內容。",
+    "mindmap": "心智圖",
+    "notes": "學習筆記",
+    "exam": "試卷",
+    "generate": "產生",
+    "regenerate": "重新產生",
+    "generating": "撰寫中…",
+    "noSource": "來源已清除。請建立新筆記本才能再產生。",
+    "examOptions": "試卷選項",
+    "questionCount": "題目數量",
+    "difficulty": "難度",
+    "beginner": "初階",
+    "intermediate": "中階",
+    "advanced": "進階",
+    "questions": "題",
+    "takeExam": "開始考試",
+    "types": {
+      "long": "長題",
+      "short": "短題",
+      "tf": "是非題",
+      "mcq": "選擇題",
+      "matching": "配對題",
+      "cloze_choice": "填充（有選項）",
+      "cloze_free": "填充（自填）"
+    }
+  },
+  "exam": {
+    "eyebrow": "試卷",
+    "subtitle": "答完所有題目後繳交，由 AI 評分並給回饋。",
+    "back": "返回筆記本",
+    "submit": "繳交評分",
+    "marking": "評分中…",
+    "marked": "已評分",
+    "tryAgain": "再試一次",
+    "marks": "分",
+    "choose": "請選擇",
+    "types": {
+      "long": "長題",
+      "short": "短題",
+      "tf": "是非題",
+      "mcq": "選擇題",
+      "matching": "配對題",
+      "cloze_choice": "填充（有選項）",
+      "cloze_free": "填充（自填）"
+    }
   }
 }

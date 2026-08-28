@@ -4,7 +4,7 @@
   },
   "nav": {
     "myDecks": "我的牌组",
-    "createDeck": "创建牌组",
+    "createDeck": "创建笔记本",
     "signIn": "登录",
     "signUp": "注册",
     "signOut": "退出",
@@ -37,11 +37,11 @@
   },
   "decks": {
     "eyebrow": "你的書庫",
-    "title": "閃卡牌組",
-    "subtitle": "建立、學習並分享 AI 閃卡。",
-    "newDeck": "新牌組",
-    "emptyTitle": "建立第一副牌組",
-    "emptyBody": "贴上笔记、上传文件，或先用范例牌组试试。",
+    "title": "笔记本",
+    "subtitle": "读取来源一次，再生成思维导图、学习笔记或试卷。",
+    "newDeck": "新笔记本",
+    "emptyTitle": "创建第一本笔记本",
+    "emptyBody": "粘贴笔记、上传文件，或先用示例牌组试试。",
     "startCreating": "開始建立",
     "sampleDeck": "建立範例牌組",
     "ready": "完成",
@@ -50,14 +50,14 @@
     "shared": "已分享"
   },
   "create": {
-    "title": "把任何內容變成閃卡",
-    "subtitle": "贴上文字，或上传 PDF、TXT、Markdown。也可建立范例牌组，无需 LLM 密钥即可试用。",
+    "title": "把笔记变成学习工作室",
+    "subtitle": "加入主题、粘贴文字或上传来源。应用读取后，你可生成思维导图、学习笔记或试卷。",
     "topic": "主题",
     "text": "文字",
     "file": "文件",
     "topicLabel": "主题或科目",
     "topicPlaceholder": "例如：光合作用、第二次世界大战、分数入门",
-    "topicHint": "只需输入主题，AI 会直接生成适合学习的闪卡。",
+    "topicHint": "AI 会读取主题并打开笔记本，再从同一来源生成教材。",
     "uploadNeedsSecret": "文件上传需要在 .env.local 设定 SUPABASE_SECRET_KEY。文字生成仍可用。",
     "titleLabel": "牌組標題（選填）",
     "titlePlaceholder": "生物第四章",
@@ -96,7 +96,11 @@
     "url": "URL",
     "urlLabel": "URL",
     "urlPlaceholder": "https://…",
-    "urlHint": "URL / YouTube"
+    "urlHint": "URL / YouTube",
+    "readSource": "读取来源",
+    "sourceRetention": "Source retention",
+    "retention24h": "Keep 24 hours",
+    "retentionKeep": "Keep until I delete the notebook"
   },
   "generation": {
     "eyebrow": "正在建立牌組",
@@ -524,5 +528,54 @@
   "streak": {
     "label": "Streak {count}",
     "title": "{count}-day streak. Longest: {longest}."
+  },
+  "studio": {
+    "eyebrow": "工作室",
+    "title": "从这个来源生成教材",
+    "subtitle": "同一份笔记，三种学习工具。再次生成会覆盖旧内容。",
+    "mindmap": "思维导图",
+    "notes": "学习笔记",
+    "exam": "试卷",
+    "generate": "生成",
+    "regenerate": "重新生成",
+    "generating": "撰写中…",
+    "noSource": "来源已清除。请创建新笔记本才能再生成。",
+    "examOptions": "试卷选项",
+    "questionCount": "题目数量",
+    "difficulty": "难度",
+    "beginner": "初级",
+    "intermediate": "中级",
+    "advanced": "进阶",
+    "questions": "题",
+    "takeExam": "开始考试",
+    "types": {
+      "long": "长题",
+      "short": "短题",
+      "tf": "判断题",
+      "mcq": "选择题",
+      "matching": "配对题",
+      "cloze_choice": "填空（有选项）",
+      "cloze_free": "填空（自填）"
+    }
+  },
+  "exam": {
+    "eyebrow": "试卷",
+    "subtitle": "答完所有题目后提交，由 AI 评分并给出反馈。",
+    "back": "返回笔记本",
+    "submit": "提交评分",
+    "marking": "评分中…",
+    "marked": "已评分",
+    "tryAgain": "再试一次",
+    "marks": "分",
+    "choose": "请选择",
+    "types": {
+      "long": "长题",
+      "short": "短题",
+      "tf": "判断题",
+      "mcq": "选择题",
+      "matching": "配对题",
+      "cloze_choice": "填空（有选项）",
+      "cloze_free": "填空（自填）"
+    }
   }
 }

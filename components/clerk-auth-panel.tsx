@@ -5,7 +5,12 @@ import { SignIn, SignUp } from "@clerk/nextjs";
 export function ClerkSignInPanel() {
   return (
     <div className="clerk-auth-panel w-full">
-      <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" />
+      <SignIn
+        fallbackRedirectUrl="/decks"
+        path="/sign-in"
+        routing="path"
+        signUpUrl="/sign-up"
+      />
     </div>
   );
 }

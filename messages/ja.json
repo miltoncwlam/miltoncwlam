@@ -4,7 +4,7 @@
   },
   "nav": {
     "myDecks": "マイデッキ",
-    "createDeck": "デッキ作成",
+    "createDeck": "ノートを作成",
     "signIn": "ログイン",
     "signUp": "登録",
     "signOut": "ログアウト",
@@ -37,11 +37,11 @@
   },
   "decks": {
     "eyebrow": "ライブラリ",
-    "title": "フラッシュカードデッキ",
-    "subtitle": "AIカードを作成・学習・共有。",
-    "newDeck": "新しいデッキ",
-    "emptyTitle": "最初のデッキを作成",
-    "emptyBody": "ノートを貼る、ファイルを上げる、またはサンプルで試す。",
+    "title": "ノート",
+    "subtitle": "ソースを一度読み、マインドマップ・学習ノート・試験問題を生成します。",
+    "newDeck": "新しいノート",
+    "emptyTitle": "最初のノートを作る",
+    "emptyBody": "ノートを貼るかファイルを上げるか、サンプルデッキで試せます。",
     "startCreating": "作成を開始",
     "sampleDeck": "サンプルデッキを作成",
     "ready": "完了",
@@ -50,14 +50,14 @@
     "shared": "共有中"
   },
   "create": {
-    "title": "何でもフラッシュカードに",
-    "subtitle": "テキストを貼るか、PDF / TXT / Markdown をアップロード。LLMキーなしで試すならサンプルデッキも。",
+    "title": "ノートを学習スタジオに",
+    "subtitle": "トピック・テキスト・ファイルを追加。読み取ったあと、マインドマップ・学習ノート・試験を作れます。",
     "topic": "トピック",
     "text": "テキスト",
     "file": "ファイル",
     "topicLabel": "トピック / 科目",
     "topicPlaceholder": "例: 光合成、第二次世界大戦、分数の基礎",
-    "topicHint": "トピックだけで学習用フラッシュカードを生成します。",
+    "topicHint": "AIがトピックを読み、同じソースから教材を生成できるノートを開きます。",
     "uploadNeedsSecret": "ファイルアップロードには .env.local の SUPABASE_SECRET_KEY が必要です。テキスト生成は可能です。",
     "titleLabel": "デッキ名（任意）",
     "titlePlaceholder": "生物 第4章",
@@ -96,7 +96,11 @@
     "url": "URL",
     "urlLabel": "URL",
     "urlPlaceholder": "https://…",
-    "urlHint": "URL / YouTube"
+    "urlHint": "URL / YouTube",
+    "readSource": "ソースを読む",
+    "sourceRetention": "Source retention",
+    "retention24h": "Keep 24 hours",
+    "retentionKeep": "Keep until I delete the notebook"
   },
   "generation": {
     "eyebrow": "デッキ作成中",
@@ -524,5 +528,54 @@
   "streak": {
     "label": "Streak {count}",
     "title": "{count}-day streak. Longest: {longest}."
+  },
+  "studio": {
+    "eyebrow": "スタジオ",
+    "title": "このソースから生成",
+    "subtitle": "同じノートから3つの学習ツール。再生成すると上書きされます。",
+    "mindmap": "マインドマップ",
+    "notes": "学習ノート",
+    "exam": "試験問題",
+    "generate": "生成",
+    "regenerate": "再生成",
+    "generating": "作成中…",
+    "noSource": "ソースが削除されています。新しくノートを作ってください。",
+    "examOptions": "試験の設定",
+    "questionCount": "問題数",
+    "difficulty": "難易度",
+    "beginner": "初級",
+    "intermediate": "中級",
+    "advanced": "上級",
+    "questions": "問",
+    "takeExam": "試験を受ける",
+    "types": {
+      "long": "記述（長文）",
+      "short": "記述（短文）",
+      "tf": "正誤",
+      "mcq": "選択",
+      "matching": "組み合わせ",
+      "cloze_choice": "穴埋め（選択肢あり）",
+      "cloze_free": "穴埋め（記述）"
+    }
+  },
+  "exam": {
+    "eyebrow": "試験問題",
+    "subtitle": "全問に答えて提出すると、AIが採点とフィードバックをします。",
+    "back": "ノートに戻る",
+    "submit": "採点する",
+    "marking": "採点中…",
+    "marked": "採点済み",
+    "tryAgain": "もう一度",
+    "marks": "点",
+    "choose": "選ぶ",
+    "types": {
+      "long": "記述（長文）",
+      "short": "記述（短文）",
+      "tf": "正誤",
+      "mcq": "選択",
+      "matching": "組み合わせ",
+      "cloze_choice": "穴埋め（選択肢あり）",
+      "cloze_free": "穴埋め（記述）"
+    }
   }
 }

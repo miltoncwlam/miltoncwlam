@@ -4,7 +4,7 @@
   },
   "nav": {
     "myDecks": "Mis mazos",
-    "createDeck": "Crear mazo",
+    "createDeck": "Crear cuaderno",
     "signIn": "Iniciar sesión",
     "signUp": "Registrarse",
     "signOut": "Cerrar sesión",
@@ -37,11 +37,11 @@
   },
   "decks": {
     "eyebrow": "Tu biblioteca",
-    "title": "Mazos de flashcards",
-    "subtitle": "Crea, estudia y comparte tarjetas con IA.",
-    "newDeck": "Nuevo mazo",
-    "emptyTitle": "Crea tu primer mazo",
-    "emptyBody": "Pega apuntes, sube un archivo o prueba el mazo de ejemplo.",
+    "title": "Cuadernos",
+    "subtitle": "Lee la fuente una vez y genera un mapa mental, apuntes o un examen.",
+    "newDeck": "Nuevo cuaderno",
+    "emptyTitle": "Crea tu primer cuaderno",
+    "emptyBody": "Pega apuntes, sube un archivo o empieza con un mazo de ejemplo.",
     "startCreating": "Empezar a crear",
     "sampleDeck": "Crear mazo de ejemplo",
     "ready": "Listo",
@@ -50,14 +50,14 @@
     "shared": "Compartido"
   },
   "create": {
-    "title": "Convierte cualquier cosa en flashcards",
-    "subtitle": "Pega texto o sube PDF, TXT o Markdown.",
+    "title": "Convierte tus notas en un estudio",
+    "subtitle": "Añade un tema, pega texto o sube una fuente. La app la lee y luego puedes generar mapa, apuntes o examen.",
     "topic": "tema",
     "text": "texto",
     "file": "archivo",
     "topicLabel": "Tema o asignatura",
     "topicPlaceholder": "p. ej. Fotosíntesis, Segunda Guerra Mundial, Fracciones",
-    "topicHint": "La IA crea flashcards educativas solo a partir del tema.",
+    "topicHint": "La IA lee el tema y abre un cuaderno para generar materiales desde esa fuente.",
     "uploadNeedsSecret": "Las subidas requieren SUPABASE_SECRET_KEY en .env.local.",
     "titleLabel": "Título del mazo (opcional)",
     "titlePlaceholder": "Biología capítulo 4",
@@ -96,7 +96,11 @@
     "url": "URL",
     "urlLabel": "URL",
     "urlPlaceholder": "https://…",
-    "urlHint": "URL / YouTube"
+    "urlHint": "URL / YouTube",
+    "readSource": "Leer fuente",
+    "sourceRetention": "Source retention",
+    "retention24h": "Keep 24 hours",
+    "retentionKeep": "Keep until I delete the notebook"
   },
   "generation": {
     "eyebrow": "Creando tu mazo",
@@ -524,5 +528,54 @@
   "streak": {
     "label": "Streak {count}",
     "title": "{count}-day streak. Longest: {longest}."
+  },
+  "studio": {
+    "eyebrow": "Estudio",
+    "title": "Generar desde esta fuente",
+    "subtitle": "Las mismas notas, tres herramientas. Volver a generar sustituye el elemento.",
+    "mindmap": "Mapa mental",
+    "notes": "Apuntes",
+    "exam": "Examen",
+    "generate": "Generar",
+    "regenerate": "Volver a generar",
+    "generating": "Escribiendo…",
+    "noSource": "La fuente se borró. Crea un cuaderno nuevo para generar otra vez.",
+    "examOptions": "Opciones del examen",
+    "questionCount": "Número de preguntas",
+    "difficulty": "Dificultad",
+    "beginner": "Inicial",
+    "intermediate": "Intermedio",
+    "advanced": "Avanzado",
+    "questions": "preguntas",
+    "takeExam": "Hacer el examen",
+    "types": {
+      "long": "Pregunta larga",
+      "short": "Pregunta corta",
+      "tf": "Verdadero / Falso",
+      "mcq": "Opción múltiple",
+      "matching": "Emparejar",
+      "cloze_choice": "Hueco con opciones",
+      "cloze_free": "Hueco sin opciones"
+    }
+  },
+  "exam": {
+    "eyebrow": "Examen",
+    "subtitle": "Responde todas las preguntas y envía para corrección e IA.",
+    "back": "Volver al cuaderno",
+    "submit": "Enviar para corrección",
+    "marking": "Corrigiendo…",
+    "marked": "Corregido",
+    "tryAgain": "Intentar de nuevo",
+    "marks": "puntos",
+    "choose": "Elegir",
+    "types": {
+      "long": "Pregunta larga",
+      "short": "Pregunta corta",
+      "tf": "Verdadero / Falso",
+      "mcq": "Opción múltiple",
+      "matching": "Emparejar",
+      "cloze_choice": "Hueco con opciones",
+      "cloze_free": "Hueco sin opciones"
+    }
   }
 }

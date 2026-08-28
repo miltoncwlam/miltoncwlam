@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { estimateGenerationCredits } from "@/lib/credits/estimate-generation";
+import { estimateArtifactCredits } from "@/lib/credits/estimate-generation";
 import {
   LOCALE_CODES,
   LOCALE_LABELS,
@@ -35,7 +35,6 @@ import {
 import type { LLMProvider } from "@/lib/types/flashcard";
 
 type SourceMode = "topic" | "text" | "url" | "file";
-type CreateMode = "flashcards" | "quiz";
 
 type FreeModel = { id: string; name: string };
 
@@ -49,7 +48,7 @@ function friendlyError(message: string, code?: string) {
   if (code === "INSUFFICIENT_CONTENT") {
     return (
       message ||
-      "Not enough usable study content. Add more notes or try a longer source / fewer cards."
+      "Not enough usable study content. Add more notes or try a longer source."
     );
   }
   if (code === "RATE_LIMITED") {
@@ -62,10 +61,10 @@ function friendlyError(message: string, code?: string) {
     return "The page took too long to load. Paste the text or try a shorter URL.";
   }
   if (/failed to fetch|networkerror|load failed/i.test(message)) {
-    return "The connection dropped. Try again with fewer cards or a shorter source.";
+    return "The connection dropped. Try again with a shorter source.";
   }
   if (/expected number|invalid option|invalid input|invalid_type|too_small/i.test(message)) {
-    return "Check the form and try again. Retry needs the same topic, text, or URL.";
+    return "Check the form and try again.";
   }
   return message;
 }
@@ -103,8 +102,6 @@ export function CreateDeckForm({
   const [phase, setPhase] = useState<GenerationPhase>("prepare");
   const [label, setLabel] = useState(tg("preparing"));
   const [openrouterModel, setOpenrouterModel] = useState(DEFAULT_OPENROUTER_MODEL);
-  const [createMode, setCreateMode] = useState<CreateMode>("flashcards");
-  const [cardCountPreview, setCardCountPreview] = useState(10);
   const [topicChars, setTopicChars] = useState(0);
   const [textChars, setTextChars] = useState(0);
   const [fileMeta, setFileMeta] = useState<{ bytes: number; mimeType: string } | null>(
@@ -117,7 +114,7 @@ export function CreateDeckForm({
   const provider: LLMProvider = "openrouter";
   const estimate = useMemo(
     () =>
-      estimateGenerationCredits({
+      estimateArtifactCredits({
         provider: "openrouter",
         modelId: openrouterModel,
         sourceMode: activeMode,
@@ -132,12 +129,11 @@ export function CreateDeckForm({
                     mimeType: fileMeta?.mimeType,
                   }
                 : {},
-        cardCount: cardCountPreview,
+        kind: "ingest",
       }),
-    [openrouterModel, activeMode, topicChars, textChars, fileMeta, cardCountPreview],
+    [openrouterModel, activeMode, topicChars, textChars, fileMeta],
   );
-  const textShort = !energyUnlimited && estimate.textCredits > energyBalance;
-  const overBalance = textShort;
+  const overBalance = !energyUnlimited && estimate.textCredits > energyBalance;
 
   async function uploadFile(file: File) {
     const signedResponse = await fetch("/api/uploads/sign", {
@@ -172,24 +168,15 @@ export function CreateDeckForm({
         sourceType: activeMode,
         title: String(formData.get("title") || "") || undefined,
         provider: "openrouter",
-        cardCount: Number(formData.get("cardCount")) || 10,
-        difficulty: String(formData.get("difficulty") || "beginner"),
         language: String(formData.get("language") || locale),
-        questionStyle:
-          createMode === "quiz"
-            ? "mcq"
-            : String(formData.get("questionStyle") || "mixed"),
-        mode: createMode,
-        sourceRetention: String(formData.get("sourceRetention") || "24h"),
+        sourceRetention: String(formData.get("sourceRetention") || "keep"),
+        model: (formData.get("openrouterModel") as string) || openrouterModel,
       };
-
-      payload.model =
-        (formData.get("openrouterModel") as string) || openrouterModel;
 
       if (activeMode === "topic") {
         payload.topic = String(formData.get("topic") || "");
-        setPhase("generate");
-        setLabel(tg("aiWriting"));
+        setPhase("read");
+        setLabel(tg("readingNotes"));
       } else if (activeMode === "text") {
         payload.content = String(formData.get("content") || "");
         setPhase("read");
@@ -199,9 +186,7 @@ export function CreateDeckForm({
         setPhase("read");
         setLabel(tg("readingSource"));
       } else {
-        if (!canUpload) {
-          throw new Error(t("uploadSecretError"));
-        }
+        if (!canUpload) throw new Error(t("uploadSecretError"));
         if (!(file instanceof File) || !file.size) {
           throw new Error(t("chooseFile"));
         }
@@ -214,21 +199,9 @@ export function CreateDeckForm({
         setLabel(tg("readingSource"));
       }
 
-      if (activeMode !== "topic") {
-        setPhase("generate");
-        setLabel(tg("aiWriting"));
-      }
-
-      let result: {
-        error?: string;
-        deckId?: string;
-        code?: string;
-        refunded?: boolean;
-        cardCount?: number;
-        requestedCardCount?: number;
-      };
+      let result: { error?: string; deckId?: string; code?: string; refunded?: boolean };
       try {
-        const response = await fetch("/api/decks/generate", {
+        const response = await fetch("/api/notebooks", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -237,25 +210,12 @@ export function CreateDeckForm({
           result = await response.json();
         } catch {
           throw new Error(
-            response.ok
-              ? "Generation failed"
-              : `Generation failed (${response.status})`,
+            response.ok ? "Could not read source" : `Read failed (${response.status})`,
           );
         }
         if (!response.ok) {
-          if (result.code === "UNRELATED_SOURCE") {
-            throw new Error(t("unrelated"));
-          }
-          if (result.code === "INSUFFICIENT_CONTENT") {
-            throw new Error(t("insufficient"));
-          }
-          const base = friendlyError(
-            result.error || "Generation failed",
-            result.code,
-          );
-          throw new Error(
-            result.refunded ? `${base} Energy was refunded.` : base,
-          );
+          const base = friendlyError(result.error || "Could not read source", result.code);
+          throw new Error(result.refunded ? `${base} Energy was refunded.` : base);
         }
       } catch (fetchError) {
         if (fetchError instanceof TypeError) {
@@ -268,23 +228,14 @@ export function CreateDeckForm({
       setLabel(tg("saving"));
       await new Promise((resolve) => window.setTimeout(resolve, 250));
       setPhase("done");
-      const got = result.cardCount;
-      const want = (result.requestedCardCount ?? Number(payload.cardCount)) || 10;
-      if (got && got < want) {
-        setLabel(tg("shortfall", { got, want }));
-        await new Promise((resolve) => window.setTimeout(resolve, 1400));
-      } else {
-        setLabel(tg("doneTitle"));
-        await new Promise((resolve) => window.setTimeout(resolve, 700));
-      }
+      setLabel(tg("doneTitle"));
+      await new Promise((resolve) => window.setTimeout(resolve, 500));
       router.push(`/decks/${result.deckId}`);
       router.refresh();
     } catch (caught) {
       setPending(false);
       setError(
-        caught instanceof Error
-          ? friendlyError(caught.message)
-          : "Generation failed",
+        caught instanceof Error ? friendlyError(caught.message) : "Could not read source",
       );
     }
   }
@@ -364,32 +315,10 @@ export function CreateDeckForm({
           </p>
         ) : null}
 
-        <div className="grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-2">
-          {(
-            [
-              { value: "flashcards" as const, label: t("modeFlashcards") },
-              { value: "quiz" as const, label: t("modeQuiz") },
-            ] as const
-          ).map((entry) => (
-            <button
-              className={`rounded-xl px-3 py-3 text-sm font-bold ${
-                createMode === entry.value
-                  ? "bg-background text-primary shadow"
-                  : "text-muted-foreground"
-              }`}
-              disabled={pending}
-              key={entry.value}
-              onClick={() => setCreateMode(entry.value)}
-              type="button"
-            >
-              {entry.label}
-            </button>
-          ))}
-        </div>
         <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
           {t("energyCost", { cost: estimate.textCredits })}
         </p>
-        {textShort ? (
+        {overBalance ? (
           <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-900">
             {t("energyShort", {
               need: estimate.textCredits,
@@ -399,16 +328,15 @@ export function CreateDeckForm({
         ) : null}
 
         <div className="space-y-2">
-          <Label>Source retention</Label>
+          <Label>{t("sourceRetention")}</Label>
           <select
             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-            defaultValue="24h"
+            defaultValue="keep"
             disabled={pending}
             name="sourceRetention"
           >
-            <option value="none">Clear immediately (privacy)</option>
-            <option value="24h">Keep 24 hours (allows regenerate)</option>
-            <option value="keep">Keep until I delete the deck</option>
+            <option value="24h">{t("retention24h")}</option>
+            <option value="keep">{t("retentionKeep")}</option>
           </select>
         </div>
 
@@ -532,51 +460,6 @@ export function CreateDeckForm({
             <input name="provider" type="hidden" value={provider} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="cardCount">{t("cardCount")}</Label>
-            <Input
-              defaultValue={10}
-              disabled={pending}
-              id="cardCount"
-              max={30}
-              min={3}
-              name="cardCount"
-              onChange={(event) =>
-                setCardCountPreview(Number(event.target.value) || 8)
-              }
-              type="number"
-            />
-          </div>
-          {createMode === "flashcards" ? (
-            <div className="space-y-2">
-              <Label>{t("questionStyle")}</Label>
-              <select
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                defaultValue="mixed"
-                disabled={pending}
-                name="questionStyle"
-              >
-                <option value="mixed">{t("styleMixed")}</option>
-                <option value="qa">{t("styleQa")}</option>
-                <option value="definition">{t("styleDefinition")}</option>
-                <option value="cloze">{t("styleCloze")}</option>
-                <option value="mcq">{t("styleMcq")}</option>
-              </select>
-            </div>
-          ) : null}
-          <div className="space-y-2">
-            <Label>{t("difficulty")}</Label>
-            <select
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-              defaultValue="beginner"
-              disabled={pending}
-              name="difficulty"
-            >
-              <option value="beginner">{t("beginner")}</option>
-              <option value="intermediate">{t("intermediate")}</option>
-              <option value="advanced">{t("advanced")}</option>
-            </select>
-          </div>
-          <div className="space-y-2">
             <Label>{t("language")}</Label>
             <select
               className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
@@ -592,14 +475,9 @@ export function CreateDeckForm({
             </select>
           </div>
         </div>
-        {createMode === "quiz" ? (
-          <p className="rounded-xl border border-border bg-secondary px-3 py-3 text-sm text-secondary-foreground">
-            {t("quizModeNote")}
-          </p>
-        ) : null}
 
         <Button className="w-full" disabled={pending || overBalance} type="submit">
-          {t("generate")}
+          {t("readSource")}
         </Button>
       </form>
     </>

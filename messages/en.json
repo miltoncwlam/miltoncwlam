@@ -5,7 +5,7 @@
   "nav": {
     "myDecks": "My decks",
     "community": "Community",
-    "createDeck": "Create deck",
+    "createDeck": "Create notebook",
     "signIn": "Sign in",
     "signUp": "Sign up",
     "signOut": "Sign out",
@@ -25,7 +25,6 @@
     "continue": "Sign in",
     "createAccount": "Create account",
     "agree": "By continuing, you agree to our <terms>Terms</terms> and <privacy>Privacy Policy</privacy>.",
-    "agree": "By continuing, you agree to our <terms>Terms</terms> and <privacy>Privacy Policy</privacy>.",
     "authNote": "Sign in with email through Clerk. You can create an account yourself."
   },
   "auth": {
@@ -38,10 +37,10 @@
   },
   "decks": {
     "eyebrow": "Your library",
-    "title": "Flashcard decks",
-    "subtitle": "Create, study, and share AI-powered cards.",
-    "newDeck": "New deck",
-    "emptyTitle": "Create your first deck",
+    "title": "Notebooks",
+    "subtitle": "Read a source once, then generate a mind map, study notes, or an exam paper.",
+    "newDeck": "New notebook",
+    "emptyTitle": "Create your first notebook",
     "emptyBody": "Paste notes, upload a document, or start with sample cards.",
     "startCreating": "Start creating",
     "sampleDeck": "Create sample deck",
@@ -51,15 +50,15 @@
     "shared": "Shared"
   },
   "create": {
-    "title": "Turn anything into flashcards",
-    "subtitle": "Enter a topic, paste text, or upload a PDF, TXT, or Markdown source. Or create a sample deck to try study and sharing without an LLM key.",
+    "title": "Turn notes into a study studio",
+    "subtitle": "Add a topic, paste text, or upload a source. The app reads it, then you generate a mind map, study notes, or an exam paper.",
     "topic": "topic",
     "text": "text",
     "url": "URL",
     "file": "file",
     "topicLabel": "Topic or subject",
     "topicPlaceholder": "e.g. Photosynthesis, World War II, Basic fractions",
-    "topicHint": "AI will create educational flashcards from the topic alone — no notes required.",
+    "topicHint": "AI will read the topic and open a notebook you can generate from — no notes required.",
     "urlLabel": "Page or YouTube URL",
     "urlPlaceholder": "https://… or YouTube link",
     "urlHint": "We fetch readable text or captions (private networks blocked).",
@@ -91,7 +90,11 @@
     "beginner": "Beginner",
     "intermediate": "Intermediate",
     "advanced": "Advanced",
-    "language": "Card language",
+    "language": "Language",
+    "readSource": "Read source",
+    "sourceRetention": "Source retention",
+    "retention24h": "Keep 24 hours",
+    "retentionKeep": "Keep until I delete the notebook",
     "generate": "Generate flashcards",
     "noProviders": "Add OPENROUTER_API_KEY before creating an AI deck. File uploads also need SUPABASE_SECRET_KEY. You can still use Create sample deck to try study and sharing.",
     "chooseFile": "Choose a file to continue",
@@ -100,8 +103,8 @@
     "insufficient": "Not enough usable study content for that many cards. Add more notes or try fewer cards."
   },
   "generation": {
-    "eyebrow": "Creating your deck",
-    "doneTitle": "Deck ready",
+    "eyebrow": "Creating your notebook",
+    "doneTitle": "Notebook ready",
     "shortfall": "Asked for {want} cards, got {got}. Opening what we could make.",
     "errorTitle": "Generation stopped",
     "retry": "Retry",
@@ -521,6 +524,55 @@
       "needCards": "Need at least 4 cards.",
       "needChips": "Need 4 short play terms (not essays).",
       "needBins": "Need two labelled groups with two cards each."
+    }
+  },
+  "studio": {
+    "eyebrow": "Studio",
+    "title": "Generate from this source",
+    "subtitle": "Same notes, three study tools. Generate again to replace an item.",
+    "mindmap": "Mind map",
+    "notes": "Study notes",
+    "exam": "Exam paper",
+    "generate": "Generate",
+    "regenerate": "Regenerate",
+    "generating": "Writing…",
+    "noSource": "Source was cleared. Create a new notebook to generate again.",
+    "examOptions": "Exam options",
+    "questionCount": "Number of questions",
+    "difficulty": "Difficulty",
+    "beginner": "Beginner",
+    "intermediate": "Intermediate",
+    "advanced": "Advanced",
+    "questions": "questions",
+    "takeExam": "Take exam",
+    "types": {
+      "long": "Long question",
+      "short": "Short question",
+      "tf": "True / False",
+      "mcq": "Multiple choice",
+      "matching": "Matching",
+      "cloze_choice": "Cloze with choices",
+      "cloze_free": "Cloze without choices"
+    }
+  },
+  "exam": {
+    "eyebrow": "Exam paper",
+    "subtitle": "Answer every question, then submit for AI marking and feedback.",
+    "back": "Back to notebook",
+    "submit": "Submit for marking",
+    "marking": "Marking…",
+    "marked": "Marked",
+    "tryAgain": "Try again",
+    "marks": "marks",
+    "choose": "Choose",
+    "types": {
+      "long": "Long question",
+      "short": "Short question",
+      "tf": "True / False",
+      "mcq": "Multiple choice",
+      "matching": "Matching",
+      "cloze_choice": "Cloze with choices",
+      "cloze_free": "Cloze without choices"
     }
   },
   "streak": {

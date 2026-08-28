@@ -34,7 +34,11 @@ export function DeckCard({ deck }: { deck: DeckSummary }) {
       </div>
       <div className="deck-card-meta">
         <span>
-          {deck.cardCount} cards
+          {deck.cardCount
+            ? `${deck.cardCount} cards`
+            : deck.artifactKinds?.length
+              ? deck.artifactKinds.join(" · ")
+              : "Notebook"}
           {deck.folderTag ? ` · ${deck.folderTag}` : ""}
           {deck.archivedAt ? " · Archived" : ""}
         </span>

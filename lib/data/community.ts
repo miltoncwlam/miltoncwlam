@@ -101,6 +101,7 @@ export async function listPublicCommunityDecks(input?: {
       createdAt: deck.createdAt,
       updatedAt: deck.updatedAt,
       cardCount: Number(row.card_count),
+      artifactKinds: [],
       isSeed: deck.isSeed,
       isFeatured: Boolean(row.is_featured),
       likeCount: Number(row.like_count ?? 0),

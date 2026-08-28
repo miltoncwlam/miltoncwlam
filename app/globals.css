@@ -3221,6 +3221,46 @@ html[data-theme="dark"] .play-lantern-text {
 .play-mosaic-paddle.is-hot-2 { left: 24%; }
 .play-mosaic-paddle.is-hot-3 { left: 74%; }
 
+.studio-panel {
+  border-radius: 1.5rem;
+  border: 1px solid var(--border);
+  background: var(--paper);
+  padding: 1.4rem;
+}
+
+.studio-tile {
+  text-align: left;
+  border-radius: 1.15rem;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  padding: 1.1rem;
+}
+
+.studio-tile:disabled {
+  opacity: 0.55;
+}
+
+.mindmap-tree ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 1rem;
+  border-left: 2px solid var(--border);
+}
+
+.mindmap-tree > ul {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.mindmap-branch summary,
+.mindmap-leaf {
+  margin: 0.35rem 0;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.75rem;
+  background: var(--surface-soft);
+  font-weight: 600;
+}
+
 .account-tutorial {
   position: fixed;
   inset: 0;

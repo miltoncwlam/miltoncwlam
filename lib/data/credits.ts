@@ -380,7 +380,14 @@ export async function assertGenerateRateLimit(
      from credit_ledger
      where user_id = $1
        and pool = 'text'
-       and reason in ('generate_deck', 'generate_quiz')
+       and reason in (
+         'generate_deck',
+         'generate_quiz',
+         'generate_ingest',
+         'generate_mindmap',
+         'generate_notes',
+         'generate_exam'
+       )
        and created_at > now() - ($2::text || ' milliseconds')::interval`,
     [userId, String(GENERATE_RATE_LIMIT_WINDOW_MS)],
   );
@@ -397,7 +404,14 @@ export async function assertGenerateRateLimit(
        from credit_ledger
        where user_id = $1
          and pool = 'text'
-         and reason in ('generate_deck', 'generate_quiz')
+         and reason in (
+         'generate_deck',
+         'generate_quiz',
+         'generate_ingest',
+         'generate_mindmap',
+         'generate_notes',
+         'generate_exam'
+       )
          and created_at > now() - interval '1 day'`,
       [userId],
     );

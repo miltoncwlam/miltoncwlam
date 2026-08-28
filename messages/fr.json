@@ -4,7 +4,7 @@
   },
   "nav": {
     "myDecks": "Mes paquets",
-    "createDeck": "Créer un paquet",
+    "createDeck": "Créer un carnet",
     "signIn": "Connexion",
     "signUp": "Inscription",
     "signOut": "Déconnexion",
@@ -37,11 +37,11 @@
   },
   "decks": {
     "eyebrow": "Votre bibliothèque",
-    "title": "Paquets de flashcards",
-    "subtitle": "Créez, étudiez et partagez des cartes IA.",
-    "newDeck": "Nouveau paquet",
-    "emptyTitle": "Créez votre premier paquet",
-    "emptyBody": "Collez des notes, importez un fichier ou essayez l’exemple.",
+    "title": "Carnets",
+    "subtitle": "Lisez la source une fois, puis générez une carte mentale, des notes ou un examen.",
+    "newDeck": "Nouveau carnet",
+    "emptyTitle": "Créez votre premier carnet",
+    "emptyBody": "Collez des notes, importez un fichier, ou commencez avec un paquet d’exemple.",
     "startCreating": "Commencer",
     "sampleDeck": "Créer un paquet d’exemple",
     "ready": "Prêt",
@@ -50,14 +50,14 @@
     "shared": "Partagé"
   },
   "create": {
-    "title": "Transformez tout en flashcards",
-    "subtitle": "Collez du texte ou importez PDF, TXT ou Markdown.",
+    "title": "Transformez vos notes en studio",
+    "subtitle": "Ajoutez un sujet, du texte ou un fichier. L’app le lit, puis vous générez carte mentale, notes ou examen.",
     "topic": "sujet",
     "text": "texte",
     "file": "fichier",
     "topicLabel": "Sujet ou matière",
     "topicPlaceholder": "ex. Photosynthèse, Seconde Guerre mondiale, Fractions",
-    "topicHint": "L’IA crée des flashcards éducatives à partir du sujet seul.",
+    "topicHint": "L’IA lit le sujet et ouvre un carnet pour générer des supports à partir de cette source.",
     "uploadNeedsSecret": "Les imports nécessitent SUPABASE_SECRET_KEY dans .env.local.",
     "titleLabel": "Titre du paquet (optionnel)",
     "titlePlaceholder": "Biologie chapitre 4",
@@ -96,7 +96,11 @@
     "url": "URL",
     "urlLabel": "URL",
     "urlPlaceholder": "https://…",
-    "urlHint": "URL / YouTube"
+    "urlHint": "URL / YouTube",
+    "readSource": "Lire la source",
+    "sourceRetention": "Source retention",
+    "retention24h": "Keep 24 hours",
+    "retentionKeep": "Keep until I delete the notebook"
   },
   "generation": {
     "eyebrow": "Création du paquet",
@@ -524,5 +528,54 @@
   "streak": {
     "label": "Streak {count}",
     "title": "{count}-day streak. Longest: {longest}."
+  },
+  "studio": {
+    "eyebrow": "Studio",
+    "title": "Générer à partir de cette source",
+    "subtitle": "Les mêmes notes, trois outils. Régénérer remplace l’élément.",
+    "mindmap": "Carte mentale",
+    "notes": "Notes d’étude",
+    "exam": "Examen",
+    "generate": "Générer",
+    "regenerate": "Régénérer",
+    "generating": "Rédaction…",
+    "noSource": "La source a été effacée. Créez un nouveau carnet pour générer à nouveau.",
+    "examOptions": "Options de l’examen",
+    "questionCount": "Nombre de questions",
+    "difficulty": "Difficulté",
+    "beginner": "Débutant",
+    "intermediate": "Intermédiaire",
+    "advanced": "Avancé",
+    "questions": "questions",
+    "takeExam": "Passer l’examen",
+    "types": {
+      "long": "Question longue",
+      "short": "Question courte",
+      "tf": "Vrai / Faux",
+      "mcq": "QCM",
+      "matching": "Appariement",
+      "cloze_choice": "Texte à trous (choix)",
+      "cloze_free": "Texte à trous (saisie)"
+    }
+  },
+  "exam": {
+    "eyebrow": "Examen",
+    "subtitle": "Répondez à toutes les questions, puis envoyez pour notation et retour IA.",
+    "back": "Retour au carnet",
+    "submit": "Envoyer pour notation",
+    "marking": "Notation…",
+    "marked": "Noté",
+    "tryAgain": "Réessayer",
+    "marks": "points",
+    "choose": "Choisir",
+    "types": {
+      "long": "Question longue",
+      "short": "Question courte",
+      "tf": "Vrai / Faux",
+      "mcq": "QCM",
+      "matching": "Appariement",
+      "cloze_choice": "Texte à trous (choix)",
+      "cloze_free": "Texte à trous (saisie)"
+    }
   }
 }

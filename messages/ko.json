@@ -4,7 +4,7 @@
   },
   "nav": {
     "myDecks": "내 덱",
-    "createDeck": "덱 만들기",
+    "createDeck": "노트북 만들기",
     "signIn": "로그인",
     "signUp": "가입",
     "signOut": "로그아웃",
@@ -37,11 +37,11 @@
   },
   "decks": {
     "eyebrow": "라이브러리",
-    "title": "플래시카드 덱",
-    "subtitle": "AI 카드를 만들고 공부하고 공유하세요.",
-    "newDeck": "새 덱",
-    "emptyTitle": "첫 덱 만들기",
-    "emptyBody": "노트를 붙이거나 파일을 올리거나 샘플로 시작하세요.",
+    "title": "노트북",
+    "subtitle": "자료를 한 번 읽은 뒤 마인드맵, 학습 노트, 시험지를 만듭니다.",
+    "newDeck": "새 노트북",
+    "emptyTitle": "첫 노트북 만들기",
+    "emptyBody": "노트를 붙이거나 파일을 올리거나, 샘플 덱으로 시작해 보세요.",
     "startCreating": "만들기 시작",
     "sampleDeck": "샘플 덱 만들기",
     "ready": "완료",
@@ -50,14 +50,14 @@
     "shared": "공유됨"
   },
   "create": {
-    "title": "무엇이든 플래시카드로",
-    "subtitle": "텍스트를 붙이거나 PDF/TXT/Markdown을 업로드하세요.",
+    "title": "노트를 학습 스튜디오로",
+    "subtitle": "주제, 텍스트, 파일을 추가하세요. 읽은 뒤 마인드맵, 학습 노트, 시험지를 만들 수 있습니다.",
     "topic": "주제",
     "text": "텍스트",
     "file": "파일",
     "topicLabel": "주제 또는 과목",
     "topicPlaceholder": "예: 광합성, 제2차 세계대전, 분수 기초",
-    "topicHint": "주제만 입력하면 AI가 학습용 플래시카드를 만듭니다.",
+    "topicHint": "AI가 주제를 읽고 같은 자료에서 학습 도구를 만들 수 있는 노트북을 엽니다.",
     "uploadNeedsSecret": "파일 업로드는 .env.local의 SUPABASE_SECRET_KEY가 필요합니다.",
     "titleLabel": "덱 제목(선택)",
     "titlePlaceholder": "생물 4장",
@@ -96,7 +96,11 @@
     "url": "URL",
     "urlLabel": "URL",
     "urlPlaceholder": "https://…",
-    "urlHint": "URL / YouTube"
+    "urlHint": "URL / YouTube",
+    "readSource": "자료 읽기",
+    "sourceRetention": "Source retention",
+    "retention24h": "Keep 24 hours",
+    "retentionKeep": "Keep until I delete the notebook"
   },
   "generation": {
     "eyebrow": "덱 만드는 중",
@@ -524,5 +528,54 @@
   "streak": {
     "label": "Streak {count}",
     "title": "{count}-day streak. Longest: {longest}."
+  },
+  "studio": {
+    "eyebrow": "스튜디오",
+    "title": "이 자료에서 생성",
+    "subtitle": "같은 노트로 세 가지 학습 도구. 다시 생성하면 덮어씁니다.",
+    "mindmap": "마인드맵",
+    "notes": "학습 노트",
+    "exam": "시험지",
+    "generate": "생성",
+    "regenerate": "다시 생성",
+    "generating": "작성 중…",
+    "noSource": "자료가 삭제되었습니다. 새 노트북을 만드세요.",
+    "examOptions": "시험 옵션",
+    "questionCount": "문항 수",
+    "difficulty": "난이도",
+    "beginner": "초급",
+    "intermediate": "중급",
+    "advanced": "고급",
+    "questions": "문항",
+    "takeExam": "시험 보기",
+    "types": {
+      "long": "서술형(장문)",
+      "short": "서술형(단답)",
+      "tf": "참/거짓",
+      "mcq": "객관식",
+      "matching": "짝짓기",
+      "cloze_choice": "빈칸(선택지)",
+      "cloze_free": "빈칸(직접 입력)"
+    }
+  },
+  "exam": {
+    "eyebrow": "시험지",
+    "subtitle": "모든 문항에 답한 뒤 제출하면 AI가 채점하고 피드백을 줍니다.",
+    "back": "노트북으로",
+    "submit": "채점하기",
+    "marking": "채점 중…",
+    "marked": "채점됨",
+    "tryAgain": "다시 시도",
+    "marks": "점",
+    "choose": "선택",
+    "types": {
+      "long": "서술형(장문)",
+      "short": "서술형(단답)",
+      "tf": "참/거짓",
+      "mcq": "객관식",
+      "matching": "짝짓기",
+      "cloze_choice": "빈칸(선택지)",
+      "cloze_free": "빈칸(직접 입력)"
+    }
   }
 }

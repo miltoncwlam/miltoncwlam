@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ClassLinkControls } from "@/components/class-link-controls";
 import { CommunityVisibilityControls } from "@/components/community-visibility-controls";
 import { DeckLibraryControls } from "@/components/deck-library-controls";
+import { NotebookStudio } from "@/components/notebook-studio";
 import { ShareControls } from "@/components/share-controls";
 import {
   deleteDeckAction,
@@ -12,9 +13,11 @@ import {
 } from "@/lib/actions/decks";
 import { requireSession } from "@/lib/auth-server";
 import { listClassLinksForDeck } from "@/lib/data/class-links";
+import { listDeckArtifacts } from "@/lib/data/artifacts";
 import { getDeckWithCards } from "@/lib/data/decks";
 import { env } from "@/lib/env";
 import { TOPIC_SOURCE_MIME } from "@/lib/llm/generate-flashcards";
+import type { ExamPayload, MindmapPayload, NotesPayload } from "@/lib/types/notebook";
 
 export default async function DeckDetailPage({
   params,
@@ -32,6 +35,11 @@ export default async function DeckDetailPage({
   const classLinks = canStudy
     ? await listClassLinksForDeck(deck.id, session.user.id)
     : [];
+  const artifacts = await listDeckArtifacts(deck.id);
+  const notes = artifacts.find((item) => item.kind === "notes");
+  const mindmap = artifacts.find((item) => item.kind === "mindmap");
+  const exam = artifacts.find((item) => item.kind === "exam");
+  const hasSource = Boolean(deck.sourceContent || deck.storagePath);
   const canRegenerate = Boolean(
     deck.generationProvider &&
       (deck.sourceContent || deck.storagePath),
@@ -49,8 +57,10 @@ export default async function DeckDetailPage({
           <p className="eyebrow">{sourceLabel} source</p>
           <h1 className="page-title">{deck.title}</h1>
           <p className="page-subtitle">
-            {deck.cards.length} cards · {deck.generationProvider ?? "sample"} ·{" "}
-            {deck.generationStatus}
+            {deck.cards.length} cards
+            {artifacts.length ? ` · ${artifacts.length} studio items` : ""}
+            {" · "}
+            {deck.generationProvider ?? "sample"} · {deck.generationStatus}
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -113,20 +123,30 @@ export default async function DeckDetailPage({
         </section>
       ) : null}
 
-      {!isFailed && isEmpty ? (
+      {!isFailed ? (
+        <div className="mt-10">
+          <NotebookStudio
+            deckId={deck.id}
+            exam={exam ? (exam.payload as ExamPayload) : null}
+            hasSource={hasSource}
+            mindmap={mindmap ? (mindmap.payload as MindmapPayload) : null}
+            notes={notes ? (notes.payload as NotesPayload) : null}
+          />
+        </div>
+      ) : null}
+
+      {!isFailed && isEmpty && !hasSource ? (
         <p className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
-          This deck has no cards yet.{" "}
-          {deck.generationStatus === "processing"
-            ? "Generation is still running — refresh in a moment."
-            : "Try regenerating or create a sample deck instead."}
+          This notebook has no source yet. Create a new notebook from a topic, notes, URL, or file.
         </p>
       ) : null}
 
       <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_320px]">
         <section className="space-y-4">
-          <h2 className="text-xl font-black">Review and edit cards</h2>
           {deck.cards.length ? (
-            deck.cards.map((card, index) => (
+            <>
+              <h2 className="text-xl font-black">Review and edit cards</h2>
+              {deck.cards.map((card, index) => (
               <form
                 action={updateCardAction}
                 className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
@@ -180,7 +200,8 @@ export default async function DeckDetailPage({
                   Save card
                 </button>
               </form>
-            ))
+              ))}
+            </>
           ) : (
             <p className="rounded-2xl border border-dashed border-slate-300 p-6 text-slate-500">
               No cards to review yet.

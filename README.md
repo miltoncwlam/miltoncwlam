@@ -5,7 +5,8 @@ Turn notes, PDFs, and photos into interactive flashcards. Built with **Next.js 1
 ## Features
 
 - Auth via **Clerk** (email sign-in and other methods you enable in the Clerk dashboard)
-- Create decks from pasted text, URL/YouTube, PDF, TXT/Markdown, or JPG/PNG
+- Create notebooks from pasted text, URL/YouTube, PDF, TXT/Markdown, or a topic
+- Generate a **mind map**, **study notes**, or **exam paper** (long/short, T/F, MCQ, matching, cloze) from that source, with AI marking
 - **Sample deck** for testing study/share without an LLM key
 - AI generation via **OpenRouter** (DeepSeek, Qwen, and other catalog models)
 - Collectible-style flip cards with Hard / OK / Easy ratings
@@ -68,7 +69,7 @@ Community seeds stay under `system:study-a-community`.
 
 Weekly energy (default 600) is an in-app text-generation and play allowance, not money, and not cash-out.
 
-- **Generate** spends energy from the token estimate on the create-deck screen.
+- **Generate** (read a source, or write a mind map / notes / exam) spends energy from the estimate on the create and studio screens. Exam marking does not spend extra energy.
 - **Play** on a deck you own costs **20 energy** to start a round. Score **50%+** to get 20 back; **80%+** pays 30; a **perfect** run pays 40. Below 50%, or if you quit before the finish screen, the ante stays spent. At most **10** paid rounds per hour.
 - **Share** and **embed** play is free (read-only). Visitors are not charged.
 - **Class links** copy the deck into the learner’s library; play on that copy uses the learner’s energy. Teachers can lock one activity, limit to due-today cards, and read scores at `/decks/[id]/class`.
@@ -76,7 +77,7 @@ Weekly energy (default 600) is an in-app text-generation and play allowance, not
 
 Optional: set `LLM_DEFAULT_PROVIDER=openrouter` (legacy `openai` / `anthropic` / `google` / `ollama` values also map to OpenRouter). Enable the **Supabase Cursor plugin** for agent access to your project (no extra env vars needed).
 
-Source uploads are deleted after successful generation when you pick “clear immediately”.
+Source is kept for 24 hours or until you delete the notebook (choose on the create screen).
 
 After migrations, seed the community library:
 

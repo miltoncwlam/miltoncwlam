@@ -124,7 +124,7 @@ export function mapCard(card: CardRow): Flashcard {
 }
 
 function toSummary(
-  row: DeckRow & { card_count: string },
+  row: DeckRow & { card_count: string; artifact_kinds?: string[] | null },
 ): DeckSummary {
   const deck = mapDeck(row);
   return {
@@ -142,6 +142,7 @@ function toSummary(
     createdAt: deck.createdAt,
     updatedAt: deck.updatedAt,
     cardCount: Number(row.card_count),
+    artifactKinds: row.artifact_kinds ?? [],
   };
 }
 
@@ -191,6 +192,7 @@ export async function listDecks(
   if (filter === "quiz-ready") {
     clauses.push(`d.archived_at is null`);
     clauses.push(`d.generation_status = 'complete'`);
+    clauses.push(`exists (select 1 from cards c2 where c2.deck_id = d.id)`);
   }
   if (options?.folder?.trim()) {
     values.push(options.folder.trim().toLowerCase());
@@ -204,8 +206,16 @@ export async function listDecks(
         ? `count(c.id) desc, d.updated_at desc`
         : `d.updated_at desc`;
 
-  const result = await pool.query<DeckRow & { card_count: string }>(
-    `select d.*, count(c.id)::text as card_count
+  const result = await pool.query<
+    DeckRow & { card_count: string; artifact_kinds: string[] | null }
+  >(
+    `select d.*, count(c.id)::text as card_count,
+            coalesce(
+              (select array_agg(a.kind)
+               from deck_artifacts a
+               where a.deck_id = d.id and a.generation_status = 'complete'),
+              '{}'
+            ) as artifact_kinds
      from decks d
      left join cards c on c.deck_id = d.id
      where ${clauses.join(" and ")}
@@ -286,15 +296,19 @@ export async function duplicateDeck(
          subject_tag, moderation_status, moderation_reasons, listed_at,
          is_seed, folder_tag, archived_at
        ) values (
-         $1, $2, $3, null, null, null, null, null,
-         $4, $5, $6, null, null, false, 'private',
-         $7, 'none', null, null, false, $8, null
+         $1, $2, $3, $4, null, $5, $6, $7,
+         $8, $9, $10, null, null, false, 'private',
+         $11, 'none', null, null, false, $12, null
        )
        returning id`,
       [
         userId,
         `${deck.title} (copy)`,
         deck.source_type,
+        deck.source_content,
+        deck.source_filename,
+        deck.source_mime_type,
+        deck.source_size_bytes,
         deck.generation_status === "complete" ? "complete" : "failed",
         deck.generation_provider,
         deck.generation_model,
@@ -312,6 +326,14 @@ export async function duplicateDeck(
        from cards
        where deck_id = $1
        order by sort_order, created_at`,
+      [deckId, newId],
+    );
+
+    await client.query(
+      `insert into deck_artifacts (deck_id, kind, payload, generation_status, generation_model)
+       select $2, kind, payload, generation_status, generation_model
+       from deck_artifacts
+       where deck_id = $1`,
       [deckId, newId],
     );
 
@@ -371,6 +393,24 @@ export async function createPendingDeck(input: {
   );
 
   return result.rows[0].id;
+}
+
+export async function completeNotebookIngest(
+  deckId: string,
+  userId: string,
+  generatedTitle: string,
+  sourceContent?: string,
+): Promise<void> {
+  await pool.query(
+    `update decks
+     set title = $3,
+         generation_status = 'complete',
+         generation_error = null,
+         source_content = coalesce($4, source_content),
+         updated_at = now()
+     where id = $1 and user_id = $2`,
+    [deckId, userId, generatedTitle, sourceContent ?? null],
+  );
 }
 
 export async function completeDeckGeneration(

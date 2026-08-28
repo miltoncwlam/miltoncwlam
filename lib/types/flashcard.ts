@@ -131,6 +131,7 @@ export type DeckSummary = Pick<
   | "updatedAt"
 > & {
   cardCount: number;
+  artifactKinds: string[];
 };
 
 export type LibrarySort = "recent" | "title" | "cards";

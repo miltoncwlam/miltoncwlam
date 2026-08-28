@@ -56,6 +56,54 @@ export function estimateOutputTokens(cardCount: number): number {
   return count * 180 + 200;
 }
 
+export type ArtifactEstimateKind = "ingest" | "mindmap" | "notes" | "exam";
+
+export function estimateArtifactOutputTokens(
+  kind: ArtifactEstimateKind,
+  questionCount = 12,
+) {
+  switch (kind) {
+    case "ingest":
+      return 220;
+    case "mindmap":
+      return 900;
+    case "notes":
+      return 1_400;
+    case "exam":
+      return Math.min(30, Math.max(6, questionCount)) * 140 + 200;
+    default:
+      return 800;
+  }
+}
+
+export function estimateArtifactCredits(input: {
+  provider: "openrouter";
+  modelId: string;
+  sourceMode: SourceMode;
+  sourceSize?: SourceSizeHints;
+  kind: ArtifactEstimateKind;
+  questionCount?: number;
+}): GenerationEstimate {
+  const inputTokens = estimateInputTokens(input.sourceMode, input.sourceSize ?? {});
+  const outputTokens = estimateArtifactOutputTokens(
+    input.kind,
+    input.questionCount,
+  );
+  const rates = resolveBillingRates({
+    provider: input.provider,
+    modelId: input.modelId,
+  });
+  const textCredits = creditsFromTokens({ inputTokens, outputTokens }, rates);
+  return {
+    credits: textCredits,
+    textCredits,
+    imageCredits: 0,
+    inputTokens,
+    outputTokens,
+    breakdown: `~${textCredits} energy`,
+  };
+}
+
 export function estimateGenerationCredits(
   input: EstimateGenerationInput,
 ): GenerationEstimate {
