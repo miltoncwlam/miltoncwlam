@@ -40,6 +40,16 @@ export function publicAppUrl() {
   );
 }
 
+/** Same-origin path only — blocks open redirects after sign-in. */
+export function safeAppPath(value: unknown, fallback = "/decks") {
+  if (typeof value !== "string") return fallback;
+  const path = value.trim();
+  if (!path.startsWith("/") || path.startsWith("//") || path.includes("\\")) {
+    return fallback;
+  }
+  return path;
+}
+
 export function withBrowserOrigin(url: string, origin: string) {
   try {
     const parsed = new URL(url);

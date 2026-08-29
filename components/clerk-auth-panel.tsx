@@ -2,11 +2,12 @@
 
 import { SignIn, SignUp } from "@clerk/nextjs";
 
-export function ClerkSignInPanel() {
+export function ClerkSignInPanel({ redirectTo = "/decks" }: { redirectTo?: string }) {
   return (
     <div className="clerk-auth-panel w-full">
       <SignIn
-        fallbackRedirectUrl="/decks"
+        fallbackRedirectUrl={redirectTo}
+        forceRedirectUrl={redirectTo}
         path="/sign-in"
         routing="path"
         signUpUrl="/sign-up"
@@ -15,11 +16,12 @@ export function ClerkSignInPanel() {
   );
 }
 
-export function ClerkSignUpPanel() {
+export function ClerkSignUpPanel({ redirectTo = "/decks" }: { redirectTo?: string }) {
   return (
     <div className="clerk-auth-panel w-full">
       <SignUp
-        fallbackRedirectUrl="/decks"
+        fallbackRedirectUrl={redirectTo}
+        forceRedirectUrl={redirectTo}
         path="/sign-up"
         routing="path"
         signInUrl="/sign-in"

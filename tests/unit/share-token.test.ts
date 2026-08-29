@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   resolvePublicAppUrl,
+  safeAppPath,
   withBrowserOrigin,
 } from "@/lib/app-url";
 import {
@@ -52,5 +53,12 @@ describe("public app urls", () => {
         "https://hkstudya.vercel.app",
       ),
     ).toBe("https://hkstudya.vercel.app/share/abc");
+  });
+
+  it("only allows in-app paths after sign-in", () => {
+    expect(safeAppPath("/decks")).toBe("/decks");
+    expect(safeAppPath("/decks/abc")).toBe("/decks/abc");
+    expect(safeAppPath("https://evil.example/phish")).toBe("/decks");
+    expect(safeAppPath("//evil.example")).toBe("/decks");
   });
 });

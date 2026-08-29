@@ -8,6 +8,7 @@ const isProtectedRoute = createRouteMatcher([
   "/account(.*)",
   "/class(.*)",
   "/api/decks(.*)",
+  "/api/notebooks(.*)",
   "/api/uploads(.*)",
 ]);
 
@@ -16,18 +17,15 @@ export default clerkMiddleware(async (auth, request) => {
     return NextResponse.next();
   }
 
-  const { userId } = await auth();
-  if (userId) {
+  if (request.nextUrl.pathname.startsWith("/api/")) {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.next();
   }
 
-  if (request.nextUrl.pathname.startsWith("/api/")) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const signIn = new URL("/sign-in", request.url);
-  signIn.searchParams.set("next", request.nextUrl.pathname);
-  return NextResponse.redirect(signIn);
+  await auth.protect();
 });
 
 export const config = {

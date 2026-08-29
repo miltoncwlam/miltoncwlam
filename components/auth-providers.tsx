@@ -36,7 +36,12 @@ function clerkAppearance(theme: "light" | "dark"): ClerkAppearance {
 
 export function AuthProviders({ children }: { children: ReactNode }) {
   return (
-    <ClerkProvider appearance={clerkAppearance("light")}>
+    <ClerkProvider
+      afterSignOutUrl="/"
+      appearance={clerkAppearance("light")}
+      signInFallbackRedirectUrl="/decks"
+      signUpFallbackRedirectUrl="/decks"
+    >
       {children}
     </ClerkProvider>
   );
