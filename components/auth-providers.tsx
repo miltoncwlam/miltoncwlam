@@ -38,9 +38,15 @@ export function AuthProviders({ children }: { children: ReactNode }) {
   return (
     <ClerkProvider
       afterSignOutUrl="/"
+      allowedRedirectOrigins={[
+        "http://localhost:3000",
+        "https://hkstudya.vercel.app",
+      ]}
       appearance={clerkAppearance("light")}
       signInFallbackRedirectUrl="/decks"
+      signInUrl="/sign-in"
       signUpFallbackRedirectUrl="/decks"
+      signUpUrl="/sign-up"
     >
       {children}
     </ClerkProvider>
