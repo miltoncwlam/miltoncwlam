@@ -14,7 +14,7 @@ const isProtectedRoute = createRouteMatcher([
 
 export default clerkMiddleware(async (auth, request) => {
   if (!isProtectedRoute(request)) {
-    return NextResponse.next();
+    return;
   }
 
   if (request.nextUrl.pathname.startsWith("/api/")) {
@@ -22,7 +22,7 @@ export default clerkMiddleware(async (auth, request) => {
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    return NextResponse.next();
+    return;
   }
 
   await auth.protect({

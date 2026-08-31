@@ -6,6 +6,9 @@ export function ClerkSignInPanel({ redirectTo = "/decks" }: { redirectTo?: strin
   return (
     <div className="clerk-auth-panel w-full">
       <SignIn
+        fallback={
+          <p className="py-8 text-center text-sm text-slate-500">Loading sign-in…</p>
+        }
         fallbackRedirectUrl={redirectTo}
         forceRedirectUrl={redirectTo}
         path="/sign-in"
@@ -20,6 +23,9 @@ export function ClerkSignUpPanel({ redirectTo = "/decks" }: { redirectTo?: strin
   return (
     <div className="clerk-auth-panel w-full">
       <SignUp
+        fallback={
+          <p className="py-8 text-center text-sm text-slate-500">Loading sign-up…</p>
+        }
         fallbackRedirectUrl={redirectTo}
         forceRedirectUrl={redirectTo}
         path="/sign-up"
