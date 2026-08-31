@@ -10,6 +10,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToastProvider } from "@/components/toast-provider";
 import { getSession } from "@/lib/auth-server";
+import { env } from "@/lib/env";
 import "./globals.css";
 
 const display = Fraunces({
@@ -54,7 +55,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           {`(function(){try{localStorage.setItem("study-a-theme","light");}catch(e){}document.documentElement.dataset.theme="light";})();`}
         </Script>
         <ThemeProvider>
-          <AuthProviders>
+          <AuthProviders appUrl={env.NEXT_PUBLIC_APP_URL}>
             <NextIntlClientProvider locale={locale} messages={messages}>
               <ToastProvider>
                 <AppHeader session={session} />

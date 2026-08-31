@@ -34,19 +34,25 @@ function clerkAppearance(theme: "light" | "dark"): ClerkAppearance {
   };
 }
 
-export function AuthProviders({ children }: { children: ReactNode }) {
+export function AuthProviders({
+  appUrl,
+  children,
+}: {
+  appUrl: string;
+  children: ReactNode;
+}) {
+  const afterAuth = `${appUrl.replace(/\/$/, "")}/decks`;
   return (
     <ClerkProvider
       afterSignOutUrl="/"
       allowedRedirectOrigins={[
         "http://localhost:3000",
         "https://hkstudya.vercel.app",
+        appUrl,
       ]}
       appearance={clerkAppearance("light")}
-      signInFallbackRedirectUrl="/decks"
-      signInUrl="/sign-in"
-      signUpFallbackRedirectUrl="/decks"
-      signUpUrl="/sign-up"
+      signInFallbackRedirectUrl={afterAuth}
+      signUpFallbackRedirectUrl={afterAuth}
     >
       {children}
     </ClerkProvider>

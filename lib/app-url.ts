@@ -50,6 +50,27 @@ export function safeAppPath(value: unknown, fallback = "/decks") {
   return path;
 }
 
+/** Decode pk_test_/pk_live_ into the Clerk Account Portal origin. */
+export function clerkAccountPortalOrigin(publishableKey: string): string {
+  const encoded = publishableKey.replace(/^pk_(?:test|live)_/, "");
+  const padded = encoded + "=".repeat((4 - (encoded.length % 4)) % 4);
+  const decoded = Buffer.from(padded, "base64")
+    .toString("utf8")
+    .replace(/\$$/, "");
+  const host = decoded.replace(/\.clerk\.accounts\.dev$/, ".accounts.dev");
+  return `https://${host}`;
+}
+
+export function clerkHostedAuthUrl(
+  kind: "sign-in" | "sign-up",
+  returnTo: string,
+  publishableKey: string,
+): string {
+  const url = new URL(`/${kind}`, clerkAccountPortalOrigin(publishableKey));
+  url.searchParams.set("redirect_url", returnTo);
+  return url.toString();
+}
+
 export function withBrowserOrigin(url: string, origin: string) {
   try {
     const parsed = new URL(url);

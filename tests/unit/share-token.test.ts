@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  clerkHostedAuthUrl,
   resolvePublicAppUrl,
   safeAppPath,
   withBrowserOrigin,
@@ -60,5 +61,20 @@ describe("public app urls", () => {
     expect(safeAppPath("/decks/abc")).toBe("/decks/abc");
     expect(safeAppPath("https://evil.example/phish")).toBe("/decks");
     expect(safeAppPath("//evil.example")).toBe("/decks");
+  });
+
+  it("sends sign-in to Clerk Account Portal with an absolute return url", () => {
+    const key =
+      "pk_test_" +
+      Buffer.from("premium-fawn-7.clerk.accounts.dev$").toString("base64");
+    expect(
+      clerkHostedAuthUrl(
+        "sign-in",
+        "https://hkstudya.vercel.app/decks",
+        key,
+      ),
+    ).toBe(
+      "https://premium-fawn-7.accounts.dev/sign-in?redirect_url=https%3A%2F%2Fhkstudya.vercel.app%2Fdecks",
+    );
   });
 });
