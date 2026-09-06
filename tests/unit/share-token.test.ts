@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  clerkFrontendProxyUrl,
   clerkHostedAuthUrl,
+  clerkJsScriptUrl,
   resolvePublicAppUrl,
   safeAppPath,
   withBrowserOrigin,
@@ -90,6 +92,18 @@ describe("public app urls", () => {
       ),
     ).toBe(
       "https://accounts.hkstudya.vercel.app/sign-in?redirect_url=http%3A%2F%2Flocalhost%3A3000%2Fdecks",
+    );
+  });
+
+  it("keeps the Clerk proxy on http for localhost", () => {
+    expect(clerkFrontendProxyUrl("https://localhost:3000")).toBe(
+      "http://localhost:3000/__clerk",
+    );
+    expect(clerkJsScriptUrl("http://localhost:3000")).toBe(
+      "http://localhost:3000/__clerk/npm/@clerk/clerk-js@5/dist/clerk.browser.js",
+    );
+    expect(clerkFrontendProxyUrl("https://hkstudya.vercel.app")).toBe(
+      "https://hkstudya.vercel.app/__clerk",
     );
   });
 });

@@ -3,6 +3,8 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { ComponentProps, ReactNode } from "react";
 
+import { clerkFrontendProxyUrl, clerkJsScriptUrl } from "@/lib/app-url";
+
 type ClerkAppearance = NonNullable<
   ComponentProps<typeof ClerkProvider>["appearance"]
 >;
@@ -42,6 +44,7 @@ export function AuthProviders({
   children: ReactNode;
 }) {
   const afterAuth = `${appUrl.replace(/\/$/, "")}/decks`;
+  const proxyUrl = clerkFrontendProxyUrl(appUrl);
   return (
     <ClerkProvider
       afterSignOutUrl="/"
@@ -51,7 +54,9 @@ export function AuthProviders({
         appUrl,
       ]}
       appearance={clerkAppearance("light")}
-      proxyUrl="/__clerk"
+      clerkJSUrl={clerkJsScriptUrl(appUrl)}
+      dynamic
+      proxyUrl={proxyUrl}
       signInFallbackRedirectUrl={afterAuth}
       signUpFallbackRedirectUrl={afterAuth}
     >

@@ -75,6 +75,28 @@ export function clerkHostedAuthUrl(
   return url.toString();
 }
 
+export function clerkAppOrigin(appUrl: string) {
+  try {
+    const url = new URL(appUrl);
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+      url.protocol = "http:";
+    }
+    return url.origin;
+  } catch {
+    return "http://localhost:3000";
+  }
+}
+
+/** Absolute Frontend API proxy. Relative `/__clerk` crashes Clerk SSR (`window is not defined`). */
+export function clerkFrontendProxyUrl(appUrl: string) {
+  return `${clerkAppOrigin(appUrl)}/__clerk`;
+}
+
+/** Clerk always prefixes `https://` unless clerkJSUrl is set; local must stay http. */
+export function clerkJsScriptUrl(appUrl: string) {
+  return `${clerkFrontendProxyUrl(appUrl)}/npm/@clerk/clerk-js@5/dist/clerk.browser.js`;
+}
+
 export function withBrowserOrigin(url: string, origin: string) {
   try {
     const parsed = new URL(url);
