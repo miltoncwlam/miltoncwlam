@@ -4,7 +4,7 @@ import { SignIn, SignUp } from "@clerk/nextjs";
 
 export function ClerkSignInPanel({ redirectTo = "/decks" }: { redirectTo?: string }) {
   return (
-    <div className="clerk-auth-panel w-full">
+    <div className="clerk-auth-panel">
       <SignIn
         fallback={
           <p className="py-8 text-center text-sm text-slate-500">Loading sign-in…</p>
@@ -21,7 +21,7 @@ export function ClerkSignInPanel({ redirectTo = "/decks" }: { redirectTo?: strin
 
 export function ClerkSignUpPanel({ redirectTo = "/decks" }: { redirectTo?: string }) {
   return (
-    <div className="clerk-auth-panel w-full">
+    <div className="clerk-auth-panel">
       <SignUp
         fallback={
           <p className="py-8 text-center text-sm text-slate-500">Loading sign-up…</p>

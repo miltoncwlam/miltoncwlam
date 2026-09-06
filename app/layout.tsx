@@ -59,7 +59,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <NextIntlClientProvider locale={locale} messages={messages}>
               <ToastProvider>
                 <AppHeader session={session} />
-                <div className="flex-1">{children}</div>
+                <div className="flex min-h-0 flex-1 flex-col">{children}</div>
                 <SiteFooter />
               </ToastProvider>
             </NextIntlClientProvider>

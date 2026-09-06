@@ -25,7 +25,10 @@ function clerkAppearance(theme: "light" | "dark"): ClerkAppearance {
       borderRadius: "1.1rem",
     },
     elements: {
-      card: "cl-app-card shadow-none border-2 rounded-3xl",
+      rootBox: "cl-app-root",
+      cardBox: "cl-app-cardBox",
+      card: "cl-app-card",
+      main: "cl-app-main",
       footer: "cl-app-footer",
       socialButtonsIconButton: "cl-app-social",
       formFieldInput: "cl-app-input",

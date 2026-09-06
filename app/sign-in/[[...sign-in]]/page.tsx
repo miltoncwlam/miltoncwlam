@@ -15,7 +15,7 @@ export default async function SignInPage({
   if (userId) redirect(redirectTo);
 
   return (
-    <main className="page-shell max-w-md">
+    <main className="auth-fill">
       <ClerkSignInPanel redirectTo={redirectTo} />
     </main>
   );

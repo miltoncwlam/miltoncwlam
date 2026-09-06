@@ -453,6 +453,49 @@ select {
   padding: 3.5rem 1.25rem 5rem;
 }
 
+.auth-fill {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+
+.auth-fill .clerk-auth-panel {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+}
+
+.auth-fill .clerk-auth-panel > div,
+.auth-fill .cl-rootBox,
+.auth-fill .cl-cardBox,
+.auth-fill .cl-card,
+.auth-fill .cl-app-root,
+.auth-fill .cl-app-cardBox,
+.auth-fill .cl-app-card,
+.auth-fill .cl-main,
+.auth-fill .cl-app-main {
+  width: 100% !important;
+  max-width: none !important;
+  height: 100% !important;
+  min-height: 100%;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.auth-fill .cl-card,
+.auth-fill .cl-app-card {
+  border: 0 !important;
+  justify-content: center;
+}
+
+body:has(.auth-fill) .site-footer {
+  display: none;
+}
+
 .eyebrow {
   font-family: var(--font-display), serif;
   font-size: 0.6875rem;
