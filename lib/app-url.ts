@@ -94,7 +94,8 @@ export function clerkFrontendProxyUrl(appUrl: string) {
 
 /** Clerk always prefixes `https://` unless clerkJSUrl is set; local must stay http. */
 export function clerkJsScriptUrl(appUrl: string) {
-  return `${clerkFrontendProxyUrl(appUrl)}/npm/@clerk/clerk-js@5/dist/clerk.browser.js`;
+  // `v` busts a year-long cache of truncated proxy bodies from older deploys.
+  return `${clerkFrontendProxyUrl(appUrl)}/npm/@clerk/clerk-js@5/dist/clerk.browser.js?v=3.2.4`;
 }
 
 export function withBrowserOrigin(url: string, origin: string) {

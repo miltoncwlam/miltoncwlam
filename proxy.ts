@@ -24,6 +24,7 @@ async function proxyClerkFrontendApi(request: NextRequest, hop = 0): Promise<Nex
   const target = new URL(path + request.nextUrl.search, CLERK_FAPI);
   const headers = new Headers(request.headers);
   headers.delete("host");
+  headers.delete("accept-encoding");
   headers.set("Host", "frontend-api.clerk.dev");
   headers.set("Clerk-Proxy-Url", `${request.nextUrl.origin}/__clerk`);
   headers.set("Clerk-Secret-Key", secret);
@@ -65,9 +66,16 @@ async function proxyClerkFrontendApi(request: NextRequest, hop = 0): Promise<Nex
     }
   }
 
+  // fetch() decompresses gzip/br but leaves Content-Length at the compressed size.
+  // Forwarding that length truncates Clerk JS (~88KB of ~322KB) so window.Clerk never loads.
+  const body = await upstream.arrayBuffer();
   const responseHeaders = new Headers(upstream.headers);
   responseHeaders.delete("content-encoding");
-  return new NextResponse(upstream.body, {
+  responseHeaders.delete("content-length");
+  responseHeaders.delete("transfer-encoding");
+  responseHeaders.delete("set-cookie");
+  responseHeaders.set("content-length", String(body.byteLength));
+  return new NextResponse(body, {
     status: upstream.status,
     headers: responseHeaders,
   });

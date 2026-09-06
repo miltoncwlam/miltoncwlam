@@ -100,7 +100,7 @@ describe("public app urls", () => {
       "http://localhost:3000/__clerk",
     );
     expect(clerkJsScriptUrl("http://localhost:3000")).toBe(
-      "http://localhost:3000/__clerk/npm/@clerk/clerk-js@5/dist/clerk.browser.js",
+      "http://localhost:3000/__clerk/npm/@clerk/clerk-js@5/dist/clerk.browser.js?v=3.2.4",
     );
     expect(clerkFrontendProxyUrl("https://hkstudya.vercel.app")).toBe(
       "https://hkstudya.vercel.app/__clerk",

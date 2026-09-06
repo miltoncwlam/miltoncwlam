@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.2.3** — one number only (`package.json`).
+**Version 3.2.4** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,12 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.2.4 — 2026-09-06
+
+**Miniscule.** Clerk `/__clerk` proxy no longer truncates `clerk.browser.js` (gzip `Content-Length` vs decompressed body). Sign-in can finish loading on https://hkstudya.vercel.app.
 
 ---
 
