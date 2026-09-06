@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.2.0** — one number only (`package.json`).
+**Version 3.2.1** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,12 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.2.1 — 2026-09-06
+
+**Miniscule.** Clerk `/__clerk` proxy follows JS redirects so the sign-in widget can load instead of staying on “Loading sign-in…”.
 
 ---
 

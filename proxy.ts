@@ -14,7 +14,7 @@ const isProtectedRoute = createRouteMatcher([
 
 const CLERK_FAPI = "https://frontend-api.clerk.dev";
 
-async function proxyClerkFrontendApi(request: NextRequest) {
+async function proxyClerkFrontendApi(request: NextRequest, hop = 0): Promise<NextResponse> {
   const secret = process.env.CLERK_SECRET_KEY;
   if (!secret) {
     return NextResponse.json({ error: "Clerk proxy is not configured" }, { status: 500 });
@@ -44,6 +44,27 @@ async function proxyClerkFrontendApi(request: NextRequest) {
   }
 
   const upstream = await fetch(target, init);
+
+  if (hop < 5 && [301, 302, 303, 307, 308].includes(upstream.status)) {
+    const location = upstream.headers.get("location");
+    if (location) {
+      const nextUrl = new URL(location, request.nextUrl.origin);
+      if (nextUrl.hostname === "frontend-api.clerk.dev") {
+        nextUrl.host = request.nextUrl.host;
+        nextUrl.protocol = request.nextUrl.protocol;
+        nextUrl.pathname = nextUrl.pathname.startsWith("/__clerk")
+          ? nextUrl.pathname
+          : `/__clerk${nextUrl.pathname}`;
+      }
+      if (nextUrl.pathname.startsWith("/__clerk")) {
+        return proxyClerkFrontendApi(
+          new NextRequest(nextUrl, { headers: request.headers, method: "GET" }),
+          hop + 1,
+        );
+      }
+    }
+  }
+
   const responseHeaders = new Headers(upstream.headers);
   responseHeaders.delete("content-encoding");
   return new NextResponse(upstream.body, {
