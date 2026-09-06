@@ -16,8 +16,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
-      - run: npm run typecheck
       - run: npm test
         env:
           NODE_ENV: test
           NEXT_PUBLIC_VERCEL_ENV: ""
+      - run: npm run typecheck

@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.1.6** — one number only (`package.json`).
+**Version 3.1.7** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,12 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.1.7 — 2026-09-06
+
+**Miniscule.** `npm run typecheck` runs `next typegen` first so CI does not fail on generated `PageProps` / `LayoutProps`.
 
 ---
 
