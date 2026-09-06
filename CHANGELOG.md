@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.2.1** — one number only (`package.json`).
+**Version 3.2.2** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,12 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.2.2 — 2026-09-06
+
+**Miniscule.** Clerk `proxyUrl` is `/__clerk` (current page origin: `http://localhost:3000` locally). Import `NextRequest` as a value so Vercel typecheck can follow JS 307s.
 
 ---
 

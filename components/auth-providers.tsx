@@ -51,7 +51,7 @@ export function AuthProviders({
         appUrl,
       ]}
       appearance={clerkAppearance("light")}
-      proxyUrl={`${appUrl.replace(/\/$/, "")}/__clerk`}
+      proxyUrl="/__clerk"
       signInFallbackRedirectUrl={afterAuth}
       signUpFallbackRedirectUrl={afterAuth}
     >
