@@ -57,7 +57,11 @@ export function clerkAccountPortalOrigin(publishableKey: string): string {
   const decoded = Buffer.from(padded, "base64")
     .toString("utf8")
     .replace(/\$$/, "");
-  const host = decoded.replace(/\.clerk\.accounts\.dev$/, ".accounts.dev");
+  let host = decoded.replace(/\.clerk\.accounts\.dev$/, ".accounts.dev");
+  // Production FAPI is clerk.example.com; Account Portal is accounts.example.com
+  if (host.startsWith("clerk.") && !host.endsWith(".accounts.dev")) {
+    host = `accounts.${host.slice("clerk.".length)}`;
+  }
   return `https://${host}`;
 }
 

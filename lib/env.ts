@@ -43,7 +43,7 @@ const parsed = envSchema.safeParse(process.env);
 if (!parsed.success) {
   const keys = parsed.error.issues.map((issue) => issue.path.join(".")).join(", ");
   throw new Error(
-    `Missing ${keys}. For Clerk, paste Development API keys (pk_test_ / sk_test_) into .env.local from dashboard.clerk.com.`,
+    `Missing ${keys}. For Clerk, paste API keys (pk_live_ / sk_live_ for production, or pk_test_ / sk_test_ for development) from dashboard.clerk.com.`,
   );
 }
 

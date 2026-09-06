@@ -1,8 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
-import { clerkHostedAuthUrl, publicAppUrl, safeAppPath } from "@/lib/app-url";
-import { env } from "@/lib/env";
+import { ClerkSignInPanel } from "@/components/clerk-auth-panel";
+import { safeAppPath } from "@/lib/app-url";
 
 export default async function SignInPage({
   searchParams,
@@ -14,8 +14,9 @@ export default async function SignInPage({
   const { userId } = await auth();
   if (userId) redirect(redirectTo);
 
-  const returnTo = new URL(redirectTo, publicAppUrl()).toString();
-  redirect(
-    clerkHostedAuthUrl("sign-in", returnTo, env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY),
+  return (
+    <main className="page-shell max-w-md">
+      <ClerkSignInPanel redirectTo={redirectTo} />
+    </main>
   );
 }

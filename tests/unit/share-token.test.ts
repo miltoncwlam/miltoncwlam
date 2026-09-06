@@ -77,4 +77,19 @@ describe("public app urls", () => {
       "https://premium-fawn-7.accounts.dev/sign-in?redirect_url=https%3A%2F%2Fhkstudya.vercel.app%2Fdecks",
     );
   });
+
+  it("sends live keys to the production Account Portal host", () => {
+    const key =
+      "pk_live_" +
+      Buffer.from("clerk.hkstudya.vercel.app$").toString("base64");
+    expect(
+      clerkHostedAuthUrl(
+        "sign-in",
+        "http://localhost:3000/decks",
+        key,
+      ),
+    ).toBe(
+      "https://accounts.hkstudya.vercel.app/sign-in?redirect_url=http%3A%2F%2Flocalhost%3A3000%2Fdecks",
+    );
+  });
 });

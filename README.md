@@ -42,7 +42,7 @@ cp .env.example .env.local
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Settings → API Keys → **Publishable** (`sb_publishable_…`) |
 | `DATABASE_URL` | Connect → Transaction pooler (port 6543). URL-encode special password characters (e.g. `*` → `%2A`) |
 
-Sign-in is **Clerk only**. Add `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` from the [Clerk dashboard](https://dashboard.clerk.com). Enable email sign-in (and Google or others if you want) in Clerk. To open `/admin`, sign in with `ADMIN_BOOTSTRAP_EMAIL` or set that user’s `publicMetadata.role` to `"admin"` in Clerk.
+Sign-in is **Clerk email only** (no Google or other SSO). Add `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` from the [Clerk dashboard](https://dashboard.clerk.com). In Clerk, keep email enabled and turn off every SSO connection. To open `/admin`, sign in with `ADMIN_BOOTSTRAP_EMAIL` or set that user’s `publicMetadata.role` to `"admin"` in Clerk.
 
 Community seeds stay under `system:study-a-community`.
 

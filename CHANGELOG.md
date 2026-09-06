@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.1.7** — one number only (`package.json`).
+**Version 3.2.0** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,12 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.2.0 — 2026-09-06
+
+**Minor.** Email-only Clerk. Production on `*.vercel.app` cannot use `clerk.hkstudya.vercel.app` (connection closed). Sign-in stays on the site; Frontend API is proxied at `/__clerk`.
 
 ---
 

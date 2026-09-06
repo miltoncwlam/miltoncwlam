@@ -18,8 +18,9 @@ const config: CapacitorConfig = {
       "*.clerk.accounts.dev",
       "*.clerk.com",
       "*.accounts.dev",
+      "accounts.hkstudya.vercel.app",
+      "clerk.hkstudya.vercel.app",
       "*.supabase.co",
-      "accounts.google.com",
     ],
   },
   android: {
