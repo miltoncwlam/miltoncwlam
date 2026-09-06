@@ -106,6 +106,7 @@ export async function POST(request: Request) {
   let spentTextAmount = 0;
   let charged = false;
   let storagePath: string | undefined;
+  let model: string | undefined;
 
   try {
     const session = await requireApiSession();
@@ -116,7 +117,9 @@ export async function POST(request: Request) {
     const provider = assertLLMReady(
       (normalizeLLMProvider(input.provider) ?? "openrouter") as LLMProvider,
     );
-    const model = await resolveRequestModel(input.model);
+    const modelId = await resolveRequestModel(input.model);
+    model = modelId;
+    if (!model) throw new Error("Missing model");
     const credits = await getOrRefreshCredits(userId);
     await assertGenerateRateLimit(userId, {
       provider,
@@ -281,7 +284,13 @@ export async function POST(request: Request) {
     return Response.json({ deckId });
   } catch (error) {
     if (error instanceof Response) return error;
-    captureException(error, { deckId, userId, route: "notebooks" });
+    captureException(error, {
+      deckId,
+      userId,
+      route: "notebooks",
+      kind: "ingest",
+      model,
+    });
     const message =
       error instanceof z.ZodError
         ? error.issues[0]?.message ?? "Invalid request"

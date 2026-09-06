@@ -29,15 +29,27 @@ const envSchema = z.object({
   OPENROUTER_FREE_MODEL_BLOCKLIST: z.string().optional(),
   OLLAMA_BASE_URL: optionalSecret,
   OLLAMA_MODEL: z.string().min(1).optional(),
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
-  CLERK_SECRET_KEY: z.string().min(1),
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().min(1),
+  ),
+  CLERK_SECRET_KEY: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().min(1),
+  ),
 });
 
-const parsed = envSchema.parse(process.env);
+const parsed = envSchema.safeParse(process.env);
+if (!parsed.success) {
+  const keys = parsed.error.issues.map((issue) => issue.path.join(".")).join(", ");
+  throw new Error(
+    `Missing ${keys}. For Clerk, paste Development API keys (pk_test_ / sk_test_) into .env.local from dashboard.clerk.com.`,
+  );
+}
 
 export const env = {
-  ...parsed,
+  ...parsed.data,
   NEXT_PUBLIC_APP_URL: publicAppUrl(),
-  supabaseBrowserKey: parsed.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-  supabaseSecretKey: parsed.SUPABASE_SECRET_KEY,
+  supabaseBrowserKey: parsed.data.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  supabaseSecretKey: parsed.data.SUPABASE_SECRET_KEY,
 };

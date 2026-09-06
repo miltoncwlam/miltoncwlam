@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { estimateArtifactOutputTokens } from "@/lib/credits/estimate-generation";
+import { isRetryableGenerateError } from "@/lib/llm/generate-object-retry";
 import {
   gradeExamExact,
   parseExamPayload,
@@ -122,5 +123,16 @@ describe("artifact energy", () => {
     expect(estimateArtifactOutputTokens("exam", 12)).toBeGreaterThan(
       estimateArtifactOutputTokens("ingest"),
     );
+  });
+});
+
+describe("generate retry", () => {
+  it("retries schema errors but not timeouts", () => {
+    expect(isRetryableGenerateError(new Error("too_small"))).toBe(true);
+    expect(isRetryableGenerateError(new Error("NoObjectGenerated"))).toBe(true);
+    expect(isRetryableGenerateError(new Error("This operation was aborted"))).toBe(
+      false,
+    );
+    expect(isRetryableGenerateError(new Error("Unauthorized"))).toBe(false);
   });
 });

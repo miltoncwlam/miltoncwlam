@@ -34,40 +34,11 @@ import {
 } from "@/lib/llm/models";
 import type { LLMProvider } from "@/lib/types/flashcard";
 
+import { friendlyGenerateError } from "@/lib/friendly-generate-error";
+
 type SourceMode = "topic" | "text" | "url" | "file";
 
 type FreeModel = { id: string; name: string };
-
-function friendlyError(message: string, code?: string) {
-  if (code === "UNRELATED_SOURCE") {
-    return (
-      message ||
-      "This source doesn’t look like study material. Paste notes, a lesson, or an article — not random chat or memes."
-    );
-  }
-  if (code === "INSUFFICIENT_CONTENT") {
-    return (
-      message ||
-      "Not enough usable study content. Add more notes or try a longer source."
-    );
-  }
-  if (code === "RATE_LIMITED") {
-    return message || "Too many generates this hour. Wait a bit, then try again.";
-  }
-  if (/too large to read|too large \(max/i.test(message)) {
-    return "That page is too heavy to fetch whole. Paste the article text, or try a shorter URL.";
-  }
-  if (/aborted|timeout/i.test(message)) {
-    return "The page took too long to load. Paste the text or try a shorter URL.";
-  }
-  if (/failed to fetch|networkerror|load failed/i.test(message)) {
-    return "The connection dropped. Try again with a shorter source.";
-  }
-  if (/expected number|invalid option|invalid input|invalid_type|too_small/i.test(message)) {
-    return "Check the form and try again.";
-  }
-  return message;
-}
 
 function catalogLabel(name: string) {
   return name
@@ -214,12 +185,12 @@ export function CreateDeckForm({
           );
         }
         if (!response.ok) {
-          const base = friendlyError(result.error || "Could not read source", result.code);
+          const base = friendlyGenerateError(result.error || "Could not read source", result.code);
           throw new Error(result.refunded ? `${base} Energy was refunded.` : base);
         }
       } catch (fetchError) {
         if (fetchError instanceof TypeError) {
-          throw new Error(friendlyError(fetchError.message));
+          throw new Error(friendlyGenerateError(fetchError.message));
         }
         throw fetchError;
       }
@@ -235,7 +206,7 @@ export function CreateDeckForm({
     } catch (caught) {
       setPending(false);
       setError(
-        caught instanceof Error ? friendlyError(caught.message) : "Could not read source",
+        caught instanceof Error ? friendlyGenerateError(caught.message) : "Could not read source",
       );
     }
   }

@@ -247,6 +247,8 @@ export async function POST(request: Request) {
   let spentImageAmount = 0;
   let charged = false;
 
+  let model: string | undefined;
+
   try {
     const session = await requireApiSession();
     userId = session.user.id;
@@ -254,7 +256,8 @@ export async function POST(request: Request) {
     void purgeFailedGenerations(userId).then(cleanupDiscardedGenerations);
     const input = requestSchema.parse(await request.json());
     const provider = assertLLMReady(resolveRequestProvider(input.provider));
-    const model = await resolveRequestModel(input.model);
+    model = await resolveRequestModel(input.model);
+    if (!model) throw new Error("Missing model");
     const credits = await getOrRefreshCredits(userId);
     await assertGenerateRateLimit(userId, {
       provider,
@@ -526,7 +529,13 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     if (error instanceof Response) return error;
-    captureException(error, { deckId, userId, route: "generate" });
+    captureException(error, {
+      deckId,
+      userId,
+      route: "generate",
+      kind: "cards",
+      model,
+    });
     const refusal =
       error instanceof UnrelatedSourceError ? error.code : undefined;
     const message =

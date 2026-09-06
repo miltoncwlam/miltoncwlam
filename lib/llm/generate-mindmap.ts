@@ -5,6 +5,7 @@ import {
   getOpenRouterClient,
   resolveOpenRouterModel,
 } from "@/lib/llm/config";
+import { generateObjectWithRetry } from "@/lib/llm/generate-object-retry";
 import { mindmapSchema, parseMindmapPayload } from "@/lib/llm/parse-studio";
 import type { MindmapPayload } from "@/lib/types/notebook";
 
@@ -37,11 +38,12 @@ export async function generateMindmap(input: {
   model?: string;
 }): Promise<{ mindmap: MindmapPayload; usage: StudioUsage }> {
   const language = promptLanguageName(input.language ?? "en");
-  const result = await generateObject({
-    model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
-    schema: mindmapSchema,
-    abortSignal: AbortSignal.timeout(45_000),
-    prompt: `Build a study mind map in ${language} as a flat node list.
+  const result = await generateObjectWithRetry(() =>
+    generateObject({
+      model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
+      schema: mindmapSchema,
+      abortSignal: AbortSignal.timeout(45_000),
+      prompt: `Build a study mind map in ${language} as a flat node list.
 Rules:
 - One root node with parentId null (the topic).
 - 3–8 main branches (parentId = root id).
@@ -51,7 +53,8 @@ Rules:
 
 Source:
 ${input.source.slice(0, 24_000)}`,
-  });
+    }),
+  );
   return {
     mindmap: parseMindmapPayload(result.object),
     usage: readUsage(result),

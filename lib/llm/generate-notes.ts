@@ -5,6 +5,7 @@ import {
   getOpenRouterClient,
   resolveOpenRouterModel,
 } from "@/lib/llm/config";
+import { generateObjectWithRetry } from "@/lib/llm/generate-object-retry";
 import { notesSchema, parseNotesPayload } from "@/lib/llm/parse-studio";
 import type { NotesPayload } from "@/lib/types/notebook";
 
@@ -37,18 +38,20 @@ export async function generateNotes(input: {
   model?: string;
 }): Promise<{ notes: NotesPayload; usage: StudioUsage }> {
   const language = promptLanguageName(input.language ?? "en");
-  const result = await generateObject({
-    model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
-    schema: notesSchema,
-    abortSignal: AbortSignal.timeout(45_000),
-    prompt: `Write clear study notes in ${language} from this source.
+  const result = await generateObjectWithRetry(() =>
+    generateObject({
+      model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
+      schema: notesSchema,
+      abortSignal: AbortSignal.timeout(45_000),
+      prompt: `Write clear study notes in ${language} from this source.
 Use markdown: # title, ## headings, bullet lists, and short examples.
 Cover key terms, facts, and how to remember them. No invented facts.
 Do not mention that you are an AI.
 
 Source:
 ${input.source.slice(0, 24_000)}`,
-  });
+    }),
+  );
   return {
     notes: parseNotesPayload(result.object),
     usage: readUsage(result),

@@ -5,6 +5,7 @@ import {
   getOpenRouterClient,
   resolveOpenRouterModel,
 } from "@/lib/llm/config";
+import { generateObjectWithRetry } from "@/lib/llm/generate-object-retry";
 import { examSchema, parseExamPayload } from "@/lib/llm/parse-studio";
 import type { ExamPayload, ExamQuestionType } from "@/lib/types/notebook";
 
@@ -45,11 +46,12 @@ export async function generateExam(input: {
     : (["mcq", "short", "tf"] as ExamQuestionType[]);
   const count = Math.min(24, Math.max(4, input.questionCount));
   const difficulty = input.difficulty ?? "intermediate";
-  const result = await generateObject({
-    model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
-    schema: examSchema,
-    abortSignal: AbortSignal.timeout(50_000),
-    prompt: `Write a ${difficulty} exam paper in ${language} from this source.
+  const result = await generateObjectWithRetry(() =>
+    generateObject({
+      model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
+      schema: examSchema,
+      abortSignal: AbortSignal.timeout(50_000),
+      prompt: `Write a ${difficulty} exam paper in ${language} from this source.
 Exactly ${count} questions. Mix these types: ${types.join(", ")}.
 Type rules:
 - long: extended written answer, marks 4–8, include markScheme.
@@ -63,7 +65,8 @@ Questions must be answerable from the source. No invented facts.
 
 Source:
 ${input.source.slice(0, 24_000)}`,
-  });
+    }),
+  );
   return {
     exam: parseExamPayload(result.object),
     usage: readUsage(result),

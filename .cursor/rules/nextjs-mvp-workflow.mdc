@@ -13,6 +13,11 @@ alwaysApply: true
 - **Explicit Permission Required**: ALWAYS ask for permission before creating any new file or deleting an existing file.
 - **Clear Intent**: State the exact file path and purpose before requesting creation or deletion.
 
+## Dev Server
+- **Keep `npm run dev` running** on **http://localhost:3000** for every session. Do not wait for the user to ask.
+- At the start of UI/app work, after a crash, after a build error, and after killing processes: check port 3000 (`lsof -ti :3000`). If nothing is listening, start `npm run dev` in the project root and confirm HTTP 200.
+- Do not change the port. Clerk allowed origins stay `localhost:3000`.
+
 ## Next.js MVP & Testing Rules
 - **MVP-First Architecture**: Prioritize the simplest working implementation using App Router standards, React Server Components (RSC), and clean Server Actions.
 - **Automated Verification Loop**:

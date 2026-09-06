@@ -1,0 +1,40 @@
+---
+description: One Version x.y.z — major +1.0.0, minor +0.1.0, miniscule +0.0.1 — logged in CHANGELOG.md only.
+alwaysApply: true
+---
+
+# Versioning
+
+There is **one** number, everywhere: **Version x.y.z** (`package.json` `"version"`, changelog headings, tags `vx.y.z`, replies). Never a second label for the same release (no “also 1.2.5”).
+
+After each finished user task, bump **before** you stop. Skip typo-only edits, or if they say not to. Chats are not versions until the work lands.
+
+## How far to bump
+
+| Kind | Bump | When |
+| --- | --- | --- |
+| **Major** | **x+1.0.0** | Full-version change: new core product, breaking auth/API, removed main feature |
+| **Minor** | **x.y+1.0** | New capability (studio tile, play mode, auth flow) |
+| **Miniscule** | **x.y.z+1** | Bugfix, copy, reliability, docs |
+
+Never skip or reuse a number. One task → one bump.
+
+## Log
+
+Only [`CHANGELOG.md`](CHANGELOG.md). Prepend:
+
+```markdown
+## Version x.y.z — YYYY-MM-DD
+`abc1234`
+```
+
+Then detailed Added / Changed / Fixed / Removed (what, why, what the user sees). Reply: **Version x.y.z**.
+
+```text
+❌ BAD: “v1.5.0 (same as 1.2.6)”
+✅ GOOD: Version 3.1.0 — Account Portal; next Clerk fix is 3.1.1
+```
+
+## Tags when shipping
+
+Annotated tag `vx.y.z` to `origin` and `miltoncwlam`. Do not force-push `origin/milton`.

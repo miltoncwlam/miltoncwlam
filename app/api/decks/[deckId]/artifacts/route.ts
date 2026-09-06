@@ -38,6 +38,8 @@ export async function POST(
   let spentTextAmount = 0;
   let charged = false;
   let userId: string | undefined;
+  let kind: string | undefined;
+  let model: string | undefined;
   const { deckId } = await context.params;
 
   try {
@@ -48,8 +50,9 @@ export async function POST(
       return Response.json({ error: "Notebook not found" }, { status: 404 });
     }
     const input = bodySchema.parse(await request.json());
+    kind = input.kind;
     const source = await loadNotebookSource(deck);
-    const model = deck.generationModel || undefined;
+    model = deck.generationModel || undefined;
     const credits = await getOrRefreshCredits(userId);
     await assertGenerateRateLimit(userId, {
       provider: "openrouter",
@@ -154,7 +157,13 @@ export async function POST(
     return Response.json({ ok: true, kind: artifact.kind });
   } catch (error) {
     if (error instanceof Response) return error;
-    captureException(error, { deckId, userId, route: "artifacts" });
+    captureException(error, {
+      deckId,
+      userId,
+      route: "artifacts",
+      kind,
+      model,
+    });
     const message =
       error instanceof z.ZodError
         ? error.issues[0]?.message ?? "Invalid request"

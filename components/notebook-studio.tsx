@@ -4,8 +4,10 @@ import { useMemo, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
+import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
 import { MindmapTree } from "@/components/mindmap-tree";
 import { StudyNotesView } from "@/components/study-notes-view";
+import { friendlyGenerateError } from "@/lib/friendly-generate-error";
 import { EXAM_QUESTION_TYPES, type ArtifactKind } from "@/lib/types/notebook";
 import type { ExamPayload, MindmapPayload, NotesPayload } from "@/lib/types/notebook";
 import type { AppLocale } from "@/lib/i18n/locales";
@@ -27,6 +29,7 @@ export function NotebookStudio({
   const locale = useLocale() as AppLocale;
   const router = useRouter();
   const [pendingKind, setPendingKind] = useState<ArtifactKind | null>(null);
+  const [lastKind, setLastKind] = useState<ArtifactKind | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [types, setTypes] = useState<string[]>([...EXAM_QUESTION_TYPES]);
@@ -46,6 +49,7 @@ export function NotebookStudio({
   function generate(kind: ArtifactKind) {
     if (!hasSource) return;
     setError(null);
+    setLastKind(kind);
     setPendingKind(kind);
     startTransition(async () => {
       try {
@@ -61,18 +65,43 @@ export function NotebookStudio({
           }),
         });
         const result = await response.json();
-        if (!response.ok) throw new Error(result.error || "Generation failed");
+        if (!response.ok) {
+          throw new Error(
+            friendlyGenerateError(result.error || "Generation failed", result.code),
+          );
+        }
         router.refresh();
       } catch (caught) {
-        setError(caught instanceof Error ? caught.message : "Generation failed");
+        setError(
+          caught instanceof Error
+            ? friendlyGenerateError(caught.message)
+            : "Generation failed",
+        );
       } finally {
         setPendingKind(null);
       }
     });
   }
 
+  const showOverlay = Boolean(pendingKind) || Boolean(error);
+
   return (
     <section className="studio-panel space-y-6">
+      {showOverlay ? (
+        <GenerationLoadingScreen
+          error={error}
+          includeUpload={false}
+          label={t("generating")}
+          onDismiss={() => {
+            setError(null);
+            setPendingKind(null);
+          }}
+          onRetry={() => {
+            if (lastKind) generate(lastKind);
+          }}
+          phase="generate"
+        />
+      ) : null}
       <div>
         <p className="eyebrow">{t("eyebrow")}</p>
         <h2 className="mt-2 text-2xl font-black">{t("title")}</h2>
@@ -82,9 +111,6 @@ export function NotebookStudio({
         <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
           {t("noSource")}
         </p>
-      ) : null}
-      {error ? (
-        <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-900">{error}</p>
       ) : null}
       <div className="grid gap-4 sm:grid-cols-3">
         {tiles.map((tile) => (
