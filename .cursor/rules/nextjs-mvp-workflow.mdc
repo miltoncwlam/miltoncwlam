@@ -24,6 +24,7 @@ alwaysApply: true
   1. After making edits, automatically run relevant tests or linter checks (`npm test` / `npm run lint`).
   2. If a test fails, immediately fix the issue before moving to the next step.
   3. Never ask the user to proceed if background tests are currently broken.
+- **Never put `npm test` in `vercel.json` `buildCommand`.** Vercel sets `NODE_ENV=production` and `NEXT_PUBLIC_VERCEL_ENV`; unit tests belong in GitHub CI / local `npm test` (Vitest pins `NODE_ENV=test`).
 
 ## Execution Pattern
 1. State the immediate micro-goal in 1 sentence.

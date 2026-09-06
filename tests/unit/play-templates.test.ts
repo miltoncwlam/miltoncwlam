@@ -10,7 +10,7 @@ import {
   templateReason,
   unlockedCatalogCount,
 } from "@/lib/play/eligibility";
-import { PLAY_CATALOG_IDS, PLAY_TEMPLATES, PLAY_TEMPLATE_IDS, playCatalogIds, playTemplates, resolvePlayTemplate } from "@/lib/play/templates";
+import { PLAY_CATALOG_IDS, PLAY_TEMPLATE_IDS, playCatalogIds, playTemplates, resolvePlayTemplate } from "@/lib/play/templates";
 import type { CommunitySeedPack } from "@/lib/data/community-packs/types";
 import type { Flashcard } from "@/lib/types/flashcard";
 
@@ -70,8 +70,8 @@ describe("play templates", () => {
   });
 
   it("ships a 15-game catalog and keeps retired ids for old runs", () => {
-    expect(PLAY_TEMPLATES).toHaveLength(15);
-    expect(PLAY_CATALOG_IDS).toHaveLength(15);
+    expect(playTemplates(false)).toHaveLength(15);
+    expect(playCatalogIds(false)).toHaveLength(15);
     expect(PLAY_TEMPLATE_IDS.length).toBeGreaterThan(15);
     expect(resolvePlayTemplate("crossword")).toBe("type-the-answer");
     expect(resolvePlayTemplate("airplane")).toBe("gate-dash");

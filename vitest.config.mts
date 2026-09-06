@@ -15,6 +15,10 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    env: {
+      NODE_ENV: "test",
+      NEXT_PUBLIC_VERCEL_ENV: "",
+    },
     include: [
       "tests/unit/**/*.test.ts",
       "tests/unit/**/*.test.tsx",

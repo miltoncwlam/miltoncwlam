@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.1.4** — one number only (`package.json`).
+**Version 3.1.5** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,12 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.1.5 — 2026-09-06
+
+**Miniscule.** Vercel build is `next build` only. Unit tests stay in GitHub CI / local `npm test` with `NODE_ENV=test`, so production env (`NEXT_PUBLIC_VERCEL_ENV`, no React `act`) cannot fail a deploy.
 
 ---
 
