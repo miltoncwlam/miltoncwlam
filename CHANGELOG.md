@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.2.5** — one number only (`package.json`).
+**Version 3.2.6** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,12 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.2.6 — 2026-09-06
+
+**Miniscule.** `/__clerk` forwards Clerk `__client` / `__session` cookies onto the app host, so typing a password no longer flips the widget to “You are signed out”.
 
 ---
 

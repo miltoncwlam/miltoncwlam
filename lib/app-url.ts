@@ -98,6 +98,18 @@ export function clerkJsScriptUrl(appUrl: string) {
   return `${clerkFrontendProxyUrl(appUrl)}/npm/@clerk/clerk-js@5/dist/clerk.browser.js?v=3.2.4`;
 }
 
+/** Bind Clerk FAPI cookies to this app host. Cloudflare bot cookies are dropped. */
+export function rewriteClerkProxySetCookie(
+  cookie: string,
+  { https }: { https: boolean },
+) {
+  const name = cookie.split("=", 1)[0]?.trim() ?? "";
+  if (!name || /^__cf/i.test(name) || /cfuvid/i.test(name)) return null;
+  let next = cookie.replace(/;\s*Domain=[^;]*/gi, "").replace(/;\s*Secure/gi, "");
+  if (https) next += "; Secure";
+  return next;
+}
+
 export function withBrowserOrigin(url: string, origin: string) {
   try {
     const parsed = new URL(url);

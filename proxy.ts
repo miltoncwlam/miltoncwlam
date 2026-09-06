@@ -1,6 +1,8 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
+import { rewriteClerkProxySetCookie } from "@/lib/app-url";
+
 const isProtectedRoute = createRouteMatcher([
   "/decks(.*)",
   "/community(.*)",
@@ -69,12 +71,30 @@ async function proxyClerkFrontendApi(request: NextRequest, hop = 0): Promise<Nex
   // fetch() decompresses gzip/br but leaves Content-Length at the compressed size.
   // Forwarding that length truncates Clerk JS (~88KB of ~322KB) so window.Clerk never loads.
   const body = await upstream.arrayBuffer();
-  const responseHeaders = new Headers(upstream.headers);
-  responseHeaders.delete("content-encoding");
-  responseHeaders.delete("content-length");
-  responseHeaders.delete("transfer-encoding");
-  responseHeaders.delete("set-cookie");
+  const responseHeaders = new Headers();
+  upstream.headers.forEach((value, key) => {
+    const lower = key.toLowerCase();
+    if (
+      lower === "content-encoding" ||
+      lower === "content-length" ||
+      lower === "transfer-encoding" ||
+      lower === "set-cookie"
+    ) {
+      return;
+    }
+    responseHeaders.set(key, value);
+  });
   responseHeaders.set("content-length", String(body.byteLength));
+  const setCookies =
+    typeof upstream.headers.getSetCookie === "function"
+      ? upstream.headers.getSetCookie()
+      : [];
+  for (const cookie of setCookies) {
+    const rewritten = rewriteClerkProxySetCookie(cookie, {
+      https: request.nextUrl.protocol === "https:",
+    });
+    if (rewritten) responseHeaders.append("set-cookie", rewritten);
+  }
   return new NextResponse(body, {
     status: upstream.status,
     headers: responseHeaders,

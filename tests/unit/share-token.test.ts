@@ -5,6 +5,7 @@ import {
   clerkHostedAuthUrl,
   clerkJsScriptUrl,
   resolvePublicAppUrl,
+  rewriteClerkProxySetCookie,
   safeAppPath,
   withBrowserOrigin,
 } from "@/lib/app-url";
@@ -105,5 +106,22 @@ describe("public app urls", () => {
     expect(clerkFrontendProxyUrl("https://hkstudya.vercel.app")).toBe(
       "https://hkstudya.vercel.app/__clerk",
     );
+  });
+
+  it("rewrites Clerk proxy cookies onto the app host", () => {
+    const session = rewriteClerkProxySetCookie(
+      "__client=abc; Path=/; Domain=.frontend-api.clerk.dev; HttpOnly; Secure; SameSite=Lax",
+      { https: true },
+    );
+    expect(session).toContain("__client=abc");
+    expect(session).not.toMatch(/Domain=/i);
+    expect(session).toMatch(/;\s*Secure/i);
+
+    expect(
+      rewriteClerkProxySetCookie(
+        "__cf_bm=bot; Domain=.frontend-api.clerk.dev; Secure",
+        { https: true },
+      ),
+    ).toBeNull();
   });
 });
