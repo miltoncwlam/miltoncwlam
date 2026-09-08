@@ -17,9 +17,11 @@ function normalizeHeading(value: string) {
 }
 
 export type StudyNoteBlock =
-  | { type: "h2" | "h3"; text: string }
+  | { type: "h2"; text: string }
+  | { type: "h3"; text: string }
   | { type: "p"; text: string }
-  | { type: "ul" | "ol"; items: string[] };
+  | { type: "ul"; items: string[] }
+  | { type: "ol"; items: string[] };
 
 export function parseStudyNotes(markdown: string, title: string): StudyNoteBlock[] {
   const lines = markdown.replace(/\r\n/g, "\n").split("\n");
@@ -133,7 +135,10 @@ export function StudyNotesView({
               </ol>
             );
           }
-          return <p key={index}>{renderInline(block.text)}</p>;
+          if (block.type === "p") {
+            return <p key={index}>{renderInline(block.text)}</p>;
+          }
+          return null;
         })}
       </div>
     </article>

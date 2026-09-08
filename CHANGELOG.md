@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.4.0** — one number only (`package.json`).
+**Version 3.4.1** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,12 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.4.1 — 2026-09-08
+
+**Miniscule.** Study notes typecheck: paragraph blocks are a separate `p` type so `npm run build` can finish.
 
 ---
 
