@@ -548,6 +548,8 @@
     "advanced": "進階",
     "questions": "題",
     "takeExam": "開始考試",
+    "printNotes": "列印筆記",
+    "printMap": "列印心智圖",
     "types": {
       "long": "長題",
       "short": "短題",

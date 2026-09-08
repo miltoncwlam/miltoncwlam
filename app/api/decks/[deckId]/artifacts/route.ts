@@ -33,7 +33,7 @@ const bodySchema = z.object({
   types: z.array(z.enum(EXAM_QUESTION_TYPES)).min(1).max(7).optional(),
 });
 
-export const maxDuration = 60;
+export const maxDuration = 180;
 
 export async function POST(
   request: Request,

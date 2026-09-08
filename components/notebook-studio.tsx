@@ -102,17 +102,17 @@ export function NotebookStudio({
           phase="generate"
         />
       ) : null}
-      <div>
+      <div className="no-print">
         <p className="eyebrow">{t("eyebrow")}</p>
         <h2 className="mt-2 text-2xl font-black">{t("title")}</h2>
         <p className="page-subtitle mt-2">{t("subtitle")}</p>
       </div>
       {!hasSource ? (
-        <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
+        <p className="no-print rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
           {t("noSource")}
         </p>
       ) : null}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="no-print grid gap-4 sm:grid-cols-3">
         {tiles.map((tile) => (
           <button
             className="studio-tile"
@@ -133,7 +133,7 @@ export function NotebookStudio({
         ))}
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="no-print rounded-2xl border border-slate-200 bg-white p-4">
         <p className="text-sm font-black uppercase tracking-widest text-slate-500">
           {t("examOptions")}
         </p>
@@ -187,7 +187,7 @@ export function NotebookStudio({
       {mindmap ? <MindmapTree nodes={mindmap.nodes} title={mindmap.title} /> : null}
       {notes ? <StudyNotesView markdown={notes.markdown} title={notes.title} /> : null}
       {exam ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-5">
+        <section className="no-print rounded-2xl border border-slate-200 bg-white p-5">
           <h2 className="text-xl font-black">{exam.title}</h2>
           <p className="mt-2 text-sm text-slate-600">
             {exam.questions.length} {t("questions")}

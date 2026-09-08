@@ -5,8 +5,9 @@ import { createRoot, type Root } from "react-dom/client";
 import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { FlashCard } from "@/components/flash-card";
 import { ExamPlayer } from "@/components/exam-player";
+import { FlashCard } from "@/components/flash-card";
+import { MindmapTree } from "@/components/mindmap-tree";
 import { PlayDispatcher } from "@/components/play/play-dispatcher";
 import { PLAY_CATALOG_IDS, type PlayCatalogId } from "@/lib/play/templates";
 import { catalogReason } from "@/lib/play/eligibility";
@@ -476,5 +477,31 @@ describe("exam player", () => {
         (button) => button.textContent === "Print paper",
       ),
     ).toBe(true);
+  });
+});
+
+describe("mind map tree", () => {
+  it("draws SVG spokes for a root and two branches", async () => {
+    const node = document.createElement("div");
+    document.body.appendChild(node);
+    const root = createRoot(node);
+    live.push({ root, node });
+    await act(async () => {
+      root.render(
+        <NextIntlClientProvider locale="en" messages={en}>
+          <MindmapTree
+            nodes={[
+              { id: "n1", parentId: null, label: "Topic" },
+              { id: "n2", parentId: "n1", label: "Light" },
+              { id: "n3", parentId: "n1", label: "Dark" },
+            ]}
+            title="Photosynthesis"
+          />
+        </NextIntlClientProvider>,
+      );
+    });
+    expect(node.querySelectorAll("path").length).toBeGreaterThanOrEqual(2);
+    expect(node.textContent).toContain("Topic");
+    expect(node.textContent).toContain("Print map");
   });
 });

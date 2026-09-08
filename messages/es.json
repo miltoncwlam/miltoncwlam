@@ -548,6 +548,8 @@
     "advanced": "Avanzado",
     "questions": "preguntas",
     "takeExam": "Hacer el examen",
+    "printNotes": "Imprimir notas",
+    "printMap": "Imprimir mapa",
     "types": {
       "long": "Pregunta larga",
       "short": "Pregunta corta",

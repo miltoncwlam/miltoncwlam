@@ -548,6 +548,8 @@
     "advanced": "上級",
     "questions": "問",
     "takeExam": "試験を受ける",
+    "printNotes": "ノートを印刷",
+    "printMap": "マップを印刷",
     "types": {
       "long": "記述（長文）",
       "short": "記述（短文）",

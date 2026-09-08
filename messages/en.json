@@ -545,6 +545,8 @@
     "advanced": "Advanced",
     "questions": "questions",
     "takeExam": "Take exam",
+    "printNotes": "Print notes",
+    "printMap": "Print map",
     "types": {
       "long": "Long question",
       "short": "Short question",

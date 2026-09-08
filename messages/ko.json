@@ -548,6 +548,8 @@
     "advanced": "고급",
     "questions": "문항",
     "takeExam": "시험 보기",
+    "printNotes": "노트 인쇄",
+    "printMap": "마인드맵 인쇄",
     "types": {
       "long": "서술형(장문)",
       "short": "서술형(단답)",

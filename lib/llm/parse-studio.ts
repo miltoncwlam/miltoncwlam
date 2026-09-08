@@ -135,15 +135,64 @@ export function parseMindmapPayload(payload: unknown): MindmapPayload {
   const parsed = mindmapSchema.parse(
     typeof payload === "string" ? extractJsonObject(payload) : payload,
   );
-  const ids = new Set(parsed.nodes.map((node) => node.id));
-  const nodes = parsed.nodes.map((node) => ({
-    id: node.id,
-    parentId: node.parentId && ids.has(node.parentId) ? node.parentId : null,
-    label: node.label,
-  }));
-  if (!nodes.some((node) => node.parentId === null) && nodes[0]) {
-    nodes[0] = { ...nodes[0], parentId: null };
+  const remap = new Map<string, string>();
+  parsed.nodes.forEach((node, index) => {
+    const nextId = `n${index + 1}`;
+    if (node.id && !remap.has(node.id)) remap.set(node.id, nextId);
+  });
+
+  const nodes = parsed.nodes.map((node, index) => {
+    const id = `n${index + 1}`;
+    const parentId =
+      node.parentId && remap.has(node.parentId) && remap.get(node.parentId) !== id
+        ? remap.get(node.parentId)!
+        : null;
+    return { id, parentId, label: node.label.trim() };
+  });
+
+  const byId = new Map(nodes.map((node) => [node.id, node]));
+  const rootId = nodes.find((node) => node.parentId === null)?.id ?? nodes[0]?.id;
+
+  function wouldCycle(id: string, parentId: string | null) {
+    let current = parentId;
+    const seen = new Set([id]);
+    while (current) {
+      if (seen.has(current)) return true;
+      seen.add(current);
+      current = byId.get(current)?.parentId ?? null;
+    }
+    return false;
   }
+
+  if (rootId) {
+    for (const node of nodes) {
+      if (node.id === rootId) {
+        node.parentId = null;
+        continue;
+      }
+      if (!node.parentId || wouldCycle(node.id, node.parentId)) {
+        node.parentId = rootId;
+      }
+    }
+
+    function depthOf(id: string) {
+      let depth = 0;
+      let current = byId.get(id)?.parentId ?? null;
+      const seen = new Set<string>();
+      while (current && !seen.has(current)) {
+        seen.add(current);
+        depth += 1;
+        current = byId.get(current)?.parentId ?? null;
+      }
+      return depth;
+    }
+
+    for (const node of nodes) {
+      if (node.id === rootId) continue;
+      if (depthOf(node.id) > 3) node.parentId = rootId;
+    }
+  }
+
   return { title: parsed.title, nodes };
 }
 

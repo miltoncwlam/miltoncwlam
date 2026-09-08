@@ -49,10 +49,10 @@ export default async function DeckDetailPage({
 
   return (
     <main className="page-shell">
-      <Link className="text-button" href="/decks">
+      <Link className="text-button no-print" href="/decks">
         ← Back to decks
       </Link>
-      <div className="mt-6 flex flex-col justify-between gap-6 lg:flex-row lg:items-start">
+      <div className="no-print mt-6 flex flex-col justify-between gap-6 lg:flex-row lg:items-start">
         <div>
           <p className="eyebrow">{sourceLabel} source</p>
           <h1 className="page-title">{deck.title}</h1>
@@ -63,7 +63,7 @@ export default async function DeckDetailPage({
             {deck.generationProvider ?? "sample"} · {deck.generationStatus}
           </p>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="no-print flex flex-wrap gap-3">
           {canStudy ? (
             <>
               <Link
@@ -141,7 +141,7 @@ export default async function DeckDetailPage({
         </p>
       ) : null}
 
-      <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_320px]">
+      <div className="no-print mt-10 grid gap-8 lg:grid-cols-[1fr_320px]">
         <section className="space-y-4">
           {deck.cards.length ? (
             <>

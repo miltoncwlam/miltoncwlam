@@ -42,14 +42,13 @@ export async function generateMindmap(input: {
     generateObject({
       model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
       schema: mindmapSchema,
-      abortSignal: AbortSignal.timeout(45_000),
-      prompt: `Build a study mind map in ${language} as a flat node list.
+      abortSignal: AbortSignal.timeout(150_000),
+      prompt: `Build a study mind map in ${language} as a flat node list from this source.
 Rules:
-- One root node with parentId null (the topic).
-- 3–8 main branches (parentId = root id).
-- Each branch can have 1–4 child leaves.
-- Labels: short (2–8 words). No invented facts.
-- ids like n1, n2, n3.
+- Exactly one root node with parentId null (the topic). ids n1, n2, n3… with no repeats.
+- 4–7 main branches (parentId = root id) that cover different parts of the source, not synonyms of the title.
+- Each branch has 2–4 children. Optional grandchildren. Max depth 3. About 12–28 nodes total.
+- Labels: 2–6 words. Leaves are facts or examples from the source. No invented facts.
 
 Source:
 ${input.source.slice(0, 24_000)}`,

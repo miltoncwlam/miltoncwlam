@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.3.0** — one number only (`package.json`).
+**Version 3.4.0** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,24 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.4.0 — 2026-09-08
+
+**Minor.** Studio mind maps draw as a radial map. Study notes look like a revision sheet and print/save as PDF. Mind map and notes generation can run for up to 3 minutes so they stop dying at 45 seconds.
+
+### Added
+- Radial mind map (centre topic, coloured branches, click to collapse, Print map).
+- **Print notes** (browser Save as PDF).
+
+### Changed
+- Mind-map prompt: one rooted study map, 4–7 distinct branches, facts on leaves.
+- Notes: key terms / facts / how to remember; no duplicate `#` title; paper typography.
+- Artifacts route `maxDuration` 180s; mind map and notes abort at 150s.
+
+### Fixed
+- Orphan mind-map nodes attach to the root instead of becoming extra trees. Cycles are broken.
 
 ---
 

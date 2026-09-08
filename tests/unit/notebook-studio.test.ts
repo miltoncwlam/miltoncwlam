@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { layoutMindmap } from "@/components/mindmap-tree";
+import { parseStudyNotes } from "@/components/study-notes-view";
 import { estimateArtifactOutputTokens } from "@/lib/credits/estimate-generation";
 import { isRetryableGenerateError } from "@/lib/llm/generate-object-retry";
 import {
@@ -23,8 +25,39 @@ describe("studio parsers", () => {
         { id: "n4", parentId: "missing", label: "Orphan" },
       ],
     });
-    expect(map.nodes.find((node) => node.id === "n4")?.parentId).toBeNull();
-    expect(map.nodes.filter((node) => node.parentId === "n1")).toHaveLength(2);
+    expect(map.nodes.find((node) => node.id === "n4")?.parentId).toBe("n1");
+    expect(map.nodes.filter((node) => node.parentId === "n1")).toHaveLength(3);
+  });
+
+  it("attaches cycles to the root and unique-ifies ids", () => {
+    const map = parseMindmapPayload({
+      title: "Cells",
+      nodes: [
+        { id: "root", parentId: null, label: "Cells" },
+        { id: "a", parentId: "b", label: "Nucleus" },
+        { id: "b", parentId: "a", label: "DNA" },
+        { id: "dup", parentId: "root", label: "Membrane" },
+        { id: "dup", parentId: "root", label: "Wall" },
+      ],
+    });
+    expect(map.nodes.map((node) => node.id)).toEqual([
+      "n1",
+      "n2",
+      "n3",
+      "n4",
+      "n5",
+    ]);
+    expect(map.nodes.filter((node) => node.parentId === null)).toHaveLength(1);
+    expect(map.nodes[0]?.parentId).toBeNull();
+    for (const node of map.nodes) {
+      const seen = new Set<string>([node.id]);
+      let current = node.parentId;
+      while (current) {
+        expect(seen.has(current)).toBe(false);
+        seen.add(current);
+        current = map.nodes.find((item) => item.id === current)?.parentId ?? null;
+      }
+    }
   });
 
   it("keeps exam question types", () => {
@@ -219,6 +252,36 @@ describe("exam length from minutes", () => {
     ]);
     expect(shortPaper.length).toBeGreaterThanOrEqual(4);
     expect(longPaper.length).toBeGreaterThan(shortPaper.length);
+  });
+});
+
+describe("study notes and mind map layout", () => {
+  it("parses headings, lists, and skips a duplicate title", () => {
+    const blocks = parseStudyNotes(
+      `# Photosynthesis\n## Key terms\n- **Chlorophyll** — green pigment\n1. Light hits the leaf\n### Remember\nPlants make sugar.`,
+      "Photosynthesis",
+    );
+    expect(blocks[0]).toEqual({ type: "h2", text: "Key terms" });
+    expect(blocks.some((block) => block.type === "ul")).toBe(true);
+    expect(blocks.some((block) => block.type === "ol")).toBe(true);
+    expect(blocks.some((block) => block.type === "h3" && block.text === "Remember")).toBe(
+      true,
+    );
+  });
+
+  it("lays out a root and branches with connectors", () => {
+    const laid = layoutMindmap(
+      [
+        { id: "n1", parentId: null, label: "Topic" },
+        { id: "n2", parentId: "n1", label: "Branch A" },
+        { id: "n3", parentId: "n1", label: "Branch B" },
+        { id: "n4", parentId: "n2", label: "Leaf" },
+      ],
+      new Set(),
+    );
+    expect(laid.items).toHaveLength(4);
+    expect(laid.items[0]?.x).toBe(laid.cx);
+    expect(laid.items.filter((item) => item.parentId === "n1")).toHaveLength(2);
   });
 });
 

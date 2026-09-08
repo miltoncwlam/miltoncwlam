@@ -42,11 +42,15 @@ export async function generateNotes(input: {
     generateObject({
       model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
       schema: notesSchema,
-      abortSignal: AbortSignal.timeout(45_000),
-      prompt: `Write clear study notes in ${language} from this source.
-Use markdown: # title, ## headings, bullet lists, and short examples.
-Cover key terms, facts, and how to remember them. No invented facts.
-Do not mention that you are an AI.
+      abortSignal: AbortSignal.timeout(150_000),
+      prompt: `Write revision-sheet study notes in ${language} from this source.
+Put the title only in the title field. Do not start markdown with a duplicate # title.
+Use markdown sections:
+## Key terms
+## Facts
+## How to remember
+Optional ### subheadings, bullet or numbered lists, **bold** terms, and short examples.
+Write enough to study from (a full sheet), still grounded in the source. No invented facts. Do not mention that you are an AI.
 
 Source:
 ${input.source.slice(0, 24_000)}`,
