@@ -6,7 +6,7 @@ import { ExamPlayer } from "@/components/exam-player";
 import { requireSession } from "@/lib/auth-server";
 import { getDeckArtifact } from "@/lib/data/artifacts";
 import { getDeckWithCards } from "@/lib/data/decks";
-import type { ExamPayload } from "@/lib/types/notebook";
+import { parseExamPayload } from "@/lib/llm/parse-studio";
 
 export default async function DeckExamPage({
   params,
@@ -19,12 +19,12 @@ export default async function DeckExamPage({
   if (!deck) notFound();
   const artifact = await getDeckArtifact(deckId, "exam");
   if (!artifact) notFound();
-  const exam = artifact.payload as ExamPayload;
+  const exam = parseExamPayload(artifact.payload);
   const t = await getTranslations("exam");
 
   return (
     <main className="page-shell">
-      <Link className="text-button" href={`/decks/${deckId}`}>
+      <Link className="text-button no-print" href={`/decks/${deckId}`}>
         ← {t("back")}
       </Link>
       <div className="mt-6 mb-8">

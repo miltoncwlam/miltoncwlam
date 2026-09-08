@@ -19,13 +19,17 @@ import { generateExam } from "@/lib/llm/generate-exam";
 import { generateMindmap } from "@/lib/llm/generate-mindmap";
 import { generateNotes } from "@/lib/llm/generate-notes";
 import { loadNotebookSource } from "@/lib/llm/load-notebook-source";
+import {
+  clampExamDurationMinutes,
+  planExamQuestions,
+} from "@/lib/llm/parse-studio";
 import { EXAM_QUESTION_TYPES } from "@/lib/types/notebook";
 
 const bodySchema = z.object({
   kind: z.enum(["mindmap", "notes", "exam"]),
   language: z.enum(LOCALE_CODES).optional(),
   difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
-  questionCount: z.number().int().min(4).max(24).optional(),
+  durationMinutes: z.number().int().min(10).max(90).optional(),
   types: z.array(z.enum(EXAM_QUESTION_TYPES)).min(1).max(7).optional(),
 });
 
@@ -60,13 +64,24 @@ export async function POST(
       isUnlimited: credits.isUnlimited,
     });
 
+    const examTypes = input.types ?? [
+      "long",
+      "short",
+      "tf",
+      "mcq",
+      "matching",
+      "cloze_choice",
+      "cloze_free",
+    ];
+    const durationMinutes = clampExamDurationMinutes(input.durationMinutes);
+    const plannedCount = planExamQuestions(durationMinutes, examTypes).length;
     const estimate = estimateArtifactCredits({
       provider: "openrouter",
       modelId: model || "deepseek/deepseek-v4-flash",
       sourceMode: source.sourceMode,
       sourceSize: { charCount: source.charCount },
       kind: input.kind,
-      questionCount: input.questionCount,
+      questionCount: input.kind === "exam" ? plannedCount : undefined,
     });
     const spent = await assertAndSpendCredits({
       userId,
@@ -103,16 +118,8 @@ export async function POST(
         language,
         model,
         difficulty: input.difficulty,
-        types: input.types ?? [
-          "long",
-          "short",
-          "tf",
-          "mcq",
-          "matching",
-          "cloze_choice",
-          "cloze_free",
-        ],
-        questionCount: input.questionCount ?? 12,
+        types: examTypes,
+        durationMinutes,
       });
       payload = generated.exam;
       usage = generated.usage;

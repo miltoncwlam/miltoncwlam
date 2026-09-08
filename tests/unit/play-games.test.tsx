@@ -6,6 +6,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { FlashCard } from "@/components/flash-card";
+import { ExamPlayer } from "@/components/exam-player";
 import { PlayDispatcher } from "@/components/play/play-dispatcher";
 import { PLAY_CATALOG_IDS, type PlayCatalogId } from "@/lib/play/templates";
 import { catalogReason } from "@/lib/play/eligibility";
@@ -422,5 +423,58 @@ describe("study wrap-to-fit", () => {
       release?.(new Response(new Blob(["x"]), { status: 200 }));
     });
     vi.unstubAllGlobals();
+  });
+});
+
+describe("exam player", () => {
+  it("shows lettered MCQ radios, matching selects, timer, and print paper", async () => {
+    const node = document.createElement("div");
+    document.body.appendChild(node);
+    const root = createRoot(node);
+    live.push({ root, node });
+    await act(async () => {
+      root.render(
+        <NextIntlClientProvider locale="en" messages={en}>
+          <ExamPlayer
+            deckId="d1"
+            exam={{
+              title: "Paper",
+              instructions: "Go",
+              durationMinutes: 15,
+              questions: [
+                {
+                  id: "q1",
+                  type: "mcq",
+                  prompt: "Pick chlorophyll",
+                  marks: 1,
+                  answer: "chloroplast",
+                  choices: ["nucleus", "chloroplast", "vacuole", "ribosome"],
+                },
+                {
+                  id: "q2",
+                  type: "matching",
+                  prompt: "Match",
+                  marks: 2,
+                  answer: "a -> 1",
+                  pairs: [
+                    { left: "nucleus", right: "DNA" },
+                    { left: "mito", right: "ATP" },
+                  ],
+                },
+              ],
+            }}
+          />
+        </NextIntlClientProvider>,
+      );
+    });
+    expect(node.textContent).toContain("Time left");
+    expect(node.textContent).toContain("A.");
+    expect(node.querySelectorAll("input[type=radio]")).toHaveLength(4);
+    expect(node.querySelectorAll("select")).toHaveLength(2);
+    expect(
+      [...node.querySelectorAll("button")].some(
+        (button) => button.textContent === "Print paper",
+      ),
+    ).toBe(true);
   });
 });

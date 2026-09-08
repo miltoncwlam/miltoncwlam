@@ -33,7 +33,7 @@ export function NotebookStudio({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [types, setTypes] = useState<string[]>([...EXAM_QUESTION_TYPES]);
-  const [questionCount, setQuestionCount] = useState(12);
+  const [durationMinutes, setDurationMinutes] = useState(30);
   const [difficulty, setDifficulty] = useState("intermediate");
 
   const tiles = useMemo(
@@ -60,7 +60,7 @@ export function NotebookStudio({
             kind,
             language: locale,
             difficulty,
-            questionCount,
+            durationMinutes,
             types: kind === "exam" ? types : undefined,
           }),
         });
@@ -138,14 +138,18 @@ export function NotebookStudio({
           {t("examOptions")}
         </p>
         <label className="mt-3 block text-sm">
-          {t("questionCount")}
+          {t("durationMinutes")}
           <input
             className="field mt-1"
-            max={24}
-            min={4}
-            onChange={(event) => setQuestionCount(Number(event.target.value) || 12)}
+            max={90}
+            min={10}
+            onChange={(event) =>
+              setDurationMinutes(
+                Math.min(90, Math.max(10, Number(event.target.value) || 30)),
+              )
+            }
             type="number"
-            value={questionCount}
+            value={durationMinutes}
           />
         </label>
         <label className="mt-3 block text-sm">

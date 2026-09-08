@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -14,6 +14,31 @@ import type {
 
 function shuffle<T>(items: T[]) {
   return [...items].sort(() => Math.random() - 0.5);
+}
+
+function formatMmSs(ms: number) {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const minutes = Math.floor(total / 60);
+  const seconds = total % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function formatStudentAnswer(value: ExamStudentAnswer | undefined) {
+  if (value == null) return "—";
+  if (typeof value === "string") return value.trim() || "—";
+  const rows = Object.entries(value).filter(([, right]) => right);
+  if (!rows.length) return "—";
+  return rows.map(([left, right]) => `${left} → ${right}`).join("; ");
+}
+
+function resultTone(item: ExamQuestionResult | undefined) {
+  if (!item) return "border-rose-200 bg-rose-50";
+  if (item.feedback.includes("Could not mark")) {
+    return "border-amber-200 bg-amber-50";
+  }
+  if (item.marksAwarded >= item.marks) return "border-emerald-200 bg-emerald-50";
+  if (item.marksAwarded > 0) return "border-amber-200 bg-amber-50";
+  return "border-rose-200 bg-rose-50";
 }
 
 function QuestionField({
@@ -40,16 +65,31 @@ function QuestionField({
         : question.type === "tf"
           ? ["True", "False"]
           : [];
+    if (!choices.length) {
+      return (
+        <input
+          className="field"
+          onChange={(event) => onChange(event.target.value)}
+          value={text}
+        />
+      );
+    }
     return (
       <div className="space-y-2">
-        {choices.map((choice) => (
-          <label className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2" key={choice}>
+        {choices.map((choice, index) => (
+          <label
+            className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2"
+            key={choice}
+          >
             <input
               checked={text === choice}
               name={question.id}
               onChange={() => onChange(choice)}
               type="radio"
             />
+            <span className="font-black text-slate-500">
+              {String.fromCharCode(65 + index)}.
+            </span>
             {choice}
           </label>
         ))}
@@ -57,10 +97,11 @@ function QuestionField({
     );
   }
 
-  if (question.type === "matching" && question.pairs?.length) {
+  if (question.type === "matching") {
+    const pairs = question.pairs ?? [];
     return (
       <div className="space-y-2">
-        {question.pairs.map((pair) => (
+        {pairs.map((pair) => (
           <label className="grid gap-2 sm:grid-cols-2" key={pair.left}>
             <span className="rounded-xl bg-slate-50 px-3 py-2 text-sm font-semibold">
               {pair.left}
@@ -113,41 +154,90 @@ export function ExamPlayer({
 }) {
   const t = useTranslations("exam");
   const router = useRouter();
+  const durationMinutes = exam.durationMinutes ?? 30;
+  const storageKey = `exam-start:${deckId}`;
   const [answers, setAnswers] = useState<ExamAnswers>({});
   const [result, setResult] = useState<ExamQuestionResult[] | null>(null);
   const [score, setScore] = useState(0);
   const [maxScore, setMaxScore] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [remainingMs, setRemainingMs] = useState(durationMinutes * 60_000);
   const [isPending, startTransition] = useTransition();
+  const answersRef = useRef(answers);
+  const submittedRef = useRef(false);
+  const submitRef = useRef<() => void>(() => {});
 
   function setAnswer(id: string, value: ExamStudentAnswer) {
     setAnswers((current) => ({ ...current, [id]: value }));
   }
 
   function submit() {
+    if (submittedRef.current) return;
+    submittedRef.current = true;
     setError(null);
     startTransition(async () => {
       try {
         const response = await fetch(`/api/decks/${deckId}/exam/grade`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ answers }),
+          body: JSON.stringify({ answers: answersRef.current }),
         });
         const payload = await response.json();
         if (!response.ok) throw new Error(payload.error || "Grading failed");
+        try {
+          sessionStorage.removeItem(storageKey);
+        } catch {
+          // ignore
+        }
         setResult(payload.result);
         setScore(payload.score);
         setMaxScore(payload.maxScore);
       } catch (caught) {
+        submittedRef.current = false;
         setError(caught instanceof Error ? caught.message : "Grading failed");
       }
     });
   }
 
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
+
+  useEffect(() => {
+    submitRef.current = submit;
+  });
+
+  useEffect(() => {
+    if (result) return;
+    let start = 0;
+    try {
+      start = Number(sessionStorage.getItem(storageKey));
+    } catch {
+      start = 0;
+    }
+    if (!Number.isFinite(start) || start <= 0) {
+      start = Date.now();
+      try {
+        sessionStorage.setItem(storageKey, String(start));
+      } catch {
+        // ignore
+      }
+    }
+    const durationMs = durationMinutes * 60_000;
+    function tick() {
+      const left = Math.max(0, start + durationMs - Date.now());
+      setRemainingMs(left);
+      if (left <= 0) submitRef.current();
+    }
+    tick();
+    const id = window.setInterval(tick, 250);
+    return () => window.clearInterval(id);
+  }, [deckId, durationMinutes, result, storageKey]);
+
   if (result) {
     const byId = new Map(result.map((item) => [item.id, item]));
     return (
-      <section className="space-y-6">
+      <section className="exam-paper space-y-6">
         <section className="play-finish mx-auto max-w-lg">
           <p className="eyebrow">{t("marked")}</p>
           <h2 className="page-title mt-2">
@@ -156,7 +246,7 @@ export function ExamPlayer({
           <p className="page-subtitle">
             {maxScore ? Math.round((score / maxScore) * 100) : 0}%
           </p>
-          <div className="mt-8 flex justify-center gap-3">
+          <div className="mt-8 flex justify-center gap-3 no-print">
             <button
               className="secondary-button"
               onClick={() => router.push(`/decks/${deckId}`)}
@@ -167,12 +257,26 @@ export function ExamPlayer({
             <button
               className="primary-button"
               onClick={() => {
+                submittedRef.current = false;
                 setResult(null);
                 setAnswers({});
+                setRemainingMs(durationMinutes * 60_000);
+                try {
+                  sessionStorage.removeItem(storageKey);
+                } catch {
+                  // ignore
+                }
               }}
               type="button"
             >
               {t("tryAgain")}
+            </button>
+            <button
+              className="secondary-button"
+              onClick={() => window.print()}
+              type="button"
+            >
+              {t("printResults")}
             </button>
           </div>
         </section>
@@ -180,9 +284,7 @@ export function ExamPlayer({
           const item = byId.get(question.id);
           return (
             <article
-              className={`rounded-2xl border p-5 ${
-                item?.ok ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"
-              }`}
+              className={`rounded-2xl border p-5 ${resultTone(item)}`}
               key={question.id}
             >
               <p className="text-xs font-black uppercase tracking-widest">
@@ -190,6 +292,31 @@ export function ExamPlayer({
                 {question.marks}
               </p>
               <p className="mt-2 font-semibold">{question.prompt}</p>
+              {question.type === "matching" && question.pairs?.length ? (
+                <div className="mt-3 space-y-2">
+                  {question.pairs.map((pair) => (
+                    <p className="text-sm" key={pair.left}>
+                      {pair.left}
+                    </p>
+                  ))}
+                </div>
+              ) : null}
+              {(question.type === "mcq" ||
+                question.type === "tf" ||
+                question.type === "cloze_choice") &&
+              question.choices?.length ? (
+                <ol className="mt-3 list-none space-y-1 text-sm">
+                  {question.choices.map((choice, choiceIndex) => (
+                    <li key={choice}>
+                      {String.fromCharCode(65 + choiceIndex)}. {choice}
+                    </li>
+                  ))}
+                </ol>
+              ) : null}
+              <p className="mt-3 text-sm">
+                <span className="font-semibold">{t("yourAnswer")}: </span>
+                {formatStudentAnswer(answers[question.id])}
+              </p>
               {item?.feedback ? <p className="mt-2 text-sm">{item.feedback}</p> : null}
             </article>
           );
@@ -199,12 +326,20 @@ export function ExamPlayer({
   }
 
   return (
-    <section className="space-y-6">
+    <section className="exam-paper space-y-6">
+      <div className="exam-timer no-print sticky top-2 z-20 flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+        <p className="text-sm font-black uppercase tracking-widest text-slate-500">
+          {remainingMs <= 0 ? t("timeUp") : t("timeLeft")}
+        </p>
+        <p className="font-black tabular-nums">{formatMmSs(remainingMs)}</p>
+      </div>
       {exam.instructions ? (
         <p className="rounded-2xl bg-slate-50 p-4 text-sm">{exam.instructions}</p>
       ) : null}
       {error ? (
-        <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-900">{error}</p>
+        <p className="no-print rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-900">
+          {error}
+        </p>
       ) : null}
       {exam.questions.map((question, index) => (
         <article className="rounded-2xl border border-slate-200 bg-white p-5" key={question.id}>
@@ -221,9 +356,14 @@ export function ExamPlayer({
           </div>
         </article>
       ))}
-      <button className="primary-button" disabled={isPending} onClick={submit} type="button">
-        {isPending ? t("marking") : t("submit")}
-      </button>
+      <div className="no-print flex flex-wrap gap-3">
+        <button className="primary-button" disabled={isPending} onClick={submit} type="button">
+          {isPending ? t("marking") : t("submit")}
+        </button>
+        <button className="secondary-button" onClick={() => window.print()} type="button">
+          {t("printPaper")}
+        </button>
+      </div>
     </section>
   );
 }

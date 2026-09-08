@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.2.7** — one number only (`package.json`).
+**Version 3.3.0** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,25 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.3.0 — 2026-09-08
+
+**Minor.** Exam taking works like a paper: MCQ radios and matching dropdowns, a minutes picker before generate (that also sizes the paper), a countdown that auto-submits, print/save PDF, and partial marks instead of yes/no zeros.
+
+### Added
+- Studio **Time limit (minutes)** (10–90). No question-count field — longer papers get more questions, and long items count for more time than MCQ/TF.
+- Countdown on take-exam that auto-submits at 0. Refresh keeps the same start time.
+- **Print paper** and **Print results** (browser Save as PDF).
+
+### Changed
+- Written answers can score `MARKS: k/max` (a “fraction of marks” no longer becomes 0/6). Matching scores per pair.
+- Generate asks for exactly the planned number of questions (`q1`…`qN`) and fills in if the model comes up short.
+
+### Fixed
+- MCQ with `options` instead of `choices` now shows lettered radios. Matching without `pairs` is rebuilt from `left -> right` answer lines, not a text box.
+- Marker timeouts show “Could not mark… submit again” instead of a silent 0.
 
 ---
 

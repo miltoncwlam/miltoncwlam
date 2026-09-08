@@ -48,6 +48,7 @@ export type ExamPayload = {
   title: string;
   instructions: string;
   questions: ExamQuestion[];
+  durationMinutes?: number;
 };
 
 export type ArtifactPayload = MindmapPayload | NotesPayload | ExamPayload;

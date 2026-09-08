@@ -3,9 +3,12 @@ import { describe, expect, it } from "vitest";
 import { estimateArtifactOutputTokens } from "@/lib/credits/estimate-generation";
 import { isRetryableGenerateError } from "@/lib/llm/generate-object-retry";
 import {
+  examCouldNotMarkResult,
   gradeExamExact,
+  parseAiExamMarks,
   parseExamPayload,
   parseMindmapPayload,
+  planExamQuestions,
 } from "@/lib/llm/parse-studio";
 import type { ExamQuestion } from "@/lib/types/notebook";
 
@@ -69,6 +72,46 @@ describe("studio parsers", () => {
     expect(exam.questions).toHaveLength(4);
     expect(exam.questions[0].type).toBe("tf");
   });
+
+  it("maps MCQ options onto choices", () => {
+    const exam = parseExamPayload({
+      title: "Paper",
+      questions: [
+        {
+          id: "dup",
+          type: "mcq",
+          prompt: "Pick",
+          marks: 1,
+          answer: "b",
+          options: ["a", "b", "c", "d"],
+        },
+      ],
+    });
+    expect(exam.questions[0].id).toBe("q1");
+    expect(exam.questions[0].choices).toEqual(["a", "b", "c", "d"]);
+  });
+
+  it("builds matching pairs from answer lines", () => {
+    const exam = parseExamPayload({
+      title: "Paper",
+      durationMinutes: 20,
+      questions: [
+        {
+          id: "q9",
+          type: "matching",
+          prompt: "Match",
+          marks: 3,
+          answer: "left -> right\nup -> down",
+        },
+      ],
+    });
+    expect(exam.durationMinutes).toBe(20);
+    expect(exam.questions[0].type).toBe("matching");
+    expect(exam.questions[0].pairs).toEqual([
+      { left: "left", right: "right" },
+      { left: "up", right: "down" },
+    ]);
+  });
 });
 
 describe("exam exact grading", () => {
@@ -115,6 +158,40 @@ describe("exam exact grading", () => {
       gradeExamExact(question, { b: "2", a: "1", c: "3" })?.ok,
     ).toBe(true);
     expect(gradeExamExact(question, { a: "2", b: "1", c: "3" })?.ok).toBe(false);
+    const partial = gradeExamExact(question, { a: "1", b: "2", c: "wrong" });
+    expect(partial?.ok).toBe(false);
+    expect(partial?.marksAwarded).toBe(1);
+  });
+});
+
+describe("exam AI mark parsing", () => {
+  it("parses MARKS: 2/6", () => {
+    const parsed = parseAiExamMarks(
+      "MARKS: 2/6\nOnly a fraction of the available marks would be awarded.",
+      6,
+    );
+    expect(parsed.marksAwarded).toBe(2);
+    expect(parsed.feedback).toMatch(/fraction/i);
+  });
+
+  it("awards partial marks when the model says no then fraction", () => {
+    const parsed = parseAiExamMarks(
+      "no\nOnly a fraction of the available marks would be awarded.",
+      6,
+    );
+    expect(parsed.marksAwarded).toBe(3);
+  });
+
+  it("keeps a timeout-style result visible", () => {
+    const result = examCouldNotMarkResult({
+      id: "q1",
+      type: "long",
+      prompt: "Explain",
+      marks: 6,
+      answer: "points",
+    });
+    expect(result.feedback).toMatch(/Could not mark/);
+    expect(result.marksAwarded).toBe(0);
   });
 });
 
@@ -123,6 +200,25 @@ describe("artifact energy", () => {
     expect(estimateArtifactOutputTokens("exam", 12)).toBeGreaterThan(
       estimateArtifactOutputTokens("ingest"),
     );
+  });
+});
+
+describe("exam length from minutes", () => {
+  it("makes a longer paper when the time limit is longer", () => {
+    const shortPaper = planExamQuestions(15, [
+      "mcq",
+      "tf",
+      "short",
+      "long",
+    ]);
+    const longPaper = planExamQuestions(60, [
+      "mcq",
+      "tf",
+      "short",
+      "long",
+    ]);
+    expect(shortPaper.length).toBeGreaterThanOrEqual(4);
+    expect(longPaper.length).toBeGreaterThan(shortPaper.length);
   });
 });
 

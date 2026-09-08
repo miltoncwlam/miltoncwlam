@@ -3409,3 +3409,23 @@ html[data-theme="dark"] .play-lantern-text {
     animation: none;
   }
 }
+
+@media print {
+  .app-header,
+  .site-footer,
+  .no-print,
+  .exam-timer,
+  .toast-viewport {
+    display: none !important;
+  }
+
+  .page-shell {
+    max-width: none;
+    padding: 0;
+  }
+
+  .exam-paper article {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+}
