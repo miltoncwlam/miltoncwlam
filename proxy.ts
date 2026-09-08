@@ -123,12 +123,13 @@ export default clerkMiddleware(
       unauthenticatedUrl: new URL("/sign-in", request.url).toString(),
     });
   },
-  {
+  (request) => ({
     authorizedParties: [
       "http://localhost:3000",
       "https://hkstudya.vercel.app",
     ],
-  },
+    proxyUrl: `${request.nextUrl.origin}/__clerk`,
+  }),
 );
 
 export const config = {

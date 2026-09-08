@@ -48,10 +48,25 @@ export default async function DecksPage({
   const filter = asFilter(params.filter);
   const sort = asSort(params.sort);
   const folder = params.folder?.trim() || undefined;
-  const [decks, folders] = await Promise.all([
-    listDecks(session.user.id, { filter, sort, folder }),
-    listDeckFolders(session.user.id),
-  ]);
+  let decks;
+  let folders: string[] = [];
+  try {
+    [decks, folders] = await Promise.all([
+      listDecks(session.user.id, { filter, sort, folder }),
+      listDeckFolders(session.user.id),
+    ]);
+  } catch {
+    return (
+      <main className="page-shell">
+        <p className="eyebrow">Library</p>
+        <h1 className="page-title">Library is waking up</h1>
+        <p className="page-subtitle">
+          Your account is fine. The study database was offline. Wait a minute,
+          refresh, and try My decks again.
+        </p>
+      </main>
+    );
+  }
   const t = await getTranslations("decks");
   const tAccount = await getTranslations("account");
 

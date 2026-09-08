@@ -15,8 +15,21 @@ export default async function SignInPage({
   if (userId) redirect(redirectTo);
 
   return (
-    <main className="auth-fill">
-      <ClerkSignInPanel redirectTo={redirectTo} />
+    <main className="auth-stage">
+      <div className="auth-stage-glow" aria-hidden />
+      <div className="auth-stage-grid">
+        <section className="auth-stage-copy">
+          <p className="landing-kicker">Welcome back</p>
+          <p className="landing-brand">HK Study A</p>
+          <h1 className="auth-stage-title">Sign in to your library</h1>
+          <p className="auth-stage-subtitle">
+            Email and password only. Generate decks, then study them here.
+          </p>
+        </section>
+        <div className="auth-stage-card">
+          <ClerkSignInPanel redirectTo={redirectTo} />
+        </div>
+      </div>
     </main>
   );
 }

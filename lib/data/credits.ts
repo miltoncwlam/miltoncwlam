@@ -73,6 +73,9 @@ async function ensureRow(userId: string): Promise<UserCreditBalance> {
     `select ${CREDIT_SELECT} from user_credits where user_id = $1`,
     [userId],
   );
+  if (!existing.rows[0]) {
+    throw new Error("Could not create energy for this account. Try again.");
+  }
   return mapRow(existing.rows[0]);
 }
 

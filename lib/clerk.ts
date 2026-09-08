@@ -8,12 +8,16 @@ export async function getClerkSessionUser(): Promise<SessionUser | null> {
   const { userId } = await auth();
   if (!userId) return null;
 
-  const user = await currentUser();
-  if (!user) return null;
+  let user: Awaited<ReturnType<typeof currentUser>> = null;
+  try {
+    user = await currentUser();
+  } catch {
+    user = null;
+  }
 
-  const email = user.emailAddresses[0]?.emailAddress ?? "";
+  const email = user?.emailAddresses[0]?.emailAddress ?? "";
   const role =
-    typeof user.publicMetadata?.role === "string"
+    typeof user?.publicMetadata?.role === "string"
       ? user.publicMetadata.role
       : "user";
 
@@ -21,8 +25,8 @@ export async function getClerkSessionUser(): Promise<SessionUser | null> {
     id: userId,
     email,
     name:
-      user.fullName?.trim() ||
-      user.firstName?.trim() ||
+      user?.fullName?.trim() ||
+      user?.firstName?.trim() ||
       email.split("@")[0] ||
       "Learner",
     role,

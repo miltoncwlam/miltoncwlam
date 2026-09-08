@@ -13,7 +13,21 @@ export default async function NewDeckPage() {
   const session = await requireSession();
   const providers = getConfiguredProviders();
   const canUpload = Boolean(env.supabaseSecretKey);
-  const credits = await getOrRefreshCredits(session.user.id);
+  let credits;
+  try {
+    credits = await getOrRefreshCredits(session.user.id);
+  } catch {
+    return (
+      <main className="page-shell max-w-3xl">
+        <p className="eyebrow">Create</p>
+        <h1 className="page-title">Library is waking up</h1>
+        <p className="page-subtitle">
+          Your account is fine. The study database was offline. Wait a minute,
+          then try generating a deck again.
+        </p>
+      </main>
+    );
+  }
   const freeModels = providers.includes("openrouter")
     ? await listOpenRouterFreeModels()
     : [];
