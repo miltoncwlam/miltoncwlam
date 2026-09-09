@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.7.1** — one number only (`package.json`).
+**Version 3.7.2** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,15 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.7.2 — 2026-09-09
+
+**Miniscule.** Same study PDF and Wikipedia URLs every time we test create-notebook.
+
+### Added
+- `tests/fixtures/hk-dse-photosynthesis.pdf` (selectable notes) and a 2-page scan PDF, plus Wikipedia photosynthesis/chloroplast links in `tests/fixtures/test-sources.ts`.
 
 ---
 

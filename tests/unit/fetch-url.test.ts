@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { fetchStudyTextFromUrl, readResponseBytes } from "@/lib/ingest/fetch-url";
+import { TEST_WEB_URLS } from "@/tests/fixtures/test-sources";
 
 describe("fetchStudyTextFromUrl SSRF guards", () => {
   it("blocks localhost", async () => {
@@ -42,4 +43,13 @@ describe("readResponseBytes", () => {
     expect(buffer.byteLength).toBe(80);
     expect(buffer.toString("utf8")).toContain("Photosynthesis");
   });
+});
+
+describe("live study URLs", () => {
+  it("reads the photosynthesis Wikipedia page", async () => {
+    const result = await fetchStudyTextFromUrl(TEST_WEB_URLS.photosynthesis);
+    expect(result.kind).toBe("webpage");
+    expect(result.content.length).toBeGreaterThan(400);
+    expect(result.content).toMatch(/chlorophyll|Calvin|carbon dioxide/i);
+  }, 20_000);
 });

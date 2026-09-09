@@ -1,0 +1,27 @@
+---
+description: Always run tests; use the committed study PDF and public article URLs to verify ingest.
+alwaysApply: true
+---
+
+# Testing
+
+After any code change, run `npm test` and `npm run lint`. If they fail, fix them before shipping. Do not ask the user to click around instead of running tests.
+
+When the change touches ingest, OCR, notebooks, generate, guest, or auth, also:
+
+1. Run the matching unit files (`tests/unit/ingest.test.ts`, `pdf-to-images`, `fetch-url`, `credits-config`).
+2. Exercise create-notebook on **http://localhost:3000/decks/new** with the fixtures below (guest is fine locally). Prefer localhost so you do not burn production guest quota (2 generates).
+
+## Fixtures — use these, do not invent new sources
+
+| Kind | Use |
+| --- | --- |
+| Detailed selectable PDF | `tests/fixtures/hk-dse-photosynthesis.pdf` |
+| Scan PDF (OCR) | `tests/fixtures/hk-dse-photosynthesis-scan.pdf` |
+| Short text | `tests/fixtures/sample-notes.txt` |
+| Article URL | https://en.wikipedia.org/wiki/Photosynthesis |
+| Second URL | https://en.wikipedia.org/wiki/Chloroplast |
+| App | http://localhost:3000/decks/new |
+| Prod (after ship) | https://hkstudya.vercel.app/decks/new |
+
+URLs and paths are exported from `tests/fixtures/test-sources.ts`.

@@ -22,8 +22,9 @@ alwaysApply: true
 - **MVP-First Architecture**: Prioritize the simplest working implementation using App Router standards, React Server Components (RSC), and clean Server Actions.
 - **Automated Verification Loop**:
   1. After making edits, automatically run relevant tests or linter checks (`npm test` / `npm run lint`).
-  2. If a test fails, immediately fix the issue before moving to the next step.
-  3. Never ask the user to proceed if background tests are currently broken.
+  2. If ingest, OCR, notebooks, or URL fetch changed, run those unit files and use `tests/fixtures` (see `.cursor/rules/testing.mdc`).
+  3. If a test fails, immediately fix the issue before moving to the next step.
+  4. Never ask the user to proceed if background tests are currently broken.
 - **Never put `npm test` in `vercel.json` `buildCommand`.** Vercel sets `NODE_ENV=production` and `NEXT_PUBLIC_VERCEL_ENV`; unit tests belong in GitHub CI / local `npm test` (Vitest pins `NODE_ENV=test`).
 
 ## Execution Pattern

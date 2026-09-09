@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+
 import { createCanvas } from "@napi-rs/canvas";
 import { describe, expect, it } from "vitest";
 
@@ -6,6 +8,10 @@ import {
   extractEmbeddedJpegs,
   pdfPagesToImages,
 } from "@/lib/ingest/pdf-to-images";
+import {
+  TEST_FIXTURE_FILES,
+  fixturePath,
+} from "@/tests/fixtures/test-sources";
 
 function assemblePdf(objects: Buffer[]): Uint8Array {
   let body = Buffer.from("%PDF-1.4\n");
@@ -105,6 +111,18 @@ describe("pdfPagesToImages", () => {
     expect(pages[0].mediaType).toBe("image/jpeg");
     expect(Array.from(pages[0].data.slice(0, 2))).toEqual([0xff, 0xd8]);
     expect(pages[0].data.byteLength).toBeLessThan(jpeg.byteLength);
+  }, 30_000);
+
+  it("reads the committed scan fixture as page JPEGs", async () => {
+    const scan = new Uint8Array(
+      await readFile(fixturePath(TEST_FIXTURE_FILES.scanPdf)),
+    );
+    const embedded = extractEmbeddedJpegs(scan);
+    expect(embedded.length).toBeGreaterThanOrEqual(2);
+    const pages = await pdfPagesToImages(scan, { maxPages: 2, maxDimension: 1024 });
+    expect(pages.length).toBeGreaterThanOrEqual(2);
+    expect(pages[0].mediaType).toBe("image/jpeg");
+    expect(pages[0].data.byteOffset).toBe(0);
   }, 30_000);
 });
 
