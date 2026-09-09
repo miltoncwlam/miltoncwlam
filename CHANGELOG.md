@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.6.1** — one number only (`package.json`).
+**Version 3.6.2** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,16 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.6.2 — 2026-09-09
+
+**Miniscule.** Scanned PDFs no longer fail notebook create with a Node `path` type error.
+
+### Fixed
+- OCR now reads JPEG images already inside the PDF (the `/Length 55876` stream) instead of asking pdf.js to rasterize them as a filesystem path.
+- Create-notebook overlay explains a scan read failure instead of showing the raw Node error.
 
 ---
 

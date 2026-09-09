@@ -14,7 +14,14 @@ export function friendlyGenerateError(message: string, code?: string) {
   if (code === "RATE_LIMITED") {
     return message || "Too many generates this hour. Wait a bit, then try again.";
   }
-  if (/OCR found no readable text|no selectable text|likely a scan|OCR it first/i.test(message)) {
+  if (
+    /OCR found no readable text|no selectable text|likely a scan|OCR it first|could not read this scanned PDF|could not convert any PDF pages/i.test(
+      message,
+    )
+  ) {
+    return "This PDF looks like a photo of a page. We try OCR automatically — if that fails, paste the text.";
+  }
+  if (/path["'] argument must be of type string/i.test(message)) {
     return "This PDF looks like a photo of a page. We try OCR automatically — if that fails, paste the text.";
   }
   if (/too large to read|too large \(max/i.test(message)) {

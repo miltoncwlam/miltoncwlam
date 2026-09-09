@@ -64,9 +64,9 @@ Preserve headings, lists, and formulas as plain text. Do not summarize, translat
 If a page is blank, output nothing for that page.`,
             },
             ...batch.map((page) => ({
-              type: "file" as const,
+              type: "image" as const,
+              image: page.data,
               mediaType: page.mediaType,
-              data: page.data,
             })),
           ],
         },
