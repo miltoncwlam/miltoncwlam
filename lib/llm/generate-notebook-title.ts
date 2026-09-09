@@ -1,7 +1,7 @@
 import { generateObject } from "ai";
 
 import { INGEST_TITLE_CHARS } from "@/lib/credits/config";
-import { promptLanguageName } from "@/lib/i18n/locales";
+import { studioLanguageRules } from "@/lib/i18n/locales";
 import {
   getOpenRouterClient,
   resolveOpenRouterModel,
@@ -32,14 +32,14 @@ export async function generateNotebookTitle(input: {
   model?: string;
   fallback?: string;
 }) {
-  const language = promptLanguageName(input.language ?? "en");
   const fallback = input.fallback?.trim() || "Study notebook";
   try {
     const result = await generateObject({
       model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
       schema: notebookTitleSchema,
       abortSignal: AbortSignal.timeout(20_000),
-      prompt: `Write a short study-notebook title (max 8 words) in ${language}.
+      prompt: `Write a short study-notebook title (max 8 words).
+${studioLanguageRules(input.language ?? "en")}
 Optional one-sentence summary of what the source is about.
 Source:
 ${input.source.slice(0, INGEST_TITLE_CHARS)}`,

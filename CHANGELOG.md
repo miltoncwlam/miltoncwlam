@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.7.2** — one number only (`package.json`).
+**Version 3.7.3** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,17 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.7.3 — 2026-09-09
+
+**Miniscule.** Study notes follow the language you picked, and the sheet is readable.
+
+### Fixed
+- Choosing 繁體中文 on create now sets the app language, so studio notes/exams are not generated in English.
+- Notes prompts require full Traditional Chinese (Hong Kong wording), not English with Chinese glosses.
+- Notes hide `xn--` punycode junk, render `**bold**`, and split a wall of text into headings and lists.
 
 ---
 

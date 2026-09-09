@@ -34,6 +34,7 @@ import {
 import {
   LOCALE_CODES,
   LOCALE_LABELS,
+  parseAppLocale,
   type AppLocale,
 } from "@/lib/i18n/locales";
 import { createClient } from "@/lib/supabase/client";
@@ -78,6 +79,7 @@ export function CreateDeckForm({
   const t = useTranslations("create");
   const tg = useTranslations("generation");
   const locale = useLocale() as AppLocale;
+  const [language, setLanguage] = useState<AppLocale>(locale);
   const formRef = useRef<HTMLFormElement>(null);
   const [mode, setMode] = useState<SourceMode>("topic");
   const [error, setError] = useState<string | null>(null);
@@ -170,7 +172,7 @@ export function CreateDeckForm({
         sourceType: activeMode,
         title: String(formData.get("title") || "") || undefined,
         provider: "openrouter",
-        language: String(formData.get("language") || locale),
+        language: language,
         sourceRetention: String(formData.get("sourceRetention") || "keep"),
         model: (formData.get("openrouterModel") as string) || openrouterModel,
       };
@@ -493,9 +495,18 @@ export function CreateDeckForm({
             <Label>{t("language")}</Label>
             <select
               className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-              defaultValue={locale}
               disabled={pending}
               name="language"
+              onChange={(event) => {
+                const next = parseAppLocale(event.target.value);
+                setLanguage(next);
+                void fetch("/api/locale", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ locale: next }),
+                });
+              }}
+              value={language}
             >
               {LOCALE_CODES.map((code) => (
                 <option key={code} value={code}>

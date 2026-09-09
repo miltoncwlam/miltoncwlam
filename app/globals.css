@@ -3435,6 +3435,11 @@ html[data-theme="dark"] .play-lantern-text {
 
 .study-notes-body p {
   margin: 0.35rem 0;
+  overflow-wrap: break-word;
+}
+
+.study-notes-body strong {
+  font-weight: 800;
 }
 
 .study-notes-body ul,

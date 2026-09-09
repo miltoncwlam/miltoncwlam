@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { extractJsonObject } from "@/lib/llm/parse-deck-json";
+import { sanitizeStudyMarkdown } from "@/lib/study/notes-markdown";
 import { answersMatch } from "@/lib/quiz/choices";
 import { EXAM_QUESTION_TYPES } from "@/lib/types/notebook";
 import type {
@@ -126,9 +127,13 @@ export function planExamQuestions(
 }
 
 export function parseNotesPayload(payload: unknown): NotesPayload {
-  return notesSchema.parse(
+  const parsed = notesSchema.parse(
     typeof payload === "string" ? extractJsonObject(payload) : payload,
   );
+  return {
+    title: parsed.title.trim(),
+    markdown: sanitizeStudyMarkdown(parsed.markdown),
+  };
 }
 
 export function parseMindmapPayload(payload: unknown): MindmapPayload {

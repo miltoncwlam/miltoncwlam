@@ -1,6 +1,6 @@
 import { generateObject } from "ai";
 
-import { promptLanguageName } from "@/lib/i18n/locales";
+import { studioLanguageRules } from "@/lib/i18n/locales";
 import {
   getOpenRouterClient,
   resolveOpenRouterModel,
@@ -37,13 +37,13 @@ export async function generateMindmap(input: {
   language?: string;
   model?: string;
 }): Promise<{ mindmap: MindmapPayload; usage: StudioUsage }> {
-  const language = promptLanguageName(input.language ?? "en");
   const result = await generateObjectWithRetry(() =>
     generateObject({
       model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
       schema: mindmapSchema,
       abortSignal: AbortSignal.timeout(150_000),
-      prompt: `Build a study mind map in ${language} as a flat node list from this source.
+      prompt: `Build a study mind map as a flat node list from this source.
+${studioLanguageRules(input.language ?? "en")}
 Rules:
 - Exactly one root node with parentId null (the topic). ids n1, n2, n3… with no repeats.
 - 4–7 main branches (parentId = root id) that cover different parts of the source, not synonyms of the title.

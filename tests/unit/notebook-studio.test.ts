@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { layoutMindmap } from "@/components/mindmap-tree";
-import { parseStudyNotes } from "@/components/study-notes-view";
 import { estimateArtifactOutputTokens } from "@/lib/credits/estimate-generation";
+import { studioLanguageRules } from "@/lib/i18n/locales";
 import { isRetryableGenerateError } from "@/lib/llm/generate-object-retry";
 import {
   examCouldNotMarkResult,
@@ -10,8 +10,10 @@ import {
   parseAiExamMarks,
   parseExamPayload,
   parseMindmapPayload,
+  parseNotesPayload,
   planExamQuestions,
 } from "@/lib/llm/parse-studio";
+import { parseStudyNotes, sanitizeStudyMarkdown } from "@/lib/study/notes-markdown";
 import type { ExamQuestion } from "@/lib/types/notebook";
 
 describe("studio parsers", () => {
@@ -267,6 +269,45 @@ describe("study notes and mind map layout", () => {
     expect(blocks.some((block) => block.type === "h3" && block.text === "Remember")).toBe(
       true,
     );
+  });
+
+  it("strips punycode and turns a wall of bold terms into a list", () => {
+    const markdown =
+      "xn--chs-6o4a1b5j7a: Palaeolithic Age **abdication (禪讓)** a king gives up the throne **feudal system (封建)** lords and fiefs **hegemons (霸主)** Spring and Autumn";
+    const cleaned = sanitizeStudyMarkdown(markdown);
+    expect(cleaned).not.toMatch(/xn--/i);
+    expect(cleaned).toMatch(/## Key terms/);
+    const blocks = parseStudyNotes(markdown, "Unit 1");
+    expect(blocks.some((block) => block.type === "ul")).toBe(true);
+    const list = blocks.find((block) => block.type === "ul");
+    expect(list && list.type === "ul" && list.items.some((item) => /禪讓/.test(item))).toBe(
+      true,
+    );
+  });
+
+  it("splits inlined headings out of a single paragraph", () => {
+    const blocks = parseStudyNotes(
+      "Intro sentence. ## Key terms - chlorophyll makes food ## Facts light and water",
+      "Photosynthesis",
+    );
+    expect(blocks.some((block) => block.type === "h2" && block.text === "Key terms")).toBe(
+      true,
+    );
+  });
+
+  it("asks Traditional Chinese models to write 繁體全文", () => {
+    expect(studioLanguageRules("zh-Hant")).toMatch(/繁體中文/);
+    expect(studioLanguageRules("zh-Hant")).toMatch(/Do not write English paragraphs/);
+  });
+
+  it("sanitizes stored notes markdown", () => {
+    const notes = parseNotesPayload({
+      title: "Unit 1",
+      markdown:
+        "xn--fq2c: filler text **abdication (禪讓)** a king gives up the throne **feudal system (封建)** lords **hegemons (霸主)** Spring and Autumn extra words here for length",
+    });
+    expect(notes.markdown).not.toMatch(/xn--/i);
+    expect(notes.markdown).toMatch(/\*\*abdication/);
   });
 
   it("lays out a root and branches with connectors", () => {

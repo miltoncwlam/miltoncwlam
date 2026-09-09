@@ -7,7 +7,7 @@ import {
   resolveOpenRouterModel,
 } from "@/lib/llm/config";
 import { env } from "@/lib/env";
-import { promptLanguageName } from "@/lib/i18n/locales";
+import { promptLanguageName, studioLanguageRules } from "@/lib/i18n/locales";
 import { mergeGeneratedDecks } from "@/lib/llm/merge-decks";
 import {
   extractJsonObject,
@@ -123,6 +123,7 @@ function generationInstructions(options: GenerationOptions) {
   return `Create exactly ${cardCount} high-quality study flashcards (not fewer, not more).
 Difficulty: ${options.difficulty ?? "intermediate"}.
 Language: write every card front and back in ${language}.
+${studioLanguageRules(options.language ?? "en")}
 Return a short deck title in ${language}.
 ${qualityRules()}
 ${styleRules(style)}
@@ -147,6 +148,7 @@ function topicGenerationInstructions(options: GenerationOptions) {
   return `Create exactly ${cardCount} high-quality educational flashcards from the topic alone (no study material provided).
 Difficulty: ${options.difficulty ?? "intermediate"}.
 Language: write every card front and back in ${language}.
+${studioLanguageRules(options.language ?? "en")}
 Return a short deck title in ${language}.
 Cover core concepts for learners at this level. Keep content age-appropriate and accurate.
 ${qualityRules()}

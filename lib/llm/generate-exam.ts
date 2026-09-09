@@ -1,6 +1,6 @@
 import { generateObject } from "ai";
 
-import { promptLanguageName } from "@/lib/i18n/locales";
+import { studioLanguageRules } from "@/lib/i18n/locales";
 import {
   getOpenRouterClient,
   resolveOpenRouterModel,
@@ -63,7 +63,6 @@ export async function generateExam(input: {
   types: ExamQuestionType[];
   durationMinutes?: number;
 }): Promise<{ exam: ExamPayload; usage: StudioUsage }> {
-  const language = promptLanguageName(input.language ?? "en");
   const types = input.types.length
     ? input.types
     : (["mcq", "short", "tf"] as ExamQuestionType[]);
@@ -77,7 +76,8 @@ export async function generateExam(input: {
       model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
       schema: examSchema,
       abortSignal: AbortSignal.timeout(50_000),
-      prompt: `Write a ${difficulty} exam paper in ${language} from this source.
+      prompt: `Write a ${difficulty} exam paper from this source.
+${studioLanguageRules(input.language ?? "en")}
 This paper must be finishable in ${duration} minutes. Emit EXACTLY ${count} questions, ids q1 to q${count} with no gaps or repeats.
 Question mix (longer types take more time): ${mix}.
 Type rules — choices and pairs are required JSON fields for those types:
@@ -109,7 +109,8 @@ ${input.source.slice(0, 24_000)}`,
           model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
           schema: examFillSchema,
           abortSignal: AbortSignal.timeout(20_000),
-          prompt: `Add EXACTLY ${missing} more ${difficulty} exam questions in ${language} from this source.
+          prompt: `Add EXACTLY ${missing} more ${difficulty} exam questions from this source.
+${studioLanguageRules(input.language ?? "en")}
 Continue ids after q${exam.questions.length}. Mix: ${mix}.
 Same type rules as a ${duration}-minute paper (choices/pairs required for mcq/tf/matching/cloze_choice).
 Source:

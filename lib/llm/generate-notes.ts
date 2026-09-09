@@ -1,6 +1,6 @@
 import { generateObject } from "ai";
 
-import { promptLanguageName } from "@/lib/i18n/locales";
+import { studioLanguageRules } from "@/lib/i18n/locales";
 import {
   getOpenRouterClient,
   resolveOpenRouterModel,
@@ -37,20 +37,21 @@ export async function generateNotes(input: {
   language?: string;
   model?: string;
 }): Promise<{ notes: NotesPayload; usage: StudioUsage }> {
-  const language = promptLanguageName(input.language ?? "en");
   const result = await generateObjectWithRetry(() =>
     generateObject({
       model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
       schema: notesSchema,
       abortSignal: AbortSignal.timeout(150_000),
-      prompt: `Write revision-sheet study notes in ${language} from this source.
+      prompt: `Write revision-sheet study notes from this source.
+${studioLanguageRules(input.language ?? "en")}
 Put the title only in the title field. Do not start markdown with a duplicate # title.
-Use markdown sections:
+The markdown field MUST use real newline characters (not a single paragraph).
+Required sections, each starting on its own line:
 ## Key terms
 ## Facts
 ## How to remember
-Optional ### subheadings, bullet or numbered lists, **bold** terms, and short examples.
-Write enough to study from (a full sheet), still grounded in the source. No invented facts. Do not mention that you are an AI.
+Use "- " bullets under each heading. Bold a term with **term** on the same line as its meaning.
+Write enough to study from. No invented facts. No Punycode (xn--). Do not mention that you are an AI.
 
 Source:
 ${input.source.slice(0, 24_000)}`,

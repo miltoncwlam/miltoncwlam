@@ -2,85 +2,25 @@
 
 import { useTranslations } from "next-intl";
 
+import {
+  parseStudyNotes,
+  type StudyNoteBlock,
+} from "@/lib/study/notes-markdown";
+
+export type { StudyNoteBlock };
+export { parseStudyNotes };
+
 function renderInline(text: string) {
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  const parts = text.split(/(\*\*.+?\*\*|__[^_]+?__)/g);
   return parts.map((part, index) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
+    if (part.startsWith("**") && part.endsWith("**") && part.length >= 4) {
       return <strong key={index}>{part.slice(2, -2)}</strong>;
     }
-    return <span key={index}>{part}</span>;
+    if (part.startsWith("__") && part.endsWith("__") && part.length >= 4) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>;
+    }
+    return <span key={index}>{part.replace(/\*\*/g, "")}</span>;
   });
-}
-
-function normalizeHeading(value: string) {
-  return value.trim().replace(/\s+/g, " ").toLowerCase();
-}
-
-export type StudyNoteBlock =
-  | { type: "h2"; text: string }
-  | { type: "h3"; text: string }
-  | { type: "p"; text: string }
-  | { type: "ul"; items: string[] }
-  | { type: "ol"; items: string[] };
-
-export function parseStudyNotes(markdown: string, title: string): StudyNoteBlock[] {
-  const lines = markdown.replace(/\r\n/g, "\n").split("\n");
-  const blocks: StudyNoteBlock[] = [];
-  let list: { type: "ul" | "ol"; items: string[] } | null = null;
-  const titleKey = normalizeHeading(title);
-
-  function flushList() {
-    if (list?.items.length) blocks.push(list);
-    list = null;
-  }
-
-  for (const raw of lines) {
-    const line = raw.trimEnd();
-    const trimmed = line.trim();
-    if (!trimmed) {
-      flushList();
-      continue;
-    }
-    if (trimmed.startsWith("### ")) {
-      flushList();
-      blocks.push({ type: "h3", text: trimmed.slice(4).trim() });
-      continue;
-    }
-    if (trimmed.startsWith("## ")) {
-      flushList();
-      blocks.push({ type: "h2", text: trimmed.slice(3).trim() });
-      continue;
-    }
-    if (trimmed.startsWith("# ")) {
-      const heading = trimmed.slice(2).trim();
-      if (normalizeHeading(heading) === titleKey) continue;
-      flushList();
-      blocks.push({ type: "h2", text: heading });
-      continue;
-    }
-    const bullet = trimmed.match(/^[-*]\s+(.*)$/);
-    if (bullet) {
-      if (list?.type !== "ul") {
-        flushList();
-        list = { type: "ul", items: [] };
-      }
-      list.items.push(bullet[1]);
-      continue;
-    }
-    const numbered = trimmed.match(/^\d+[.)]\s+(.*)$/);
-    if (numbered) {
-      if (list?.type !== "ol") {
-        flushList();
-        list = { type: "ol", items: [] };
-      }
-      list.items.push(numbered[1]);
-      continue;
-    }
-    flushList();
-    blocks.push({ type: "p", text: trimmed });
-  }
-  flushList();
-  return blocks;
 }
 
 export function StudyNotesView({
@@ -112,10 +52,10 @@ export function StudyNotesView({
       <div className="study-notes-body">
         {blocks.map((block, index) => {
           if (block.type === "h2") {
-            return <h2 key={index}>{block.text}</h2>;
+            return <h2 key={index}>{renderInline(block.text)}</h2>;
           }
           if (block.type === "h3") {
-            return <h3 key={index}>{block.text}</h3>;
+            return <h3 key={index}>{renderInline(block.text)}</h3>;
           }
           if (block.type === "ul") {
             return (
