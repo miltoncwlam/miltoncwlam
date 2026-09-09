@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { requireApiSession } from "@/lib/auth-server";
-import { MAX_OCR_PAGES } from "@/lib/credits/config";
+import { friendlyGenerateError } from "@/lib/friendly-generate-error";
 import {
   estimateArtifactCredits,
   estimateOcrCredits,
@@ -28,7 +28,7 @@ import {
   purgeFailedGenerations,
 } from "@/lib/data/decks";
 import { extractStudyText, isSparsePdfText, readPdfTextLayer } from "@/lib/ingest/extract-text";
-import { ocrPdfPages } from "@/lib/ingest/ocr-pdf";
+import { OCR_PAGE_CAP, ocrPdfPages } from "@/lib/ingest/ocr-pdf";
 import { fetchStudyTextFromUrl } from "@/lib/ingest/fetch-url";
 import {
   assertOwnedStoragePath,
@@ -166,7 +166,7 @@ async function readNotebookSource(
       sourceSizeBytes: upload.size,
       ocr: {
         data,
-        pageCount: Math.min(MAX_OCR_PAGES, Math.max(1, layer.totalPages)),
+        pageCount: Math.min(OCR_PAGE_CAP, Math.max(1, layer.totalPages)),
       },
     };
   }
@@ -415,7 +415,10 @@ export async function POST(request: Request) {
     const guestQuota = isGuestQuotaError(error);
     return Response.json(
       {
-        error: message,
+        error: friendlyGenerateError(
+          message,
+          guestQuota ? "GUEST_QUOTA" : rateLimited ? "RATE_LIMITED" : undefined,
+        ),
         deckId,
         code: guestQuota ? "GUEST_QUOTA" : rateLimited ? "RATE_LIMITED" : undefined,
         refunded: charged && spentTextAmount > 0,

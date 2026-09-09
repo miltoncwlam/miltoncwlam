@@ -329,6 +329,7 @@ describe("study notes and mind map layout", () => {
 describe("generate retry", () => {
   it("retries schema errors but not timeouts", () => {
     expect(isRetryableGenerateError(new Error("too_small"))).toBe(true);
+    expect(isRetryableGenerateError(new Error("Invalid JSON response"))).toBe(true);
     expect(isRetryableGenerateError(new Error("NoObjectGenerated"))).toBe(true);
     expect(isRetryableGenerateError(new Error("This operation was aborted"))).toBe(
       false,

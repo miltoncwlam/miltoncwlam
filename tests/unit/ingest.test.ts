@@ -1,4 +1,6 @@
+import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
@@ -60,6 +62,18 @@ describe("source ingestion", () => {
     expect(text.length).toBeGreaterThan(800);
     const diskText = await extractStudyText(fromDisk, "application/pdf");
     expect(diskText).toMatch(/photolysis/i);
+  });
+
+  it("treats the S1 Chinese History L1.1 scan as a photo PDF", async () => {
+    const historyPdf = join(
+      process.cwd(),
+      "S1 CH L1.1 中華民族與早期國家的起源.pdf",
+    );
+    if (!existsSync(historyPdf)) return;
+    const scan = new Uint8Array(await readFile(historyPdf));
+    const layer = await readPdfTextLayer(scan);
+    expect(isSparsePdfText(layer.text)).toBe(true);
+    expect(layer.totalPages).toBe(12);
   });
 
   it("treats the scan fixture as a photo PDF", async () => {

@@ -42,7 +42,7 @@ export function friendlyGenerateError(message: string, code?: string) {
   if (/failed to fetch|networkerror|load failed/i.test(message)) {
     return "The connection dropped. Try again with a shorter source.";
   }
-  if (/expected number|invalid option|invalid input|invalid_type|too_small|did not match schema|JSONParse|NoObjectGenerated/i.test(message)) {
+  if (/expected number|invalid option|invalid input|invalid_type|too_small|did not match schema|JSONParse|Invalid JSON response|invalid json|NoObjectGenerated/i.test(message)) {
     return "The model returned a messy draft. Retry — it usually works the second time.";
   }
   return message;

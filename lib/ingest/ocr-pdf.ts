@@ -4,16 +4,18 @@ import { generateText } from "ai";
 
 import { MAX_OCR_PAGES } from "@/lib/credits/config";
 import { fitPageImage, pdfPagesToImages } from "@/lib/ingest/pdf-to-images";
-import { getOpenRouterClient } from "@/lib/llm/config";
 import { DEFAULT_OCR_MODEL } from "@/lib/llm/models";
 
 /** Leave room for title + refund inside notebooks `maxDuration` (180s). */
-const OCR_BUDGET_MS = 150_000;
-const OCR_FIRST_PAGE_MS = 80_000;
-const OCR_PAGE_MS = 50_000;
-const OCR_RETRY_MS = 40_000;
-const OCR_RETRY_DIMENSION = 720;
+const OCR_BUDGET_MS = 125_000;
+const OCR_FIRST_PAGE_MS = 115_000;
+const OCR_PAGE_MS = 40_000;
+const OCR_RETRY_MS = 45_000;
+const OCR_RETRY_DIMENSION = 640;
+const OCR_FIRST_DIMENSION = 768;
 const MAX_SOURCE = 80_000;
+/** Read a few pages well instead of timing out on ten huge scans. */
+export const OCR_PAGE_CAP = Math.min(3, MAX_OCR_PAGES);
 
 function readUsage(result: {
   usage?: {
@@ -33,19 +35,34 @@ function readUsage(result: {
   };
 }
 
-function isAbortError(error: unknown) {
+export function isTransientOcrError(error: unknown) {
   const name = error instanceof Error ? error.name : "";
   const message = error instanceof Error ? error.message : String(error);
-  return /aborted|timeout|TimeoutError|AbortError/i.test(`${name} ${message}`);
+  return /aborted|timeout|TimeoutError|AbortError|Invalid JSON response|invalid json|JSONParse|APICallError|EmptyResponse|NoContentGenerated/i.test(
+    `${name} ${message}`,
+  );
 }
 
 function remainingMs(started: number) {
   return OCR_BUDGET_MS - (Date.now() - started);
 }
 
+/** Avoid Buffer — JSON.stringify(Buffer) can blow up the OpenRouter body. */
+export function pageImageDataUrl(page: {
+  data: Uint8Array;
+  mediaType: string;
+}) {
+  const bytes = Uint8Array.from(page.data);
+  return `data:${page.mediaType};base64,${Buffer.from(bytes).toString("base64")}`;
+}
+
 async function transcribePage(
-  model: ReturnType<ReturnType<typeof getOpenRouterClient>>,
-  page: Awaited<ReturnType<typeof pdfPagesToImages>>[number],
+  model: Parameters<typeof generateText>[0]["model"],
+  page: {
+    data: Uint8Array;
+    mediaType: string;
+    pageNumber: number;
+  },
   timeoutMs: number,
 ) {
   return generateText({
@@ -64,9 +81,9 @@ Preserve headings, lists, and formulas as plain text. Do not summarize, translat
 If a page is blank, output nothing.`,
           },
           {
-            type: "image" as const,
-            image: Buffer.from(page.data),
+            type: "file" as const,
             mediaType: page.mediaType,
+            data: Uint8Array.from(page.data),
           },
         ],
       },
@@ -83,9 +100,10 @@ export async function ocrPdfPages(
   usage: { inputTokens: number; outputTokens: number };
 }> {
   const pages = await pdfPagesToImages(data, {
-    maxPages: MAX_OCR_PAGES,
-    maxDimension: 1024,
+    maxPages: OCR_PAGE_CAP,
+    maxDimension: OCR_FIRST_DIMENSION,
   });
+  const { getOpenRouterClient } = await import("@/lib/llm/config");
   const client = getOpenRouterClient();
   const model = client(modelId || DEFAULT_OCR_MODEL);
   const parts: string[] = [];
@@ -95,12 +113,15 @@ export async function ocrPdfPages(
 
   for (const [index, page] of pages.entries()) {
     const leftover = remainingMs(started);
-    if (leftover < 12_000) {
+    if (parts.length && (leftover < 40_000 || Date.now() - started > 50_000)) {
+      break;
+    }
+    if (leftover < 15_000) {
       timedOut = true;
       break;
     }
     const timeoutMs = Math.max(
-      12_000,
+      15_000,
       Math.min(index === 0 ? OCR_FIRST_PAGE_MS : OCR_PAGE_MS, leftover - 8_000),
     );
     try {
@@ -112,13 +133,19 @@ export async function ocrPdfPages(
         inputTokens: usage.inputTokens + used.inputTokens,
         outputTokens: usage.outputTokens + used.outputTokens,
       };
+      if (parts.length && (remainingMs(started) < 40_000 || Date.now() - started > 50_000)) {
+        break;
+      }
     } catch (error) {
-      if (!isAbortError(error)) throw error;
+      if (!isTransientOcrError(error)) throw error;
       timedOut = true;
       const retryBudget = remainingMs(started);
-      if (retryBudget < 12_000) break;
+      if (retryBudget < 15_000) {
+        if (parts.length) break;
+        continue;
+      }
       try {
-        const smaller = await fitPageImage(page, OCR_RETRY_DIMENSION, 50);
+        const smaller = await fitPageImage(page, OCR_RETRY_DIMENSION, 45);
         const result = await transcribePage(
           model,
           smaller,
@@ -135,7 +162,7 @@ export async function ocrPdfPages(
           outputTokens: usage.outputTokens + used.outputTokens,
         };
       } catch (retryError) {
-        if (!isAbortError(retryError)) throw retryError;
+        if (!isTransientOcrError(retryError)) throw retryError;
         if (parts.length) break;
       }
     }

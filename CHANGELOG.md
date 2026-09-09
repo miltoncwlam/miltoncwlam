@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.7.3** — one number only (`package.json`).
+**Version 3.7.4** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,18 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.7.4 — 2026-09-09
+
+**Miniscule.** Dense scanned PDFs finish reading instead of dying on timeout or Invalid JSON.
+
+### Fixed
+- OCR sends page images as file bytes (not a Node `Buffer`), so OpenRouter no longer returns `Invalid JSON response`.
+- The first scan page can use most of the time budget; extra pages stop once we have text, so title-save still fits in 180s.
+- Invalid JSON is treated as a skippable/retryable page error and mapped to a friendly retry hint.
+- The S1 中華民族與早期國家的起源 12-page JPEG scan now OCRs instead of “Reading this scan took too long.”
 
 ---
 

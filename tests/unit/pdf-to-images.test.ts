@@ -1,9 +1,15 @@
+import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 import { createCanvas } from "@napi-rs/canvas";
 import { describe, expect, it } from "vitest";
 
 import { friendlyGenerateError } from "@/lib/friendly-generate-error";
+import {
+  isTransientOcrError,
+  pageImageDataUrl,
+} from "@/lib/ingest/ocr-pdf";
 import {
   extractEmbeddedJpegs,
   pdfPagesToImages,
@@ -104,6 +110,24 @@ describe("pdfPagesToImages", () => {
     expect(pages[0].data.buffer.byteLength).toBe(pages[0].data.byteLength);
   }, 30_000);
 
+  it("reads the S1 Chinese History L1.1 scan when the file is in the repo", async () => {
+    const historyPdf = join(
+      process.cwd(),
+      "S1 CH L1.1 中華民族與早期國家的起源.pdf",
+    );
+    if (!existsSync(historyPdf)) return;
+    const scan = new Uint8Array(await readFile(historyPdf));
+    const embedded = extractEmbeddedJpegs(scan);
+    expect(embedded.length).toBe(12);
+    const pages = await pdfPagesToImages(scan, { maxPages: 3, maxDimension: 768 });
+    expect(pages.length).toBe(3);
+    expect(pages[0].mediaType).toBe("image/jpeg");
+    expect(pages[0].data.byteLength).toBeLessThan(embedded[0].byteLength);
+    const url = pageImageDataUrl(pages[0]);
+    expect(url).toMatch(/^data:image\/jpeg;base64,/);
+    expect(JSON.stringify({ image: url })).not.toMatch(/"type":"Buffer"/);
+  }, 30_000);
+
   it("shrinks large scan JPEGs so OCR payloads stay small", async () => {
     const { pdf, jpeg } = await jpegScanPdf(1800, 1200);
     expect(jpeg.byteLength).toBeGreaterThan(8_000);
@@ -147,6 +171,27 @@ describe("friendlyGenerateError", () => {
     expect(
       friendlyGenerateError("Guest trial is used up.", "GUEST_QUOTA"),
     ).toMatch(/create a free account/i);
+  });
+
+  it("maps Invalid JSON response to a retry hint", () => {
+    expect(friendlyGenerateError("Invalid JSON response")).toMatch(/messy draft/i);
+  });
+});
+
+describe("OCR error handling", () => {
+  it("treats Invalid JSON and timeouts as skippable page errors", () => {
+    expect(isTransientOcrError(new Error("Invalid JSON response"))).toBe(true);
+    expect(isTransientOcrError(new Error("This operation was aborted"))).toBe(true);
+    expect(isTransientOcrError(new Error("Unauthorized"))).toBe(false);
+  });
+
+  it("encodes page bytes as a data URL instead of a Buffer", () => {
+    const url = pageImageDataUrl({
+      data: new Uint8Array([0xff, 0xd8, 0xff, 0xd9]),
+      mediaType: "image/jpeg",
+    });
+    expect(url).toMatch(/^data:image\/jpeg;base64,/);
+    expect(JSON.stringify({ image: url })).not.toMatch(/"type":"Buffer"/);
   });
 });
 
