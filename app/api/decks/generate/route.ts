@@ -11,9 +11,11 @@ import { captureException } from "@/lib/sentry";
 import {
   assertAndSpendCredits,
   assertGenerateRateLimit,
+  assertGuestGenerateQuota,
   getOrRefreshCredits,
   refundCredits,
 } from "@/lib/data/credits";
+import { isGuestQuotaError } from "@/lib/credits/config";
 import {
   clearDeckSource,
   completeDeckGeneration,
@@ -257,6 +259,7 @@ export async function POST(request: Request) {
     model = await resolveRequestModel(input.model);
     if (!model) throw new Error("Missing model");
     const credits = await getOrRefreshCredits(userId);
+    await assertGuestGenerateQuota(userId, session.user.isGuest);
     await assertGenerateRateLimit(userId, {
       provider,
       model,
@@ -298,6 +301,7 @@ export async function POST(request: Request) {
       textAmount: estimate.textCredits,
       imageAmount: 0,
       reason: input.mode === "quiz" ? "generate_quiz" : "generate_deck",
+      skipBalance: Boolean(session.user.isGuest),
       meta: {
         provider,
         model,
@@ -548,21 +552,24 @@ export async function POST(request: Request) {
     }
 
     const rateLimited = /too many generates/i.test(message);
+    const guestQuota = isGuestQuotaError(error);
     return Response.json(
       {
         error: message,
         deckId,
-        code: refusal ?? (rateLimited ? "RATE_LIMITED" : undefined),
+        code: refusal ?? (guestQuota ? "GUEST_QUOTA" : rateLimited ? "RATE_LIMITED" : undefined),
         refunded: charged && (spentTextAmount > 0 || spentImageAmount > 0),
       },
       {
         status: refusal
           ? 422
-          : rateLimited
-            ? 429
-            : deckId
-              ? 502
-              : 400,
+          : guestQuota
+            ? 403
+            : rateLimited
+              ? 429
+              : deckId
+                ? 502
+                : 400,
       },
     );
   }

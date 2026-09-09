@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
@@ -31,6 +32,7 @@ export function NotebookStudio({
   const [pendingKind, setPendingKind] = useState<ArtifactKind | null>(null);
   const [lastKind, setLastKind] = useState<ArtifactKind | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [types, setTypes] = useState<string[]>([...EXAM_QUESTION_TYPES]);
   const [durationMinutes, setDurationMinutes] = useState(30);
@@ -49,6 +51,7 @@ export function NotebookStudio({
   function generate(kind: ArtifactKind) {
     if (!hasSource) return;
     setError(null);
+    setErrorCode(null);
     setLastKind(kind);
     setPendingKind(kind);
     startTransition(async () => {
@@ -66,6 +69,7 @@ export function NotebookStudio({
         });
         const result = await response.json();
         if (!response.ok) {
+          if (result.code) setErrorCode(result.code);
           throw new Error(
             friendlyGenerateError(result.error || "Generation failed", result.code),
           );
@@ -94,11 +98,23 @@ export function NotebookStudio({
           label={t("generating")}
           onDismiss={() => {
             setError(null);
+            setErrorCode(null);
             setPendingKind(null);
           }}
-          onRetry={() => {
-            if (lastKind) generate(lastKind);
-          }}
+          errorAction={
+            errorCode === "GUEST_QUOTA" ? (
+              <Link className="primary-button flex-1 text-center" href="/account?upgrade=1">
+                {t("guestCreateAccount")}
+              </Link>
+            ) : null
+          }
+          onRetry={
+            errorCode === "GUEST_QUOTA"
+              ? undefined
+              : () => {
+                  if (lastKind) generate(lastKind);
+                }
+          }
           phase="generate"
         />
       ) : null}

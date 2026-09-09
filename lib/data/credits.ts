@@ -9,6 +9,8 @@ import {
   FREE_GENERATE_LIMIT_DAY,
   FREE_GENERATE_LIMIT_HOUR,
   GENERATE_RATE_LIMIT_WINDOW_MS,
+  GUEST_GENERATE_LIMIT,
+  GuestQuotaError,
   IMAGE_PERIOD_GRANT,
   PAID_GENERATE_LIMIT_HOUR,
 } from "@/lib/credits/config";
@@ -54,6 +56,15 @@ function mapRow(row: CreditRow): UserCreditBalance {
 }
 
 const CREDIT_SELECT = `user_id, balance, image_balance, period_start, period_end, period_grant, image_period_grant, is_unlimited`;
+
+const GENERATE_REASONS = [
+  "generate_deck",
+  "generate_quiz",
+  "generate_ingest",
+  "generate_mindmap",
+  "generate_notes",
+  "generate_exam",
+] as const;
 
 async function ensureRow(userId: string): Promise<UserCreditBalance> {
   const inserted = await pool.query<CreditRow>(
@@ -143,12 +154,33 @@ export async function getOrRefreshCredits(
   return mapRow(row);
 }
 
+export async function assertGuestGenerateQuota(
+  userId: string,
+  isGuest: boolean | undefined,
+): Promise<void> {
+  if (!isGuest) return;
+  const result = await pool.query<{ count: string }>(
+    `select count(*)::text as count
+     from credit_ledger
+     where user_id = $1
+       and pool = 'text'
+       and reason = any($2::text[])`,
+    [userId, [...GENERATE_REASONS]],
+  );
+  const count = Number(result.rows[0]?.count ?? 0);
+  if (count >= GUEST_GENERATE_LIMIT) {
+    throw new GuestQuotaError();
+  }
+}
+
 export async function assertAndSpendCredits(input: {
   userId: string;
   textAmount?: number;
   imageAmount?: number;
   reason: string;
   meta?: Record<string, unknown>;
+  /** Guests skip the visible energy pool; ledger still records the generate. */
+  skipBalance?: boolean;
 }): Promise<UserCreditBalance> {
   const textAmount = Math.max(0, Math.floor(input.textAmount ?? 0));
   const imageAmount = Math.max(0, Math.floor(input.imageAmount ?? 0));
@@ -177,14 +209,18 @@ export async function assertAndSpendCredits(input: {
     );
     let row = locked.rows[0];
 
-    if (row.is_unlimited) {
+    if (row.is_unlimited || input.skipBalance) {
       if (textAmount > 0) {
         await insertLedger(client, {
           userId: input.userId,
           delta: 0,
           pool: "text",
           reason: input.reason,
-          meta: { ...(input.meta ?? {}), unlimited: true },
+          meta: {
+            ...(input.meta ?? {}),
+            unlimited: Boolean(row.is_unlimited),
+            guest: Boolean(input.skipBalance),
+          },
         });
       }
       if (imageAmount > 0) {
@@ -193,11 +229,18 @@ export async function assertAndSpendCredits(input: {
           delta: 0,
           pool: "image",
           reason: input.reason,
-          meta: { ...(input.meta ?? {}), unlimited: true },
+          meta: {
+            ...(input.meta ?? {}),
+            unlimited: Boolean(row.is_unlimited),
+            guest: Boolean(input.skipBalance),
+          },
         });
       }
       await client.query("commit");
-      return mapRow(row);
+      return {
+        ...mapRow(row),
+        isUnlimited: Boolean(row.is_unlimited) || Boolean(input.skipBalance),
+      };
     }
 
     if (row.period_end.getTime() <= Date.now()) {

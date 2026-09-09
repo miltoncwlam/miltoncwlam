@@ -1,4 +1,7 @@
 export function friendlyGenerateError(message: string, code?: string) {
+  if (code === "GUEST_QUOTA") {
+    return "Guest trial is used up. Create a free account to keep generating.";
+  }
   if (code === "UNRELATED_SOURCE") {
     return (
       message ||
@@ -23,6 +26,12 @@ export function friendlyGenerateError(message: string, code?: string) {
   }
   if (/path["'] argument must be of type string/i.test(message)) {
     return "This PDF looks like a photo of a page. We try OCR automatically — if that fails, paste the text.";
+  }
+  if (/guest trial is used up/i.test(message)) {
+    return "Guest trial is used up. Create a free account to keep generating.";
+  }
+  if (/reading this scan took too long/i.test(message)) {
+    return "Reading this scan took too long. Try fewer pages, or paste the text.";
   }
   if (/too large to read|too large \(max/i.test(message)) {
     return "That page is too heavy to fetch whole. Paste the article text, or try a shorter URL.";

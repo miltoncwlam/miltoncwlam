@@ -10,7 +10,8 @@
     "signOut": "Déconnexion",
     "language": "Langue",
     "primary": "Navigation principale",
-    "community": "Community"
+    "community": "Community",
+    "getAccount": "Get account"
   },
   "footer": {
     "privacy": "Confidentialité",
@@ -25,7 +26,8 @@
     "continue": "Connexion",
     "createAccount": "Créer un compte",
     "agree": "En continuant, vous acceptez les <terms>Conditions</terms> et la <privacy>Politique de confidentialité</privacy>.",
-    "authNote": "Connectez-vous par e-mail avec Clerk. Vous pouvez créer votre compte."
+    "authNote": "Try a short guest trial with no energy meter, or sign in with email.",
+    "tryGuest": "Try as guest"
   },
   "auth": {
     "signInEyebrow": "Bon retour",
@@ -100,7 +102,9 @@
     "readSource": "Lire la source",
     "sourceRetention": "Source retention",
     "retention24h": "Keep 24 hours",
-    "retentionKeep": "Keep until I delete the notebook"
+    "retentionKeep": "Keep until I delete the notebook",
+    "guestTrial": "Guest trial: a couple of generates, then create a free account. Energy stays hidden.",
+    "guestCreateAccount": "Create a free account"
   },
   "generation": {
     "eyebrow": "Création du paquet",
@@ -290,7 +294,10 @@
     "signedIn": "Connecté en tant que {email}. Mot de passe et e-mail se gèrent ci-dessous.",
     "deleteTitle": "Supprimer votre compte",
     "deleteBody": "La suppression se fait uniquement par e-mail. Écrivez à {email} et nous supprimerons vos données.",
-    "replayTutorial": "Revoir le tutoriel"
+    "replayTutorial": "Revoir le tutoriel",
+    "guestTitle": "You're on a guest trial",
+    "guestBody": "Add an email below to keep this library. Guest trials skip the energy meter and stop after two generates.",
+    "guestUpgradeHint": "Create a real account here to keep generating."
   },
   "gift": {
     "title": "Code cadeau",
@@ -568,7 +575,8 @@
       "matching": "Appariement",
       "cloze_choice": "Texte à trous (choix)",
       "cloze_free": "Texte à trous (saisie)"
-    }
+    },
+    "guestCreateAccount": "Create a free account"
   },
   "exam": {
     "eyebrow": "Examen",

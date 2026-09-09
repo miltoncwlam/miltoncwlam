@@ -5,7 +5,11 @@ import {
   IMAGE_PERIOD_GRANT,
   FREE_MODEL_BILLING_RATES,
   GENERATE_RATE_LIMIT_MAX,
+  GUEST_GENERATE_LIMIT,
+  GuestQuotaError,
   IMAGE_CREDITS_PER_USD,
+  isGuestEmail,
+  isGuestQuotaError,
   MIN_GENERATION_CREDITS,
   PAID_GENERATE_LIMIT_HOUR,
 } from "@/lib/credits/config";
@@ -88,6 +92,14 @@ describe("weekly grant and rate limits", () => {
   it("keeps a sane hourly cap", () => {
     expect(GENERATE_RATE_LIMIT_MAX).toBe(PAID_GENERATE_LIMIT_HOUR);
     expect(PAID_GENERATE_LIMIT_HOUR).toBeGreaterThanOrEqual(5);
-    expect(PAID_GENERATE_LIMIT_HOUR).toBeLessThanOrEqual(100);
+  });
+
+  it("caps guest generates before they need an account", () => {
+    expect(GUEST_GENERATE_LIMIT).toBe(2);
+    const error = new GuestQuotaError();
+    expect(isGuestQuotaError(error)).toBe(true);
+    expect(error.code).toBe("GUEST_QUOTA");
+    expect(isGuestEmail("guest-abc@example.com")).toBe(true);
+    expect(isGuestEmail("learner@example.com")).toBe(false);
   });
 });

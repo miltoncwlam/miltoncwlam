@@ -3,7 +3,11 @@ import "server-only";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 
-import { createCanvas, ImageData as CanvasImageData } from "@napi-rs/canvas";
+import {
+  createCanvas,
+  ImageData as CanvasImageData,
+  loadImage,
+} from "@napi-rs/canvas";
 import {
   createIsomorphicCanvasFactory,
   extractImages,
@@ -124,6 +128,34 @@ function rawImageToPng(img: {
   return new Uint8Array(canvas.encodeSync("png"));
 }
 
+const MAX_KEEP_JPEG_BYTES = 220_000;
+
+/** Shrink scan photos so vision OCR stays under the notebook time budget. */
+export async function fitPageImage(
+  page: PdfPageImage,
+  maxDimension: number,
+): Promise<PdfPageImage> {
+  const image = await loadImage(Buffer.from(page.data));
+  const longest = Math.max(image.width, image.height);
+  const scale = Math.min(1, maxDimension / Math.max(1, longest));
+  if (
+    scale === 1 &&
+    page.mediaType === "image/jpeg" &&
+    page.data.byteLength <= MAX_KEEP_JPEG_BYTES
+  ) {
+    return page;
+  }
+  const width = Math.max(1, Math.round(image.width * scale));
+  const height = Math.max(1, Math.round(image.height * scale));
+  const canvas = createCanvas(width, height);
+  canvas.getContext("2d").drawImage(image, 0, 0, width, height);
+  return {
+    data: new Uint8Array(canvas.encodeSync("jpeg", 70)),
+    mediaType: "image/jpeg",
+    pageNumber: page.pageNumber,
+  };
+}
+
 async function destroyPdf(pdf: {
   cleanup?: () => Promise<unknown>;
   loadingTask?: { destroy?: () => Promise<unknown> };
@@ -239,16 +271,27 @@ export async function pdfPagesToImages(
 
   const jpegs = extractEmbeddedJpegs(data).slice(0, maxPages);
   if (jpegs.length) {
-    return jpegs.map((jpeg, index) => ({
-      data: jpeg,
-      mediaType: "image/jpeg" as const,
-      pageNumber: index + 1,
-    }));
+    return Promise.all(
+      jpegs.map((jpeg, index) =>
+        fitPageImage(
+          {
+            data: jpeg,
+            mediaType: "image/jpeg",
+            pageNumber: index + 1,
+          },
+          maxDimension,
+        ),
+      ),
+    );
   }
 
   try {
     const extracted = await pagesFromExtractedImages(data, maxPages);
-    if (extracted.length) return extracted;
+    if (extracted.length) {
+      return Promise.all(
+        extracted.map((page) => fitPageImage(page, maxDimension)),
+      );
+    }
   } catch (error) {
     if (!isPathTypeError(error)) throw error;
   }

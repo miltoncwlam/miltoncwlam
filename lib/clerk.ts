@@ -2,6 +2,7 @@ import "server-only";
 
 import { auth, currentUser } from "@clerk/nextjs/server";
 
+import { isGuestEmail } from "@/lib/credits/config";
 import type { SessionUser } from "@/lib/types/auth";
 
 export async function getClerkSessionUser(): Promise<SessionUser | null> {
@@ -20,6 +21,8 @@ export async function getClerkSessionUser(): Promise<SessionUser | null> {
     typeof user?.publicMetadata?.role === "string"
       ? user.publicMetadata.role
       : "user";
+  const isGuest =
+    user?.publicMetadata?.guest === true || isGuestEmail(email);
 
   return {
     id: userId,
@@ -28,7 +31,8 @@ export async function getClerkSessionUser(): Promise<SessionUser | null> {
       user?.fullName?.trim() ||
       user?.firstName?.trim() ||
       email.split("@")[0] ||
-      "Learner",
+      (isGuest ? "Guest" : "Learner"),
     role,
+    isGuest,
   };
 }

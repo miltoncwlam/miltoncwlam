@@ -15,9 +15,11 @@ import { captureException } from "@/lib/sentry";
 import {
   assertAndSpendCredits,
   assertGenerateRateLimit,
+  assertGuestGenerateQuota,
   getOrRefreshCredits,
   refundCredits,
 } from "@/lib/data/credits";
+import { isGuestQuotaError } from "@/lib/credits/config";
 import {
   completeNotebookIngest,
   createPendingDeck,
@@ -208,6 +210,7 @@ export async function POST(request: Request) {
     model = modelId;
     if (!model) throw new Error("Missing model");
     const credits = await getOrRefreshCredits(userId);
+    await assertGuestGenerateQuota(userId, session.user.isGuest);
     await assertGenerateRateLimit(userId, {
       provider,
       model,
@@ -252,6 +255,7 @@ export async function POST(request: Request) {
       textAmount,
       imageAmount: 0,
       reason: "generate_ingest",
+      skipBalance: Boolean(session.user.isGuest),
       meta: {
         provider,
         model,
@@ -408,14 +412,15 @@ export async function POST(request: Request) {
     }
 
     const rateLimited = /too many generates/i.test(message);
+    const guestQuota = isGuestQuotaError(error);
     return Response.json(
       {
         error: message,
         deckId,
-        code: rateLimited ? "RATE_LIMITED" : undefined,
+        code: guestQuota ? "GUEST_QUOTA" : rateLimited ? "RATE_LIMITED" : undefined,
         refunded: charged && spentTextAmount > 0,
       },
-      { status: rateLimited ? 429 : 400 },
+      { status: guestQuota ? 403 : rateLimited ? 429 : 400 },
     );
   }
 }

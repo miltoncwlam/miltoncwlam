@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
+import { GuestSignInButton } from "@/components/guest-sign-in-button";
+
 export function LandingAuthCta() {
   const t = useTranslations("landing");
 
@@ -16,6 +18,7 @@ export function LandingAuthCta() {
           {t("createAccount")}
         </Link>
       </div>
+      <GuestSignInButton className="secondary-button w-full sm:w-auto" label={t("tryGuest")} />
       <p className="text-center text-base text-[var(--muted)] xl:text-left">{t("authNote")}</p>
       <p className="text-center text-sm leading-6 text-[var(--muted)] xl:text-left">
         {t.rich("agree", {

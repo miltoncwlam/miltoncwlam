@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.6.2** — one number only (`package.json`).
+**Version 3.7.0** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,29 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.7.0 — 2026-09-09
+
+**Minor.** Guest sign-in so you can try the app without an email.
+
+### Added
+- Landing and sign-in have **Try as guest**. Guests get two generates (a notebook plus one studio run), then a prompt to create a free account.
+- Guest sessions hide the energy meter and gift-code box. Create-notebook still works for a trial scan.
+
+### Changed
+- Sign-up while already a guest sends you to Account to add an email and keep the same library.
+
+---
+
+## Version 3.6.3 — 2026-09-09
+
+**Miniscule.** Notebook create no longer dies at 50s on a photo-PDF.
+
+### Fixed
+- OCR shrinks scan JPEGs, reads one page at a time, and keeps any pages that finish so a 10-page book scan can create a notebook.
+- Overlay says to try fewer pages or paste the text when the scan read hits the time budget.
 
 ---
 

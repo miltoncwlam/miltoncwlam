@@ -8,6 +8,7 @@
     "createDeck": "Create notebook",
     "signIn": "Sign in",
     "signUp": "Sign up",
+    "getAccount": "Get account",
     "signOut": "Sign out",
     "language": "Language",
     "primary": "Primary navigation"
@@ -25,7 +26,8 @@
     "continue": "Sign in",
     "createAccount": "Create account",
     "agree": "By continuing, you agree to our <terms>Terms</terms> and <privacy>Privacy Policy</privacy>.",
-    "authNote": "Sign in with email through Clerk. You can create an account yourself."
+    "authNote": "Try a short guest trial with no energy meter, or sign in with email.",
+    "tryGuest": "Try as guest"
   },
   "auth": {
     "signInEyebrow": "Welcome back",
@@ -100,7 +102,9 @@
     "chooseFile": "Choose a file to continue",
     "uploadSecretError": "Add SUPABASE_SECRET_KEY to .env.local to upload files",
     "unrelated": "This source doesn’t look like study material. Paste notes, a lesson, or an article — not random chat or memes.",
-    "insufficient": "Not enough usable study content for that many cards. Add more notes or try fewer cards."
+    "insufficient": "Not enough usable study content for that many cards. Add more notes or try fewer cards.",
+    "guestTrial": "Guest trial: a couple of generates, then create a free account. Energy stays hidden.",
+    "guestCreateAccount": "Create a free account"
   },
   "generation": {
     "eyebrow": "Creating your notebook",
@@ -291,7 +295,10 @@
     "signedIn": "Signed in as {email}. Password and email sign-in are managed below.",
     "deleteTitle": "Delete your account",
     "deleteBody": "Account deletion is by email only. Write to {email} and we will delete your account data.",
-    "replayTutorial": "Show tutorial again"
+    "replayTutorial": "Show tutorial again",
+    "guestTitle": "You're on a guest trial",
+    "guestBody": "Add an email below to keep this library. Guest trials skip the energy meter and stop after two generates.",
+    "guestUpgradeHint": "Create a real account here to keep generating."
   },
   "gift": {
     "title": "Gift code",
@@ -565,7 +572,8 @@
       "matching": "Matching",
       "cloze_choice": "Cloze with choices",
       "cloze_free": "Cloze without choices"
-    }
+    },
+    "guestCreateAccount": "Create a free account"
   },
   "exam": {
     "eyebrow": "Exam paper",

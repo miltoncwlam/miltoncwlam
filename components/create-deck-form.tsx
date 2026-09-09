@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useRef, useState } from "react";
 
@@ -63,12 +64,14 @@ export function CreateDeckForm({
   canUpload,
   energyBalance = 0,
   energyUnlimited = false,
+  isGuest = false,
   freeModels = [],
 }: {
   providers: LLMProvider[];
   canUpload: boolean;
   energyBalance?: number;
   energyUnlimited?: boolean;
+  isGuest?: boolean;
   freeModels?: FreeModel[];
 }) {
   const router = useRouter();
@@ -78,6 +81,7 @@ export function CreateDeckForm({
   const formRef = useRef<HTMLFormElement>(null);
   const [mode, setMode] = useState<SourceMode>("topic");
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [phase, setPhase] = useState<GenerationPhase>("prepare");
   const [label, setLabel] = useState(tg("preparing"));
@@ -129,7 +133,8 @@ export function CreateDeckForm({
       breakdown: `~${base.textCredits + ocr.textCredits} energy`,
     };
   }, [openrouterModel, activeMode, topicChars, textChars, fileMeta]);
-  const overBalance = !energyUnlimited && estimate.textCredits > energyBalance;
+  const overBalance =
+    !isGuest && !energyUnlimited && estimate.textCredits > energyBalance;
 
   async function uploadFile(file: File) {
     const signedResponse = await fetch("/api/uploads/sign", {
@@ -153,6 +158,7 @@ export function CreateDeckForm({
 
   async function runGeneration(form: HTMLFormElement) {
     setError(null);
+    setErrorCode(null);
     setPending(true);
     setPhase("prepare");
     setLabel(tg("preparing"));
@@ -211,7 +217,10 @@ export function CreateDeckForm({
         }
         if (!response.ok) {
           const base = friendlyGenerateError(result.error || "Could not read source", result.code);
-          throw new Error(result.refunded ? `${base} Energy was refunded.` : base);
+          if (result.code) setErrorCode(result.code);
+          throw new Error(
+            result.refunded && !isGuest ? `${base} Energy was refunded.` : base,
+          );
         }
       } catch (fetchError) {
         if (fetchError instanceof TypeError) {
@@ -274,12 +283,24 @@ export function CreateDeckForm({
           label={label}
           onDismiss={() => {
             setError(null);
+            setErrorCode(null);
             setPending(false);
             setPhase("prepare");
           }}
-          onRetry={() => {
-            if (formRef.current) void runGeneration(formRef.current);
-          }}
+          errorAction={
+            errorCode === "GUEST_QUOTA" ? (
+              <Link className="primary-button flex-1 text-center" href="/account?upgrade=1">
+                {t("guestCreateAccount")}
+              </Link>
+            ) : null
+          }
+          onRetry={
+            errorCode === "GUEST_QUOTA"
+              ? undefined
+              : () => {
+                  if (formRef.current) void runGeneration(formRef.current);
+                }
+          }
           phase={phase}
         />
       ) : null}
@@ -311,22 +332,30 @@ export function CreateDeckForm({
           </p>
         ) : null}
 
-        <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
-          {t("energyCost", { cost: estimate.textCredits })}
-        </p>
-        {overBalance ? (
-          <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-900">
-            {t("energyShort", {
-              need: estimate.textCredits,
-              have: energyBalance,
-            })}
+        {isGuest ? (
+          <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700">
+            {t("guestTrial")}
           </p>
-        ) : null}
-        {!energyUnlimited ? (
-          <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
-            <GiftCodeForm compact />
-          </div>
-        ) : null}
+        ) : (
+          <>
+            <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
+              {t("energyCost", { cost: estimate.textCredits })}
+            </p>
+            {overBalance ? (
+              <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-900">
+                {t("energyShort", {
+                  need: estimate.textCredits,
+                  have: energyBalance,
+                })}
+              </p>
+            ) : null}
+            {!energyUnlimited ? (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                <GiftCodeForm compact />
+              </div>
+            ) : null}
+          </>
+        )}
 
         <div className="space-y-2">
           <Label>{t("sourceRetention")}</Label>

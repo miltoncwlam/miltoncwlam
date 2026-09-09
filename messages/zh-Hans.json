@@ -10,7 +10,8 @@
     "signOut": "退出",
     "language": "語言",
     "primary": "主要導覽",
-    "community": "Community"
+    "community": "Community",
+    "getAccount": "Get account"
   },
   "footer": {
     "privacy": "隐私权",
@@ -25,7 +26,8 @@
     "continue": "登录",
     "createAccount": "建立帳號",
     "agree": "继续即表示你同意我们的 <terms>服务条款</terms> 与 <privacy>隐私权政策</privacy>。",
-    "authNote": "通过 Clerk 以电子邮件登录。可自行注册。"
+    "authNote": "Try a short guest trial with no energy meter, or sign in with email.",
+    "tryGuest": "Try as guest"
   },
   "auth": {
     "signInEyebrow": "歡迎回來",
@@ -100,7 +102,9 @@
     "readSource": "读取来源",
     "sourceRetention": "Source retention",
     "retention24h": "Keep 24 hours",
-    "retentionKeep": "Keep until I delete the notebook"
+    "retentionKeep": "Keep until I delete the notebook",
+    "guestTrial": "Guest trial: a couple of generates, then create a free account. Energy stays hidden.",
+    "guestCreateAccount": "Create a free account"
   },
   "generation": {
     "eyebrow": "正在建立牌組",
@@ -290,7 +294,10 @@
     "signedIn": "已登录为 {email}。密码与电邮登录在下方管理。",
     "deleteTitle": "删除账户",
     "deleteBody": "删除账户只能通过电邮申请。请写信至 {email}，我们会删除你的账户资料。",
-    "replayTutorial": "再看一次教程"
+    "replayTutorial": "再看一次教程",
+    "guestTitle": "You're on a guest trial",
+    "guestBody": "Add an email below to keep this library. Guest trials skip the energy meter and stop after two generates.",
+    "guestUpgradeHint": "Create a real account here to keep generating."
   },
   "gift": {
     "title": "礼品码",
@@ -568,7 +575,8 @@
       "matching": "配对题",
       "cloze_choice": "填空（有选项）",
       "cloze_free": "填空（自填）"
-    }
+    },
+    "guestCreateAccount": "Create a free account"
   },
   "exam": {
     "eyebrow": "试卷",

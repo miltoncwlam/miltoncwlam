@@ -23,7 +23,7 @@ export default async function SignInPage({
           <p className="landing-brand">HK Study A</p>
           <h1 className="auth-stage-title">Sign in to your library</h1>
           <p className="auth-stage-subtitle">
-            Email and password only. Generate decks, then study them here.
+            Email and password, or try a short guest trial first.
           </p>
         </section>
         <div className="auth-stage-card">

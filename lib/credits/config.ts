@@ -21,6 +21,31 @@ export const OCR_OUTPUT_TOKENS_PER_PAGE = 450;
 export const LIKELY_SCAN_BYTES = 400_000;
 export const MIN_PDF_TEXT_CHARS = 80;
 
+/** Guest trial: two generates (notebook + one studio run), then make an account. */
+export const GUEST_GENERATE_LIMIT = 2;
+
+/** Clerk rejects reserved TLDs like `.invalid`; guests use this mailbox they cannot receive. */
+export function isGuestEmail(email: string): boolean {
+  return /^guest-[^@]+@(example\.com|guest\.invalid)$/i.test(email.trim());
+}
+
+export class GuestQuotaError extends Error {
+  readonly code = "GUEST_QUOTA" as const;
+  constructor() {
+    super("Guest trial is used up. Create a free account to keep generating.");
+    this.name = "GuestQuotaError";
+  }
+}
+
+export function isGuestQuotaError(error: unknown): error is GuestQuotaError {
+  return (
+    error instanceof GuestQuotaError ||
+    (error instanceof Error &&
+      (error.name === "GuestQuotaError" ||
+        /guest trial is used up/i.test(error.message)))
+  );
+}
+
 export const GENERATE_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 export const FREE_GENERATE_LIMIT_HOUR = 5;
 export const FREE_GENERATE_LIMIT_DAY = 15;

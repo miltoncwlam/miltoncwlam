@@ -29,13 +29,20 @@ export async function AppHeader({ session }: { session: AppSession | null }) {
           {signedIn && session ? (
             <>
               <StreakBadge userId={session.user.id} />
-              <EnergyBadge userId={session.user.id} />
+              {session.user.isGuest ? null : (
+                <EnergyBadge userId={session.user.id} />
+              )}
               <Button asChild variant="ghost">
                 <Link href="/decks">{t("myDecks")}</Link>
               </Button>
               <Button asChild variant="ghost">
                 <Link href="/account">Account</Link>
               </Button>
+              {session.user.isGuest ? (
+                <Button asChild variant="ghost">
+                  <Link href="/account?upgrade=1">{t("getAccount")}</Link>
+                </Button>
+              ) : null}
               <Button asChild variant="ghost">
                 <Link href="/community">{t("community")}</Link>
               </Button>

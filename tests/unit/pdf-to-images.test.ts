@@ -39,27 +39,30 @@ function textPdf(): Uint8Array {
   ]);
 }
 
-async function jpegScanPdf(): Promise<{ pdf: Uint8Array; jpeg: Buffer }> {
-  const canvas = createCanvas(160, 90);
+async function jpegScanPdf(
+  width = 160,
+  height = 90,
+): Promise<{ pdf: Uint8Array; jpeg: Buffer }> {
+  const canvas = createCanvas(width, height);
   const ctx = canvas.getContext("2d");
   ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, 160, 90);
+  ctx.fillRect(0, 0, width, height);
   ctx.fillStyle = "#111111";
   ctx.font = "24px sans-serif";
   ctx.fillText("Scan page", 16, 52);
   const jpeg = Buffer.from(await canvas.encode("jpeg", 80));
-  const contents = "q 160 0 0 90 0 0 cm /Im0 Do Q";
+  const contents = `q ${width} 0 0 ${height} 0 0 cm /Im0 Do Q`;
   return {
     jpeg,
     pdf: assemblePdf([
       Buffer.from("1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj\n"),
       Buffer.from("2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj\n"),
       Buffer.from(
-        "3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 160 90] /Contents 5 0 R /Resources<< /XObject<< /Im0 4 0 R >> >> >>endobj\n",
+        `3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${width} ${height}] /Contents 5 0 R /Resources<< /XObject<< /Im0 4 0 R >> >> >>endobj\n`,
       ),
       Buffer.concat([
         Buffer.from(
-          `4 0 obj<< /Type /XObject /Subtype /Image /Width 160 /Height 90 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>stream\n`,
+          `4 0 obj<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>stream\n`,
         ),
         jpeg,
         Buffer.from("\nendstream\nendobj\n"),
@@ -92,6 +95,15 @@ describe("pdfPagesToImages", () => {
     expect(pages[0].mediaType).toBe("image/jpeg");
     expect(pages[0].data.byteLength).toBe(jpeg.length);
   }, 30_000);
+
+  it("shrinks large scan JPEGs so OCR payloads stay small", async () => {
+    const { pdf, jpeg } = await jpegScanPdf(1800, 1200);
+    expect(jpeg.byteLength).toBeGreaterThan(8_000);
+    const pages = await pdfPagesToImages(pdf, { maxDimension: 400 });
+    expect(pages[0].mediaType).toBe("image/jpeg");
+    expect(Array.from(pages[0].data.slice(0, 2))).toEqual([0xff, 0xd8]);
+    expect(pages[0].data.byteLength).toBeLessThan(jpeg.byteLength);
+  }, 30_000);
 });
 
 describe("friendlyGenerateError", () => {
@@ -101,6 +113,20 @@ describe("friendlyGenerateError", () => {
         'The "path" argument must be of type string. Received type number (55876)',
       ),
     ).toMatch(/photo of a page/i);
+  });
+
+  it("explains OCR timeouts on scans", () => {
+    expect(
+      friendlyGenerateError(
+        "Reading this scan took too long. Try fewer pages, or paste the text.",
+      ),
+    ).toMatch(/fewer pages/i);
+  });
+
+  it("prompts guests to create an account when the trial is used up", () => {
+    expect(
+      friendlyGenerateError("Guest trial is used up.", "GUEST_QUOTA"),
+    ).toMatch(/create a free account/i);
   });
 });
 

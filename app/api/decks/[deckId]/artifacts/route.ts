@@ -10,9 +10,11 @@ import { captureException } from "@/lib/sentry";
 import {
   assertAndSpendCredits,
   assertGenerateRateLimit,
+  assertGuestGenerateQuota,
   getOrRefreshCredits,
   refundCredits,
 } from "@/lib/data/credits";
+import { isGuestQuotaError } from "@/lib/credits/config";
 import { getDeckWithCards } from "@/lib/data/decks";
 import { upsertDeckArtifact } from "@/lib/data/artifacts";
 import { generateExam } from "@/lib/llm/generate-exam";
@@ -58,6 +60,7 @@ export async function POST(
     const source = await loadNotebookSource(deck);
     model = deck.generationModel || undefined;
     const credits = await getOrRefreshCredits(userId);
+    await assertGuestGenerateQuota(userId, session.user.isGuest);
     await assertGenerateRateLimit(userId, {
       provider: "openrouter",
       model: model ?? "",
@@ -88,6 +91,7 @@ export async function POST(
       textAmount: estimate.textCredits,
       imageAmount: 0,
       reason: `generate_${input.kind}`,
+      skipBalance: Boolean(session.user.isGuest),
       meta: { deckId, kind: input.kind },
     });
     charged = true;
@@ -191,9 +195,14 @@ export async function POST(
       }
     }
     const rateLimited = /too many generates/i.test(message);
+    const guestQuota = isGuestQuotaError(error);
     return Response.json(
-      { error: message, refunded: charged && spentTextAmount > 0 },
-      { status: rateLimited ? 429 : 400 },
+      {
+        error: message,
+        code: guestQuota ? "GUEST_QUOTA" : rateLimited ? "RATE_LIMITED" : undefined,
+        refunded: charged && spentTextAmount > 0,
+      },
+      { status: guestQuota ? 403 : rateLimited ? 429 : 400 },
     );
   }
 }

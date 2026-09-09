@@ -10,7 +10,8 @@
     "signOut": "로그아웃",
     "language": "언어",
     "primary": "기본 탐색",
-    "community": "Community"
+    "community": "Community",
+    "getAccount": "Get account"
   },
   "footer": {
     "privacy": "개인정보",
@@ -25,7 +26,8 @@
     "continue": "로그인",
     "createAccount": "계정 만들기",
     "agree": "계속하면 <terms>이용약관</terms> 및 <privacy>개인정보 처리방침</privacy>에 동의하게 됩니다.",
-    "authNote": "Clerk 이메일로 로그인. 직접 가입할 수 있습니다."
+    "authNote": "Try a short guest trial with no energy meter, or sign in with email.",
+    "tryGuest": "Try as guest"
   },
   "auth": {
     "signInEyebrow": "다시 오신 것을 환영합니다",
@@ -100,7 +102,9 @@
     "readSource": "자료 읽기",
     "sourceRetention": "Source retention",
     "retention24h": "Keep 24 hours",
-    "retentionKeep": "Keep until I delete the notebook"
+    "retentionKeep": "Keep until I delete the notebook",
+    "guestTrial": "Guest trial: a couple of generates, then create a free account. Energy stays hidden.",
+    "guestCreateAccount": "Create a free account"
   },
   "generation": {
     "eyebrow": "덱 만드는 중",
@@ -290,7 +294,10 @@
     "signedIn": "{email}(으)로 로그인됨. 비밀번호와 이메일 로그인은 아래에서 관리합니다.",
     "deleteTitle": "계정 삭제",
     "deleteBody": "계정 삭제는 이메일로만 요청할 수 있습니다. {email}로 연락하면 계정 데이터를 삭제합니다.",
-    "replayTutorial": "튜토리얼 다시 보기"
+    "replayTutorial": "튜토리얼 다시 보기",
+    "guestTitle": "You're on a guest trial",
+    "guestBody": "Add an email below to keep this library. Guest trials skip the energy meter and stop after two generates.",
+    "guestUpgradeHint": "Create a real account here to keep generating."
   },
   "gift": {
     "title": "선물 코드",
@@ -568,7 +575,8 @@
       "matching": "짝짓기",
       "cloze_choice": "빈칸(선택지)",
       "cloze_free": "빈칸(직접 입력)"
-    }
+    },
+    "guestCreateAccount": "Create a free account"
   },
   "exam": {
     "eyebrow": "시험지",

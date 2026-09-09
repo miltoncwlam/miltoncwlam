@@ -7,7 +7,9 @@ import { pdfPagesToImages } from "@/lib/ingest/pdf-to-images";
 import { getOpenRouterClient } from "@/lib/llm/config";
 import { DEFAULT_OCR_MODEL } from "@/lib/llm/models";
 
-const OCR_BATCH = 2;
+/** Leave room for title + refund inside notebooks `maxDuration` (180s). */
+const OCR_BUDGET_MS = 140_000;
+const OCR_PAGE_MS = 28_000;
 const MAX_SOURCE = 80_000;
 
 function readUsage(result: {
@@ -28,6 +30,12 @@ function readUsage(result: {
   };
 }
 
+function isAbortError(error: unknown) {
+  const name = error instanceof Error ? error.name : "";
+  const message = error instanceof Error ? error.message : String(error);
+  return /aborted|timeout|TimeoutError|AbortError/i.test(`${name} ${message}`);
+}
+
 export async function ocrPdfPages(
   data: Uint8Array,
   modelId = DEFAULT_OCR_MODEL,
@@ -38,53 +46,63 @@ export async function ocrPdfPages(
 }> {
   const pages = await pdfPagesToImages(data, {
     maxPages: MAX_OCR_PAGES,
-    maxDimension: 1600,
+    maxDimension: 1280,
   });
   const client = getOpenRouterClient();
   const model = client(modelId || DEFAULT_OCR_MODEL);
   const parts: string[] = [];
   let usage = { inputTokens: 0, outputTokens: 0 };
+  let timedOut = false;
+  const started = Date.now();
 
-  for (let index = 0; index < pages.length; index += OCR_BATCH) {
-    const batch = pages.slice(index, index + OCR_BATCH);
-    const start = batch[0]?.pageNumber ?? index + 1;
-    const end = batch[batch.length - 1]?.pageNumber ?? start;
-    const result = await generateText({
-      model,
-      abortSignal: AbortSignal.timeout(50_000),
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: `Transcribe ALL readable study text from scanned PDF page${batch.length === 1 ? "" : "s"} ${start}${end === start ? "" : `–${end}`}.
+  for (const page of pages) {
+    if (Date.now() - started > OCR_BUDGET_MS) {
+      timedOut = true;
+      break;
+    }
+    try {
+      const result = await generateText({
+        model,
+        abortSignal: AbortSignal.timeout(OCR_PAGE_MS),
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: `Transcribe ALL readable study text from scanned PDF page ${page.pageNumber}.
 Keep the original language (Traditional/Simplified Chinese, English, or mixed).
 Preserve headings, lists, and formulas as plain text. Do not summarize, translate, or invent words.
-If a page is blank, output nothing for that page.`,
-            },
-            ...batch.map((page) => ({
-              type: "image" as const,
-              image: page.data,
-              mediaType: page.mediaType,
-            })),
-          ],
-        },
-      ],
-    });
-    const chunk = result.text.trim();
-    if (chunk) parts.push(chunk);
-    const used = readUsage(result);
-    usage = {
-      inputTokens: usage.inputTokens + used.inputTokens,
-      outputTokens: usage.outputTokens + used.outputTokens,
-    };
+If a page is blank, output nothing.`,
+              },
+              {
+                type: "image" as const,
+                image: page.data,
+                mediaType: page.mediaType,
+              },
+            ],
+          },
+        ],
+      });
+      const chunk = result.text.trim();
+      if (chunk) parts.push(chunk);
+      const used = readUsage(result);
+      usage = {
+        inputTokens: usage.inputTokens + used.inputTokens,
+        outputTokens: usage.outputTokens + used.outputTokens,
+      };
+    } catch (error) {
+      if (!isAbortError(error)) throw error;
+      timedOut = true;
+    }
   }
 
   const text = parts.join("\n\n").trim().slice(0, MAX_SOURCE);
   if (!text) {
     throw new Error(
-      "OCR found no readable text on these pages. Try a clearer scan, or paste the text.",
+      timedOut
+        ? "Reading this scan took too long. Try fewer pages, or paste the text."
+        : "OCR found no readable text on these pages. Try a clearer scan, or paste the text.",
     );
   }
 

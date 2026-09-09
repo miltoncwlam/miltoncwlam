@@ -1,7 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 import { ClerkSignUpPanel } from "@/components/clerk-auth-panel";
+import { getSession } from "@/lib/auth-server";
 import { safeAppPath } from "@/lib/app-url";
 
 export default async function SignUpPage({
@@ -11,8 +11,9 @@ export default async function SignUpPage({
 }) {
   const params = await searchParams;
   const redirectTo = safeAppPath(params.redirect_url ?? params.next);
-  const { userId } = await auth();
-  if (userId) redirect(redirectTo);
+  const session = await getSession();
+  if (session?.user.isGuest) redirect("/account?upgrade=1");
+  if (session) redirect(redirectTo);
 
   return (
     <main className="auth-stage">

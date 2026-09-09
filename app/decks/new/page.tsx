@@ -51,6 +51,7 @@ export default async function NewDeckPage() {
           canUpload={canUpload}
           energyBalance={credits.balance}
           energyUnlimited={credits.isUnlimited}
+          isGuest={Boolean(session.user.isGuest)}
           freeModels={freeModels}
           providers={providers}
         />

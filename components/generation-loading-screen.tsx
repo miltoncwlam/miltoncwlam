@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 
 export type GenerationPhase =
   | "prepare"
@@ -24,6 +24,7 @@ export function GenerationLoadingScreen({
   label,
   includeUpload,
   error,
+  errorAction,
   onRetry,
   onDismiss,
 }: {
@@ -31,6 +32,7 @@ export function GenerationLoadingScreen({
   label: string;
   includeUpload: boolean;
   error?: string | null;
+  errorAction?: ReactNode;
   onRetry?: () => void;
   onDismiss?: () => void;
 }) {
@@ -92,6 +94,7 @@ export function GenerationLoadingScreen({
 
         {error ? (
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            {errorAction}
             {onRetry ? (
               <button className="primary-button flex-1" onClick={onRetry} type="button">
                 {t("retry")}

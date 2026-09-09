@@ -2,6 +2,8 @@
 
 import { SignIn, SignUp } from "@clerk/nextjs";
 
+import { GuestSignInButton } from "@/components/guest-sign-in-button";
+
 export function ClerkSignInPanel({ redirectTo = "/decks" }: { redirectTo?: string }) {
   return (
     <div className="clerk-auth-panel w-full">
@@ -15,6 +17,13 @@ export function ClerkSignInPanel({ redirectTo = "/decks" }: { redirectTo?: strin
         routing="path"
         signUpUrl="/sign-up"
       />
+      <div className="mt-6 border-t border-slate-200 pt-4">
+        <GuestSignInButton
+          className="secondary-button w-full"
+          label="Try as guest"
+          redirectTo={redirectTo}
+        />
+      </div>
     </div>
   );
 }

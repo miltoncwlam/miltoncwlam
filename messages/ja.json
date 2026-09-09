@@ -10,7 +10,8 @@
     "signOut": "ログアウト",
     "language": "言語",
     "primary": "メインナビ",
-    "community": "Community"
+    "community": "Community",
+    "getAccount": "Get account"
   },
   "footer": {
     "privacy": "プライバシー",
@@ -25,7 +26,8 @@
     "continue": "サインイン",
     "createAccount": "アカウント作成",
     "agree": "続行すると <terms>利用規約</terms> と <privacy>プライバシーポリシー</privacy> に同意したことになります。",
-    "authNote": "Clerk のメールでサインイン。自分で登録できます。"
+    "authNote": "Try a short guest trial with no energy meter, or sign in with email.",
+    "tryGuest": "Try as guest"
   },
   "auth": {
     "signInEyebrow": "おかえりなさい",
@@ -100,7 +102,9 @@
     "readSource": "ソースを読む",
     "sourceRetention": "Source retention",
     "retention24h": "Keep 24 hours",
-    "retentionKeep": "Keep until I delete the notebook"
+    "retentionKeep": "Keep until I delete the notebook",
+    "guestTrial": "Guest trial: a couple of generates, then create a free account. Energy stays hidden.",
+    "guestCreateAccount": "Create a free account"
   },
   "generation": {
     "eyebrow": "デッキ作成中",
@@ -290,7 +294,10 @@
     "signedIn": "{email} でログイン中。パスワードとメールログインは下で管理します。",
     "deleteTitle": "アカウント削除",
     "deleteBody": "アカウント削除はメール申請のみです。{email} に連絡すればデータを削除します。",
-    "replayTutorial": "チュートリアルを再表示"
+    "replayTutorial": "チュートリアルを再表示",
+    "guestTitle": "You're on a guest trial",
+    "guestBody": "Add an email below to keep this library. Guest trials skip the energy meter and stop after two generates.",
+    "guestUpgradeHint": "Create a real account here to keep generating."
   },
   "gift": {
     "title": "ギフトコード",
@@ -568,7 +575,8 @@
       "matching": "組み合わせ",
       "cloze_choice": "穴埋め（選択肢あり）",
       "cloze_free": "穴埋め（記述）"
-    }
+    },
+    "guestCreateAccount": "Create a free account"
   },
   "exam": {
     "eyebrow": "試験問題",
