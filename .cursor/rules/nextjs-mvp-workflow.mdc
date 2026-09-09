@@ -31,3 +31,4 @@ alwaysApply: true
 2. Ask permission if creating/deleting files.
 3. Apply minimal code changes.
 4. Run test/lint verification automatically and share a brief pass/fail result.
+5. Ship the version per `.cursor/rules/versioning.mdc` (commit, push, tag). Do not ask.

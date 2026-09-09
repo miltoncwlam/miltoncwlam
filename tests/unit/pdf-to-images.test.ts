@@ -75,12 +75,12 @@ async function jpegScanPdf(
 }
 
 describe("pdfPagesToImages", () => {
-  it("rasterizes a text PDF page to PNG without font Path errors", async () => {
+  it("rasterizes a text PDF page to a JPEG for OCR", async () => {
     const pages = await pdfPagesToImages(textPdf());
     expect(pages.length).toBe(1);
-    expect(pages[0].mediaType).toBe("image/png");
+    expect(pages[0].mediaType).toBe("image/jpeg");
     expect(pages[0].data.byteLength).toBeGreaterThan(100);
-    expect(Array.from(pages[0].data.slice(0, 4))).toEqual([137, 80, 78, 71]);
+    expect(Array.from(pages[0].data.slice(0, 2))).toEqual([0xff, 0xd8]);
   }, 30_000);
 
   it("reads a JPEG scan without treating stream length as a filesystem path", async () => {
@@ -94,6 +94,8 @@ describe("pdfPagesToImages", () => {
     expect(pages.length).toBe(1);
     expect(pages[0].mediaType).toBe("image/jpeg");
     expect(pages[0].data.byteLength).toBe(jpeg.length);
+    expect(pages[0].data.byteOffset).toBe(0);
+    expect(pages[0].data.buffer.byteLength).toBe(pages[0].data.byteLength);
   }, 30_000);
 
   it("shrinks large scan JPEGs so OCR payloads stay small", async () => {

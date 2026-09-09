@@ -9,6 +9,8 @@ There is **one** number, everywhere: **Version x.y.z** (`package.json` `"version
 
 After each finished user task, bump **before** you stop. Skip typo-only edits, or if they say not to. Chats are not versions until the work lands.
 
+**Ship without asking.** After the bump lands in `package.json` + `CHANGELOG.md`, commit, push `HEAD` to `miltoncwlam` `ai-flashcard`, and push annotated tag `vx.y.z` to `miltoncwlam` and `origin`. Do not wait for “commit/push/tag?”. Do not force-push `origin/milton`. Skip only if they said not to ship.
+
 ## How far to bump
 
 | Kind | Bump | When |
@@ -34,7 +36,3 @@ Then detailed Added / Changed / Fixed / Removed (what, why, what the user sees).
 ❌ BAD: “v1.5.0 (same as 1.2.6)”
 ✅ GOOD: Version 3.1.0 — Account Portal; next Clerk fix is 3.1.1
 ```
-
-## Tags when shipping
-
-Annotated tag `vx.y.z` to `origin` and `miltoncwlam`. Do not force-push `origin/milton`.

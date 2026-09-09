@@ -17,8 +17,12 @@ import {
 const require = createRequire(import.meta.url);
 
 const DEFAULT_MAX_PAGES = 8;
-const DEFAULT_MAX_DIMENSION = 1280;
+const DEFAULT_MAX_DIMENSION = 1024;
 const MIN_JPEG_BYTES = 400;
+
+function standaloneBytes(data: Uint8Array): Uint8Array {
+  return Uint8Array.from(data);
+}
 
 export type PdfPageImage = {
   data: Uint8Array;
@@ -65,7 +69,7 @@ export function extractEmbeddedJpegs(pdf: Uint8Array): Uint8Array[] {
     if (start + length > pdf.length) continue;
     const slice = pdf.subarray(start, start + length);
     if (slice[0] === 0xff && slice[1] === 0xd8) {
-      out.push(slice);
+      out.push(standaloneBytes(slice));
     }
   }
   if (out.length) return out;
@@ -86,7 +90,7 @@ export function extractEmbeddedJpegs(pdf: Uint8Array): Uint8Array[] {
       }
     }
     if (end > 0 && end - start >= 8_000) {
-      out.push(pdf.subarray(start, end));
+      out.push(standaloneBytes(pdf.subarray(start, end)));
       index = end;
     } else {
       index = start + 2;
@@ -128,12 +132,13 @@ function rawImageToPng(img: {
   return new Uint8Array(canvas.encodeSync("png"));
 }
 
-const MAX_KEEP_JPEG_BYTES = 220_000;
+const MAX_KEEP_JPEG_BYTES = 140_000;
 
 /** Shrink scan photos so vision OCR stays under the notebook time budget. */
 export async function fitPageImage(
   page: PdfPageImage,
   maxDimension: number,
+  jpegQuality = 60,
 ): Promise<PdfPageImage> {
   const image = await loadImage(Buffer.from(page.data));
   const longest = Math.max(image.width, image.height);
@@ -143,14 +148,14 @@ export async function fitPageImage(
     page.mediaType === "image/jpeg" &&
     page.data.byteLength <= MAX_KEEP_JPEG_BYTES
   ) {
-    return page;
+    return { ...page, data: standaloneBytes(page.data) };
   }
   const width = Math.max(1, Math.round(image.width * scale));
   const height = Math.max(1, Math.round(image.height * scale));
   const canvas = createCanvas(width, height);
   canvas.getContext("2d").drawImage(image, 0, 0, width, height);
   return {
-    data: new Uint8Array(canvas.encodeSync("jpeg", 70)),
+    data: standaloneBytes(canvas.encodeSync("jpeg", jpegQuality)),
     mediaType: "image/jpeg",
     pageNumber: page.pageNumber,
   };
@@ -298,7 +303,11 @@ export async function pdfPagesToImages(
 
   try {
     const rendered = await pagesFromRender(data, maxPages, maxDimension);
-    if (rendered.length) return rendered;
+    if (rendered.length) {
+      return Promise.all(
+        rendered.map((page) => fitPageImage(page, maxDimension)),
+      );
+    }
   } catch (error) {
     if (isPathTypeError(error)) {
       throw new Error(

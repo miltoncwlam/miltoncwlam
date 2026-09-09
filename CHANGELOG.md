@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.7.0** — one number only (`package.json`).
+**Version 3.7.1** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,16 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.7.1 — 2026-09-09
+
+**Miniscule.** Scan OCR finishes a page instead of dying at 28s with no text.
+
+### Fixed
+- OCR copies JPEG bytes out of the PDF so we don’t upload the whole file as one image.
+- The first page gets ~80s; a slow page retries as a smaller photo instead of skipping every page.
 
 ---
 
