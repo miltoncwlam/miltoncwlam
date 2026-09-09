@@ -292,6 +292,16 @@
     "deleteBody": "La eliminación de cuenta es solo por correo. Escribe a {email} y borraremos tus datos.",
     "replayTutorial": "Ver el tutorial otra vez"
   },
+  "gift": {
+    "title": "Código de regalo",
+    "label": "Código de regalo",
+    "placeholder": "Introduce el código",
+    "apply": "Desbloquear",
+    "hint": "Activa energía ilimitada en esta cuenta. El mismo código sirve en otra cuenta.",
+    "ok": "Esta cuenta ahora tiene energía ilimitada.",
+    "already": "Esta cuenta ya tiene energía ilimitada.",
+    "invalid": "Ese código de regalo no es válido."
+  },
   "tutorial": {
     "skip": "Saltar",
     "next": "Siguiente",

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { estimateInputTokens, estimateOutputTokens } from "@/lib/credits/estimate-generation";
+import { MAX_FILE_INPUT_TOKENS } from "@/lib/credits/config";
+import {
+  estimateArtifactCredits,
+  estimateInputTokens,
+  estimateOutputTokens,
+} from "@/lib/credits/estimate-generation";
+import { ENERGY_GIFT_CODE, giftCodeMatches } from "@/lib/credits/gift-code";
 
 describe("token estimates", () => {
   it("gives topic the smallest input", () => {
@@ -17,8 +23,36 @@ describe("token estimates", () => {
     expect(file).toBeGreaterThan(url);
   });
 
+  it("does not treat a large PDF as millions of tokens", () => {
+    const tokens = estimateInputTokens("file", {
+      mimeType: "application/pdf",
+      fileBytes: 6_000_000,
+    });
+    expect(tokens).toBeLessThanOrEqual(2_000 + MAX_FILE_INPUT_TOKENS);
+  });
+
+  it("prices notebook ingest like a short title call", () => {
+    const ingest = estimateArtifactCredits({
+      provider: "openrouter",
+      modelId: "deepseek/deepseek-v4-flash",
+      sourceMode: "file",
+      sourceSize: { mimeType: "application/pdf", fileBytes: 6_000_000 },
+      kind: "ingest",
+    });
+    expect(ingest.textCredits).toBeLessThan(50);
+  });
+
   it("scales output with card count", () => {
     expect(estimateOutputTokens(8)).toBe(8 * 180 + 200);
     expect(estimateOutputTokens(3)).toBe(3 * 180 + 200);
+  });
+});
+
+describe("gift code", () => {
+  it("accepts the reusable energy code and rejects near-misses", () => {
+    expect(giftCodeMatches(ENERGY_GIFT_CODE)).toBe(true);
+    expect(giftCodeMatches(` ${ENERGY_GIFT_CODE} `)).toBe(true);
+    expect(giftCodeMatches("30624701")).toBe(false);
+    expect(giftCodeMatches("")).toBe(false);
   });
 });

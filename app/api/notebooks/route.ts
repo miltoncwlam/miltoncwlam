@@ -98,6 +98,63 @@ async function resolveRequestModel(requested?: string): Promise<string> {
   return getLLMConfig().openrouter.model;
 }
 
+async function readNotebookSource(
+  input: z.infer<typeof requestSchema>,
+  userId: string,
+): Promise<{
+  sourceContent: string;
+  sourceFilename?: string;
+  sourceMimeType?: string;
+  sourceSizeBytes?: number;
+  storagePath?: string;
+}> {
+  if (input.sourceType === "text") {
+    return requireSourceText({ sourceContent: input.content });
+  }
+  if (input.sourceType === "topic") {
+    return requireSourceText({
+      sourceContent: input.topic,
+      sourceMimeType: TOPIC_SOURCE_MIME,
+      sourceFilename: "topic",
+      sourceSizeBytes: Buffer.byteLength(input.topic, "utf8"),
+    });
+  }
+  if (input.sourceType === "url") {
+    const fetched = await fetchStudyTextFromUrl(input.url);
+    return requireSourceText({
+      sourceContent: fetched.content,
+      sourceFilename: fetched.sourceUrl,
+      sourceMimeType:
+        fetched.kind === "youtube"
+          ? "text/youtube"
+          : fetched.kind === "markdown"
+            ? "text/markdown"
+            : "text/html",
+      sourceSizeBytes: Buffer.byteLength(fetched.content, "utf8"),
+    });
+  }
+
+  assertOwnedStoragePath(input.storagePath, userId);
+  const upload = validateUpload(input.file);
+  const data = await downloadSourceMedia(input.storagePath);
+  validateFileSignature(data, input.file.type);
+  const sourceContent = await extractStudyText(data, input.file.type);
+  return requireSourceText({
+    sourceContent,
+    storagePath: input.storagePath,
+    sourceFilename: upload.name,
+    sourceMimeType: upload.type,
+    sourceSizeBytes: upload.size,
+  });
+}
+
+function requireSourceText<T extends { sourceContent: string }>(source: T): T {
+  if (!source.sourceContent.trim()) {
+    throw new Error("Could not read this source. Paste the text and try again.");
+  }
+  return source;
+}
+
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
@@ -135,20 +192,18 @@ export async function POST(request: Request) {
           : input.sourceType === "file"
             ? "file"
             : "text";
+    const extracted = await readNotebookSource(input, userId);
+    storagePath = extracted.storagePath;
+    const sourceContent = extracted.sourceContent;
+    const sourceFilename = extracted.sourceFilename;
+    const sourceMimeType = extracted.sourceMimeType;
+    const sourceSizeBytes = extracted.sourceSizeBytes;
+
     const estimate = estimateArtifactCredits({
       provider,
       modelId: model,
       sourceMode,
-      sourceSize: {
-        charCount:
-          input.sourceType === "text"
-            ? input.content.length
-            : input.sourceType === "topic"
-              ? input.topic.length
-              : undefined,
-        fileBytes: input.sourceType === "file" ? input.file.size : undefined,
-        mimeType: input.sourceType === "file" ? input.file.type : undefined,
-      },
+      sourceSize: { charCount: sourceContent.length },
       kind: "ingest",
     });
     const spent = await assertAndSpendCredits({
@@ -173,45 +228,6 @@ export async function POST(request: Request) {
     });
     charged = true;
     spentTextAmount = spent.isUnlimited ? 0 : estimate.textCredits;
-
-    let sourceContent: string | undefined;
-    let sourceFilename: string | undefined;
-    let sourceMimeType: string | undefined;
-    let sourceSizeBytes: number | undefined;
-
-    if (input.sourceType === "text") {
-      sourceContent = input.content;
-    } else if (input.sourceType === "topic") {
-      sourceContent = input.topic;
-      sourceMimeType = TOPIC_SOURCE_MIME;
-      sourceFilename = "topic";
-      sourceSizeBytes = Buffer.byteLength(input.topic, "utf8");
-    } else if (input.sourceType === "url") {
-      const fetched = await fetchStudyTextFromUrl(input.url);
-      sourceContent = fetched.content;
-      sourceFilename = fetched.sourceUrl;
-      sourceMimeType =
-        fetched.kind === "youtube"
-          ? "text/youtube"
-          : fetched.kind === "markdown"
-            ? "text/markdown"
-            : "text/html";
-      sourceSizeBytes = Buffer.byteLength(fetched.content, "utf8");
-    } else {
-      assertOwnedStoragePath(input.storagePath, userId);
-      const upload = validateUpload(input.file);
-      storagePath = input.storagePath;
-      sourceFilename = upload.name;
-      sourceMimeType = upload.type;
-      sourceSizeBytes = upload.size;
-      const data = await downloadSourceMedia(input.storagePath);
-      validateFileSignature(data, input.file.type);
-      sourceContent = await extractStudyText(data, input.file.type);
-    }
-
-    if (!sourceContent?.trim()) {
-      throw new Error("Could not read this source. Paste the text and try again.");
-    }
 
     const fallbackTitle =
       input.title ??

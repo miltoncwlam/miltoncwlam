@@ -1,4 +1,9 @@
-import { type SourceMode, type SourceSizeHints } from "@/lib/credits/config";
+import {
+  INGEST_TITLE_CHARS,
+  MAX_FILE_INPUT_TOKENS,
+  type SourceMode,
+  type SourceSizeHints,
+} from "@/lib/credits/config";
 import { creditsFromImageUsd, creditsFromTokens } from "@/lib/credits/token-cost";
 import { resolveBillingRates } from "@/lib/llm/models";
 
@@ -39,11 +44,16 @@ export function estimateInputTokens(
       const fromChars =
         chars > 0
           ? Math.ceil(chars * 0.3)
-          : Math.ceil((sourceSize.fileBytes ?? 4_000) / 4);
+          : Math.min(
+              MAX_FILE_INPUT_TOKENS,
+              Math.ceil((sourceSize.fileBytes ?? 4_000) / 4),
+            );
       const base = 2_000 + fromChars;
       const scanned =
-        sourceSize.scannedPdf ||
-        (sourceSize.mimeType === "application/pdf" && chars < 80);
+        sourceSize.scannedPdf === true ||
+        (sourceSize.mimeType === "application/pdf" &&
+          sourceSize.charCount != null &&
+          sourceSize.charCount < 80);
       return scanned ? Math.ceil(base * 3) : base;
     }
     default:
@@ -76,6 +86,25 @@ export function estimateArtifactOutputTokens(
   }
 }
 
+export function estimateArtifactInputTokens(
+  kind: ArtifactEstimateKind,
+  sourceMode: SourceMode,
+  sourceSize: SourceSizeHints = {},
+): number {
+  if (kind === "ingest") {
+    const raw = sourceSize.charCount;
+    const chars =
+      raw != null
+        ? Math.min(INGEST_TITLE_CHARS, Math.max(0, raw))
+        : sourceMode === "file"
+          ? INGEST_TITLE_CHARS
+          : 0;
+    const mode = sourceMode === "file" ? "text" : sourceMode;
+    return estimateInputTokens(mode, { charCount: chars });
+  }
+  return estimateInputTokens(sourceMode, sourceSize);
+}
+
 export function estimateArtifactCredits(input: {
   provider: "openrouter";
   modelId: string;
@@ -84,7 +113,11 @@ export function estimateArtifactCredits(input: {
   kind: ArtifactEstimateKind;
   questionCount?: number;
 }): GenerationEstimate {
-  const inputTokens = estimateInputTokens(input.sourceMode, input.sourceSize ?? {});
+  const inputTokens = estimateArtifactInputTokens(
+    input.kind,
+    input.sourceMode,
+    input.sourceSize ?? {},
+  );
   const outputTokens = estimateArtifactOutputTokens(
     input.kind,
     input.questionCount,

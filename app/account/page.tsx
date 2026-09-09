@@ -2,12 +2,21 @@ import Link from "next/link";
 import { UserProfile } from "@clerk/nextjs";
 import { getTranslations } from "next-intl/server";
 
+import { GiftCodeForm } from "@/components/gift-code-form";
 import { requireSession } from "@/lib/auth-server";
+import { getOrRefreshCredits } from "@/lib/data/credits";
 import { LEGAL } from "@/lib/legal";
 
 export default async function AccountPage() {
   const session = await requireSession();
   const t = await getTranslations("account");
+  const tg = await getTranslations("gift");
+  let unlimited = false;
+  try {
+    unlimited = (await getOrRefreshCredits(session.user.id)).isUnlimited;
+  } catch {
+    unlimited = false;
+  }
 
   return (
     <main className="page-shell max-w-3xl">
@@ -24,6 +33,16 @@ export default async function AccountPage() {
           {t("replayTutorial")}
         </Link>
       </p>
+      <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
+        <p className="font-bold text-slate-900">{tg("title")}</p>
+        {unlimited ? (
+          <p className="mt-2 text-sm text-emerald-800">{tg("already")}</p>
+        ) : (
+          <div className="mt-3">
+            <GiftCodeForm />
+          </div>
+        )}
+      </div>
       <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
         <p className="font-bold text-slate-900">{t("deleteTitle")}</p>
         <p className="mt-1 text-sm text-slate-600">

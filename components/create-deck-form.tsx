@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useRef, useState } from "react";
 
+import { GiftCodeForm } from "@/components/gift-code-form";
 import {
   GenerationLoadingScreen,
   type GenerationPhase,
@@ -296,6 +297,11 @@ export function CreateDeckForm({
               have: energyBalance,
             })}
           </p>
+        ) : null}
+        {!energyUnlimited ? (
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+            <GiftCodeForm compact />
+          </div>
         ) : null}
 
         <div className="space-y-2">

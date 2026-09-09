@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.4.1** — one number only (`package.json`).
+**Version 3.5.0** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,22 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.5.0 — 2026-09-09
+
+**Minor.** Create-notebook energy is a small title-read, not file size. Gift code on Account (and Create) unlocks unlimited energy. Scanned PDFs ask you to paste or OCR instead of blocking with a huge energy bill.
+
+### Added
+- Gift code field on **Account** and Create notebook. Redeeming the reusable code turns on unlimited energy for that signed-in account.
+
+### Changed
+- Notebook create extracts the source first, then charges for the short title call (first 6,000 characters), not the PDF’s megabytes.
+- File token guesses are capped. A PDF is not auto-treated as a 3× scan just because the browser has not extracted text yet.
+
+### Fixed
+- Uploading a scanned or image-heavy PDF no longer asks for tens of thousands of energy to open a notebook. Empty scans explain that the file has no selectable text.
 
 ---
 

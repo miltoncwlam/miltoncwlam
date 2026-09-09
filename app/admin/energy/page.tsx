@@ -13,6 +13,7 @@ const REASON_LABELS: Record<string, string> = {
   generate_notes: "Generate notes",
   generate_exam: "Generate exam",
   generate_refund: "Generate refund",
+  gift_code: "Gift code",
   period_refill: "Weekly refill",
   admin_adjust: "Admin adjust",
 };

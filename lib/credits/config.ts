@@ -9,6 +9,11 @@ export const CREDITS_PER_USD = 50_000;
 export const IMAGE_CREDITS_PER_USD = 500;
 export const MIN_GENERATION_CREDITS = 10;
 
+/** Title prompt only reads this many source characters. */
+export const INGEST_TITLE_CHARS = 6_000;
+/** Matches extract cap — never bill file bytes as if they were tokens past this. */
+export const MAX_FILE_INPUT_TOKENS = 24_000;
+
 export const GENERATE_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 export const FREE_GENERATE_LIMIT_HOUR = 5;
 export const FREE_GENERATE_LIMIT_DAY = 15;

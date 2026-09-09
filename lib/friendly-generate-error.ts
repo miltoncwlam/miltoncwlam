@@ -14,6 +14,9 @@ export function friendlyGenerateError(message: string, code?: string) {
   if (code === "RATE_LIMITED") {
     return message || "Too many generates this hour. Wait a bit, then try again.";
   }
+  if (/no selectable text|likely a scan|OCR it first/i.test(message)) {
+    return "This PDF looks like a photo of a page. Paste the text or OCR it first, then try again.";
+  }
   if (/too large to read|too large \(max/i.test(message)) {
     return "That page is too heavy to fetch whole. Paste the article text, or try a shorter URL.";
   }

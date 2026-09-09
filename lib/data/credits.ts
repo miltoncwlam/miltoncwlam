@@ -12,6 +12,7 @@ import {
   IMAGE_PERIOD_GRANT,
   PAID_GENERATE_LIMIT_HOUR,
 } from "@/lib/credits/config";
+import { giftCodeMatches } from "@/lib/credits/gift-code";
 import { PLAY_STAKE_LIMIT_HOUR } from "@/lib/credits/play";
 import { isPaidOpenRouterModel } from "@/lib/llm/models";
 
@@ -511,6 +512,40 @@ export async function setUserEnergySettings(input: {
   });
 
   return mapRow(result.rows[0]);
+}
+
+export async function redeemEnergyGiftCode(userId: string, rawCode: string) {
+  if (!giftCodeMatches(rawCode)) {
+    throw new Error("That gift code is not valid.");
+  }
+
+  await ensureRow(userId);
+  const current = await getOrRefreshCredits(userId);
+  if (current.isUnlimited) {
+    return { alreadyUnlimited: true as const };
+  }
+
+  const result = await pool.query<CreditRow>(
+    `update user_credits
+     set is_unlimited = true, updated_at = now()
+     where user_id = $1
+     returning ${CREDIT_SELECT}`,
+    [userId],
+  );
+  const row = result.rows[0];
+  if (!row) {
+    throw new Error("Could not unlock energy for this account. Try again.");
+  }
+
+  await insertLedger(pool, {
+    userId,
+    delta: 0,
+    pool: "text",
+    reason: "gift_code",
+    meta: { unlimited: true },
+  });
+
+  return { alreadyUnlimited: false as const, credits: mapRow(row) };
 }
 
 export async function listCreditLedger(limit = 100) {

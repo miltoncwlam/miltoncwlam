@@ -8,7 +8,14 @@ const MAX_SOURCE_CHARACTERS = 80_000;
 function normalizeText(text: string) {
   const normalized = text.replace(/\0/g, "").replace(/\s+\n/g, "\n").trim();
 
-  if (!normalized) throw new Error("No readable text was found in this source");
+  if (!normalized) {
+    if (mimeType === "application/pdf") {
+      throw new Error(
+        "This PDF has no selectable text (likely a scan). Paste the text or OCR it first, then try again.",
+      );
+    }
+    throw new Error("No readable text was found in this source");
+  }
   return normalized.slice(0, MAX_SOURCE_CHARACTERS);
 }
 

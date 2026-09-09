@@ -293,6 +293,16 @@
     "deleteBody": "Account deletion is by email only. Write to {email} and we will delete your account data.",
     "replayTutorial": "Show tutorial again"
   },
+  "gift": {
+    "title": "Gift code",
+    "label": "Gift code",
+    "placeholder": "Enter code",
+    "apply": "Unlock",
+    "hint": "Unlocks unlimited energy on this account. You can use the same code again on another account.",
+    "ok": "Unlimited energy is on for this account.",
+    "already": "This account already has unlimited energy.",
+    "invalid": "That gift code is not valid."
+  },
   "tutorial": {
     "skip": "Skip",
     "next": "Next",

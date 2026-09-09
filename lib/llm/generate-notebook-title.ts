@@ -1,5 +1,6 @@
 import { generateObject } from "ai";
 
+import { INGEST_TITLE_CHARS } from "@/lib/credits/config";
 import { promptLanguageName } from "@/lib/i18n/locales";
 import {
   getOpenRouterClient,
@@ -41,7 +42,7 @@ export async function generateNotebookTitle(input: {
       prompt: `Write a short study-notebook title (max 8 words) in ${language}.
 Optional one-sentence summary of what the source is about.
 Source:
-${input.source.slice(0, 6_000)}`,
+${input.source.slice(0, INGEST_TITLE_CHARS)}`,
     });
     return {
       title: result.object.title.trim() || fallback,

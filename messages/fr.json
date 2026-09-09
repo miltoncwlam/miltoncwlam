@@ -292,6 +292,16 @@
     "deleteBody": "La suppression se fait uniquement par e-mail. Écrivez à {email} et nous supprimerons vos données.",
     "replayTutorial": "Revoir le tutoriel"
   },
+  "gift": {
+    "title": "Code cadeau",
+    "label": "Code cadeau",
+    "placeholder": "Saisir le code",
+    "apply": "Débloquer",
+    "hint": "Active l’énergie illimitée sur ce compte. Le même code peut servir sur un autre compte.",
+    "ok": "L’énergie illimitée est activée sur ce compte.",
+    "already": "Ce compte a déjà l’énergie illimitée.",
+    "invalid": "Ce code cadeau n’est pas valide."
+  },
   "tutorial": {
     "skip": "Passer",
     "next": "Suivant",
