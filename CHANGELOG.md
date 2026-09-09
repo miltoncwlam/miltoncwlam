@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.6.0** — one number only (`package.json`).
+**Version 3.6.1** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -21,7 +21,14 @@ git checkout archive/milton-2026-09-06
 
 ---
 
-## Version 3.6.0 — 2026-09-09
+## Version 3.6.1 — 2026-09-09
+
+**Miniscule.** Production typecheck: notebook ingest still imports OCR energy helpers.
+
+### Fixed
+- `app/api/notebooks/route.ts` imports `estimateArtifactCredits` and `estimateOcrCredits` so CI can typecheck.
+
+---
 
 **Minor.** Scanned PDFs are transcribed in-app with OCR (up to 10 pages) so you can create a notebook from a book photo without pasting text first.
 

@@ -2,6 +2,10 @@ import { z } from "zod";
 
 import { requireApiSession } from "@/lib/auth-server";
 import { MAX_OCR_PAGES } from "@/lib/credits/config";
+import {
+  estimateArtifactCredits,
+  estimateOcrCredits,
+} from "@/lib/credits/estimate-generation";
 import { creditsFromTokens, usdFromTokens } from "@/lib/credits/token-cost";
 import { resolveBillingRates } from "@/lib/llm/models";
 import { isPaidOpenRouterModel } from "@/lib/llm/models";
