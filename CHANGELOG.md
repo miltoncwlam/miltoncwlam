@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.5.0** — one number only (`package.json`).
+**Version 3.5.1** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -21,7 +21,14 @@ git checkout archive/milton-2026-09-06
 
 ---
 
-## Version 3.5.0 — 2026-09-09
+## Version 3.5.1 — 2026-09-09
+
+**Miniscule.** Production typecheck: empty-PDF error can see the file type.
+
+### Fixed
+- `extractStudyText` passes MIME type into the empty-text helper so `npm run build` / CI typecheck can finish.
+
+---
 
 **Minor.** Create-notebook energy is a small title-read, not file size. Gift code on Account (and Create) unlocks unlimited energy. Scanned PDFs ask you to paste or OCR instead of blocking with a huge energy bill.
 

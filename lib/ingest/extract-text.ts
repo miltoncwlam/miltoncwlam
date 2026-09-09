@@ -5,7 +5,7 @@ import { extractText } from "unpdf";
 const MAX_PDF_PAGES = 50;
 const MAX_SOURCE_CHARACTERS = 80_000;
 
-function normalizeText(text: string) {
+function normalizeText(text: string, mimeType?: string) {
   const normalized = text.replace(/\0/g, "").replace(/\s+\n/g, "\n").trim();
 
   if (!normalized) {
@@ -24,7 +24,10 @@ export async function extractStudyText(
   mimeType: string,
 ): Promise<string> {
   if (mimeType === "text/plain" || mimeType === "text/markdown") {
-    return normalizeText(new TextDecoder("utf-8", { fatal: true }).decode(data));
+    return normalizeText(
+      new TextDecoder("utf-8", { fatal: true }).decode(data),
+      mimeType,
+    );
   }
 
   if (mimeType === "application/pdf") {
@@ -33,7 +36,7 @@ export async function extractStudyText(
     if (result.totalPages > MAX_PDF_PAGES) {
       throw new Error(`PDF files are limited to ${MAX_PDF_PAGES} pages`);
     }
-    return normalizeText(result.text);
+    return normalizeText(result.text, mimeType);
   }
 
   throw new Error("This source type does not contain directly extractable text");
