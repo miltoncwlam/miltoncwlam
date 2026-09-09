@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { extractStudyText } from "@/lib/ingest/extract-text";
+import { extractStudyText, isSparsePdfText } from "@/lib/ingest/extract-text";
 import {
   assertOwnedStoragePath,
   validateUpload,
@@ -34,5 +34,11 @@ describe("source ingestion", () => {
     await expect(extractStudyText(data, "text/plain")).resolves.toBe(
       "Useful notes",
     );
+  });
+
+  it("treats very short PDF layers as scans", () => {
+    expect(isSparsePdfText("")).toBe(true);
+    expect(isSparsePdfText("ab")).toBe(true);
+    expect(isSparsePdfText("A".repeat(80))).toBe(false);
   });
 });

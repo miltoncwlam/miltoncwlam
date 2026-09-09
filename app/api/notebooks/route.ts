@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { requireApiSession } from "@/lib/auth-server";
-import { estimateArtifactCredits } from "@/lib/credits/estimate-generation";
+import { MAX_OCR_PAGES } from "@/lib/credits/config";
 import { creditsFromTokens, usdFromTokens } from "@/lib/credits/token-cost";
 import { resolveBillingRates } from "@/lib/llm/models";
 import { isPaidOpenRouterModel } from "@/lib/llm/models";
@@ -21,7 +21,8 @@ import {
   purgeExpiredSources,
   purgeFailedGenerations,
 } from "@/lib/data/decks";
-import { extractStudyText } from "@/lib/ingest/extract-text";
+import { extractStudyText, isSparsePdfText, readPdfTextLayer } from "@/lib/ingest/extract-text";
+import { ocrPdfPages } from "@/lib/ingest/ocr-pdf";
 import { fetchStudyTextFromUrl } from "@/lib/ingest/fetch-url";
 import {
   assertOwnedStoragePath,
@@ -35,6 +36,7 @@ import {
 } from "@/lib/llm/config";
 import { generateNotebookTitle } from "@/lib/llm/generate-notebook-title";
 import { TOPIC_SOURCE_MIME } from "@/lib/llm/generate-flashcards";
+import { DEFAULT_OCR_MODEL } from "@/lib/llm/models";
 import { listOpenRouterFreeModels } from "@/lib/llm/openrouter-models";
 import {
   cleanupDiscardedGenerations,
@@ -107,6 +109,7 @@ async function readNotebookSource(
   sourceMimeType?: string;
   sourceSizeBytes?: number;
   storagePath?: string;
+  ocr?: { data: Uint8Array; pageCount: number };
 }> {
   if (input.sourceType === "text") {
     return requireSourceText({ sourceContent: input.content });
@@ -138,6 +141,29 @@ async function readNotebookSource(
   const upload = validateUpload(input.file);
   const data = await downloadSourceMedia(input.storagePath);
   validateFileSignature(data, input.file.type);
+  if (input.file.type === "application/pdf") {
+    const layer = await readPdfTextLayer(data);
+    if (!isSparsePdfText(layer.text)) {
+      return requireSourceText({
+        sourceContent: layer.text,
+        storagePath: input.storagePath,
+        sourceFilename: upload.name,
+        sourceMimeType: upload.type,
+        sourceSizeBytes: upload.size,
+      });
+    }
+    return {
+      sourceContent: "",
+      storagePath: input.storagePath,
+      sourceFilename: upload.name,
+      sourceMimeType: upload.type,
+      sourceSizeBytes: upload.size,
+      ocr: {
+        data,
+        pageCount: Math.min(MAX_OCR_PAGES, Math.max(1, layer.totalPages)),
+      },
+    };
+  }
   const sourceContent = await extractStudyText(data, input.file.type);
   return requireSourceText({
     sourceContent,
@@ -155,7 +181,7 @@ function requireSourceText<T extends { sourceContent: string }>(source: T): T {
   return source;
 }
 
-export const maxDuration = 60;
+export const maxDuration = 180;
 
 export async function POST(request: Request) {
   let deckId: string | undefined;
@@ -194,40 +220,70 @@ export async function POST(request: Request) {
             : "text";
     const extracted = await readNotebookSource(input, userId);
     storagePath = extracted.storagePath;
-    const sourceContent = extracted.sourceContent;
+    let sourceContent = extracted.sourceContent;
     const sourceFilename = extracted.sourceFilename;
     const sourceMimeType = extracted.sourceMimeType;
     const sourceSizeBytes = extracted.sourceSizeBytes;
+    const ocrModel = DEFAULT_OCR_MODEL;
 
-    const estimate = estimateArtifactCredits({
+    const titleEstimate = estimateArtifactCredits({
       provider,
       modelId: model,
       sourceMode,
-      sourceSize: { charCount: sourceContent.length },
+      sourceSize: {
+        charCount: extracted.ocr ? 0 : sourceContent.length,
+      },
       kind: "ingest",
     });
+    const ocrEstimate = extracted.ocr
+      ? estimateOcrCredits({
+          provider,
+          modelId: ocrModel,
+          pageCount: extracted.ocr.pageCount,
+        })
+      : null;
+    const textAmount = titleEstimate.textCredits + (ocrEstimate?.textCredits ?? 0);
     const spent = await assertAndSpendCredits({
       userId,
-      textAmount: estimate.textCredits,
+      textAmount,
       imageAmount: 0,
       reason: "generate_ingest",
       meta: {
         provider,
         model,
         sourceMode,
-        inputTokensEstimate: estimate.inputTokens,
-        outputTokens: estimate.outputTokens,
+        ocr: Boolean(extracted.ocr),
+        ocrPages: extracted.ocr?.pageCount ?? 0,
+        inputTokensEstimate:
+          titleEstimate.inputTokens + (ocrEstimate?.inputTokens ?? 0),
+        outputTokens:
+          titleEstimate.outputTokens + (ocrEstimate?.outputTokens ?? 0),
         usdEstimate: usdFromTokens(
           {
-            inputTokens: estimate.inputTokens,
-            outputTokens: estimate.outputTokens,
+            inputTokens:
+              titleEstimate.inputTokens + (ocrEstimate?.inputTokens ?? 0),
+            outputTokens:
+              titleEstimate.outputTokens + (ocrEstimate?.outputTokens ?? 0),
           },
-          resolveBillingRates({ provider, modelId: model }),
+          resolveBillingRates({
+            provider,
+            modelId: extracted.ocr ? ocrModel : model,
+          }),
         ),
       },
     });
     charged = true;
-    spentTextAmount = spent.isUnlimited ? 0 : estimate.textCredits;
+    spentTextAmount = spent.isUnlimited ? 0 : textAmount;
+
+    let ocrUsage = { inputTokens: 0, outputTokens: 0 };
+    if (extracted.ocr) {
+      const ocr = await ocrPdfPages(extracted.ocr.data, ocrModel);
+      sourceContent = ocr.text;
+      ocrUsage = ocr.usage;
+    }
+    if (!sourceContent.trim()) {
+      throw new Error("Could not read this source. Paste the text and try again.");
+    }
 
     const fallbackTitle =
       input.title ??
@@ -264,13 +320,21 @@ export async function POST(request: Request) {
       sourceContent,
     );
 
-    const rates = resolveBillingRates({ provider, modelId: model });
+    const rates = resolveBillingRates({
+      provider,
+      modelId: extracted.ocr ? ocrModel : model,
+    });
+    const combinedUsage = {
+      inputTokens: ocrUsage.inputTokens + titled.usage.inputTokens,
+      outputTokens: ocrUsage.outputTokens + titled.usage.outputTokens,
+    };
     const actualTextCredits = creditsFromTokens(
-      titled.usage.inputTokens || titled.usage.outputTokens
-        ? titled.usage
+      combinedUsage.inputTokens || combinedUsage.outputTokens
+        ? combinedUsage
         : {
-            inputTokens: estimate.inputTokens,
-            outputTokens: estimate.outputTokens,
+            inputTokens: titleEstimate.inputTokens + (ocrEstimate?.inputTokens ?? 0),
+            outputTokens:
+              titleEstimate.outputTokens + (ocrEstimate?.outputTokens ?? 0),
           },
       rates,
     );
@@ -294,7 +358,7 @@ export async function POST(request: Request) {
       action: "notebook_ingest",
       entityType: "deck",
       entityId: deckId,
-      meta: { provider, model },
+      meta: { provider, model, ocr: Boolean(extracted.ocr) },
     });
 
     return Response.json({ deckId });

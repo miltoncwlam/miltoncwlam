@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.5.1** — one number only (`package.json`).
+**Version 3.6.0** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -21,7 +21,21 @@ git checkout archive/milton-2026-09-06
 
 ---
 
-## Version 3.5.1 — 2026-09-09
+## Version 3.6.0 — 2026-09-09
+
+**Minor.** Scanned PDFs are transcribed in-app with OCR (up to 10 pages) so you can create a notebook from a book photo without pasting text first.
+
+### Added
+- If a PDF has no selectable text, the app rasterizes pages and reads them with Qwen 3.7 Flash, then stores that text as the notebook source.
+
+### Changed
+- Create-notebook charges OCR energy (per page) plus the short title call. Large PDFs show a higher estimate on the form.
+- Flashcard generate and later studio reads use the same OCR fallback.
+
+### Fixed
+- Empty scans no longer dead-end on “paste or OCR it first” when the model can read the page images.
+
+---
 
 **Miniscule.** Production typecheck: empty-PDF error can see the file type.
 

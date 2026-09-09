@@ -149,7 +149,7 @@ export async function regenerateDeckAction(formData: FormData) {
       const data = await downloadSourceMedia(deck.storagePath);
       validateFileSignature(data, deck.sourceMimeType);
       generated = await generateFlashcardsFromContent(
-        await extractStudyText(data, deck.sourceMimeType),
+        await extractStudyText(data, deck.sourceMimeType, { ocr: true, model }),
         {
           provider,
           model,

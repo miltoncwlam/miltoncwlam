@@ -11,8 +11,8 @@ import {
 
 const require = createRequire(import.meta.url);
 
-const MAX_PAGES = 8;
-const MAX_DIMENSION = 1280;
+const DEFAULT_MAX_PAGES = 8;
+const DEFAULT_MAX_DIMENSION = 1280;
 
 export type PdfPageImage = {
   data: Uint8Array;
@@ -45,7 +45,10 @@ async function injectRealCanvasGlobals() {
 
 export async function pdfPagesToImages(
   data: Uint8Array,
+  options: { maxPages?: number; maxDimension?: number } = {},
 ): Promise<PdfPageImage[]> {
+  const maxPages = Math.max(1, options.maxPages ?? DEFAULT_MAX_PAGES);
+  const maxDimension = options.maxDimension ?? DEFAULT_MAX_DIMENSION;
   await injectRealCanvasGlobals();
 
   const pdfBytes = new Uint8Array(data);
@@ -56,7 +59,7 @@ export async function pdfPagesToImages(
   // Inject again after unpdf's factory setup (it may re-stub).
   await injectRealCanvasGlobals();
 
-  const pageCount = Math.min(pdf.numPages, MAX_PAGES);
+  const pageCount = Math.min(pdf.numPages, maxPages);
   const images: PdfPageImage[] = [];
 
   try {
@@ -65,7 +68,7 @@ export async function pdfPagesToImages(
       const baseViewport = page.getViewport({ scale: 1 });
       const scale = Math.min(
         2,
-        MAX_DIMENSION / Math.max(baseViewport.width, baseViewport.height),
+        maxDimension / Math.max(baseViewport.width, baseViewport.height),
       );
       const viewport = page.getViewport({ scale });
       const canvasFactory = new CanvasFactory();

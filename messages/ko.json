@@ -64,7 +64,7 @@
     "material": "학습 자료",
     "materialPlaceholder": "노트나 글을 붙여넣기…",
     "fileLabel": "PDF, TXT, Markdown",
-    "fileHint": "최대 10MB, 텍스트 2MB.",
+    "fileHint": "최대 10MB, 텍스트 2MB. 스캔 PDF는 OCR로 읽습니다(에너지 추가, 최대 10페이지).",
     "provider": "AI 제공자",
     "cardCount": "카드 수",
     "difficulty": "난이도",

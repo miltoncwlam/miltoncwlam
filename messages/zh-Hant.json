@@ -64,7 +64,7 @@
     "material": "學習內容",
     "materialPlaceholder": "貼上筆記、文章或教材…",
     "fileLabel": "PDF、TXT 或 Markdown",
-    "fileHint": "最大 10 MB；文字檔最大 2 MB。",
+    "fileHint": "最大 10 MB；文字檔最大 2 MB。掃描 PDF 會用 OCR 讀取（較耗能量，最多 10 頁）。",
     "provider": "AI 供應商",
     "cardCount": "卡片數量",
     "difficulty": "難度",

@@ -28,7 +28,7 @@ export async function loadNotebookSource(deck: Deck): Promise<NotebookSource> {
   if (deck.storagePath) {
     const data = await downloadSourceMedia(deck.storagePath);
     const mime = deck.sourceMimeType || "text/plain";
-    const text = await extractStudyText(data, mime);
+    const text = await extractStudyText(data, mime, { ocr: true });
     if (!text.trim()) {
       throw new Error("Could not read this source. Paste the text and try again.");
     }

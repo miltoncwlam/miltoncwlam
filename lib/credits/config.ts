@@ -14,6 +14,13 @@ export const INGEST_TITLE_CHARS = 6_000;
 /** Matches extract cap — never bill file bytes as if they were tokens past this. */
 export const MAX_FILE_INPUT_TOKENS = 24_000;
 
+export const MAX_OCR_PAGES = 10;
+export const OCR_INPUT_TOKENS_PER_PAGE = 1_600;
+export const OCR_OUTPUT_TOKENS_PER_PAGE = 450;
+/** PDFs larger than this are likely scans (photos), so the form adds OCR energy. */
+export const LIKELY_SCAN_BYTES = 400_000;
+export const MIN_PDF_TEXT_CHARS = 80;
+
 export const GENERATE_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 export const FREE_GENERATE_LIMIT_HOUR = 5;
 export const FREE_GENERATE_LIMIT_DAY = 15;

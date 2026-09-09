@@ -4,6 +4,7 @@ import { MAX_FILE_INPUT_TOKENS } from "@/lib/credits/config";
 import {
   estimateArtifactCredits,
   estimateInputTokens,
+  estimateOcrCredits,
   estimateOutputTokens,
 } from "@/lib/credits/estimate-generation";
 import { ENERGY_GIFT_CODE, giftCodeMatches } from "@/lib/credits/gift-code";
@@ -40,6 +41,16 @@ describe("token estimates", () => {
       kind: "ingest",
     });
     expect(ingest.textCredits).toBeLessThan(50);
+  });
+
+  it("prices OCR by page and stays under a weekly grant", () => {
+    const ocr = estimateOcrCredits({
+      provider: "openrouter",
+      modelId: "qwen/qwen3.7-flash",
+      pageCount: 10,
+    });
+    expect(ocr.textCredits).toBeGreaterThan(10);
+    expect(ocr.textCredits).toBeLessThan(600);
   });
 
   it("scales output with card count", () => {

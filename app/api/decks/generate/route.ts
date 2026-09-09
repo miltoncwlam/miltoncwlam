@@ -27,7 +27,6 @@ import {
   shouldChunkText,
 } from "@/lib/ingest/chunk-text";
 import { extractStudyText } from "@/lib/ingest/extract-text";
-import { pdfPagesToImages } from "@/lib/ingest/pdf-to-images";
 import { fetchStudyTextFromUrl } from "@/lib/ingest/fetch-url";
 import {
   assertOwnedStoragePath,
@@ -41,7 +40,6 @@ import {
 } from "@/lib/llm/config";
 import {
   generateFlashcardsFromContent,
-  generateFlashcardsFromImages,
   generateFlashcardsFromTopic,
   TOPIC_SOURCE_MIME,
   UnrelatedSourceError,
@@ -406,38 +404,13 @@ export async function POST(request: Request) {
 
       if (input.file.type === "application/pdf") {
         const pdfBytes = new Uint8Array(data);
-        let extractedText: string | null = null;
-        try {
-          extractedText = await extractStudyText(pdfBytes, input.file.type);
-        } catch {
-          // Scanned or unreadable PDF — fall back to page images + vision.
-        }
-
-        if (extractedText) {
-          generated = await generateFromLongText(
-            extractedText,
-            generationOptions,
-          );
-        } else {
-          try {
-            const pages = await pdfPagesToImages(pdfBytes);
-            generated = await generateFlashcardsFromImages(
-              pages.slice(0, 3).map((page) => ({
-                data: page.data,
-                mediaType: page.mediaType,
-              })),
-              generationOptions,
-            );
-          } catch (rasterError) {
-            const message =
-              rasterError instanceof Error
-                ? rasterError.message
-                : String(rasterError);
-            throw new Error(
-              `Could not read this PDF (${message}). Try TXT/Markdown or paste the text.`,
-            );
-          }
-        }
+        generated = await generateFromLongText(
+          await extractStudyText(pdfBytes, input.file.type, {
+            ocr: true,
+            model,
+          }),
+          generationOptions,
+        );
       } else {
         generated = await generateFromLongText(
           await extractStudyText(data, input.file.type),

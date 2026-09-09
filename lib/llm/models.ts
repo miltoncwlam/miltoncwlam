@@ -14,6 +14,8 @@ export type PaidOpenRouterModel = {
 };
 
 export const DEFAULT_OPENROUTER_MODEL = "deepseek/deepseek-v4-flash";
+/** Vision model used to transcribe scanned PDF pages. */
+export const DEFAULT_OCR_MODEL = "qwen/qwen3.7-flash";
 export const DEFAULT_IMAGE_MODEL = "black-forest-labs/flux.2-klein-4b";
 export const DEFAULT_IMAGE_USD = 0.014;
 

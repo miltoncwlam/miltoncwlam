@@ -22,7 +22,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { estimateArtifactCredits } from "@/lib/credits/estimate-generation";
+import {
+  LIKELY_SCAN_BYTES,
+  MAX_OCR_PAGES,
+} from "@/lib/credits/config";
+import {
+  estimateArtifactCredits,
+  estimateOcrCredits,
+} from "@/lib/credits/estimate-generation";
 import {
   LOCALE_CODES,
   LOCALE_LABELS,
@@ -30,6 +37,7 @@ import {
 } from "@/lib/i18n/locales";
 import { createClient } from "@/lib/supabase/client";
 import {
+  DEFAULT_OCR_MODEL,
   DEFAULT_OPENROUTER_MODEL,
   PAID_OPENROUTER_MODELS,
 } from "@/lib/llm/models";
@@ -84,27 +92,43 @@ export function CreateDeckForm({
       ? mode
       : "topic";
   const provider: LLMProvider = "openrouter";
-  const estimate = useMemo(
-    () =>
-      estimateArtifactCredits({
-        provider: "openrouter",
-        modelId: openrouterModel,
-        sourceMode: activeMode,
-        sourceSize:
-          activeMode === "topic"
-            ? { charCount: topicChars }
-            : activeMode === "text"
-              ? { charCount: textChars }
-              : activeMode === "file"
-                ? {
-                    fileBytes: fileMeta?.bytes,
-                    mimeType: fileMeta?.mimeType,
-                  }
-                : {},
-        kind: "ingest",
-      }),
-    [openrouterModel, activeMode, topicChars, textChars, fileMeta],
-  );
+  const estimate = useMemo(() => {
+    const base = estimateArtifactCredits({
+      provider: "openrouter",
+      modelId: openrouterModel,
+      sourceMode: activeMode,
+      sourceSize:
+        activeMode === "topic"
+          ? { charCount: topicChars }
+          : activeMode === "text"
+            ? { charCount: textChars }
+            : activeMode === "file"
+              ? {
+                  fileBytes: fileMeta?.bytes,
+                  mimeType: fileMeta?.mimeType,
+                }
+              : {},
+      kind: "ingest",
+    });
+    const likelyScan =
+      activeMode === "file" &&
+      fileMeta?.mimeType === "application/pdf" &&
+      (fileMeta.bytes ?? 0) >= LIKELY_SCAN_BYTES;
+    if (!likelyScan) return base;
+    const ocr = estimateOcrCredits({
+      provider: "openrouter",
+      modelId: DEFAULT_OCR_MODEL,
+      pageCount: MAX_OCR_PAGES,
+    });
+    return {
+      ...base,
+      textCredits: base.textCredits + ocr.textCredits,
+      credits: base.credits + ocr.textCredits,
+      inputTokens: base.inputTokens + ocr.inputTokens,
+      outputTokens: base.outputTokens + ocr.outputTokens,
+      breakdown: `~${base.textCredits + ocr.textCredits} energy`,
+    };
+  }, [openrouterModel, activeMode, topicChars, textChars, fileMeta]);
   const overBalance = !energyUnlimited && estimate.textCredits > energyBalance;
 
   async function uploadFile(file: File) {
