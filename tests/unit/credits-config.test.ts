@@ -15,30 +15,53 @@ import {
 } from "@/lib/credits/config";
 import { estimateGenerationCredits } from "@/lib/credits/estimate-generation";
 import { creditsFromImageUsd, creditsFromTokens } from "@/lib/credits/token-cost";
-import { resolveBillingRates } from "@/lib/llm/models";
+import {
+  DEFAULT_OCR_MODEL,
+  DEFAULT_OPENROUTER_MODEL,
+  PAID_OPENROUTER_MODELS,
+  isPaidOpenRouterModel,
+  resolveBillingRates,
+} from "@/lib/llm/models";
 
 describe("unified token credits", () => {
-  it("bills Qwen below DeepSeek and keeps DeepSeek at the free reference", () => {
+  it("defaults generate to DeepSeek 0731 and OCR to Qwen 3.8", () => {
+    expect(DEFAULT_OPENROUTER_MODEL).toBe("deepseek/deepseek-v4-flash-0731");
+    expect(DEFAULT_OCR_MODEL).toBe("qwen/qwen3.8-flash");
+    expect(PAID_OPENROUTER_MODELS.map((model) => model.id)).toEqual([
+      "deepseek/deepseek-v4-flash-0731",
+      "qwen/qwen3.8-flash",
+      "deepseek/deepseek-v4.1-flash",
+    ]);
+    expect(isPaidOpenRouterModel("deepseek/deepseek-v4-flash")).toBe(true);
+    expect(isPaidOpenRouterModel("qwen/qwen3.7-flash")).toBe(true);
+  });
+
+  it("bills Qwen 3.8 above DeepSeek 0731 and keeps the old Flash pin at the free reference", () => {
     const usage = { inputTokens: 2000, outputTokens: 1640 };
     const catalog = creditsFromTokens(usage, FREE_MODEL_BILLING_RATES);
     const qwen = creditsFromTokens(usage, resolveBillingRates({
       provider: "openrouter",
-      modelId: "qwen/qwen3.7-flash",
+      modelId: "qwen/qwen3.8-flash",
     }));
     const deepseek = creditsFromTokens(usage, resolveBillingRates({
+      provider: "openrouter",
+      modelId: "deepseek/deepseek-v4-flash-0731",
+    }));
+    const legacyFlash = creditsFromTokens(usage, resolveBillingRates({
       provider: "openrouter",
       modelId: "deepseek/deepseek-v4-flash",
     }));
 
-    expect(qwen).toBeLessThan(deepseek);
-    expect(deepseek).toBe(catalog);
-    expect(qwen).toBeGreaterThanOrEqual(MIN_GENERATION_CREDITS);
+    expect(deepseek).toBeLessThan(catalog);
+    expect(qwen).toBeGreaterThan(deepseek);
+    expect(legacyFlash).toBe(catalog);
+    expect(deepseek).toBeGreaterThanOrEqual(MIN_GENERATION_CREDITS);
   });
 
   it("charges topic less than text less than file", () => {
     const base = {
       provider: "openrouter" as const,
-      modelId: "qwen/qwen3.7-flash",
+      modelId: "qwen/qwen3.8-flash",
       cardCount: 8,
     };
     const topic = estimateGenerationCredits({ ...base, sourceMode: "topic" });
@@ -59,13 +82,13 @@ describe("unified token credits", () => {
   it("adds image credits when illustrations are on", () => {
     const textOnly = estimateGenerationCredits({
       provider: "openrouter",
-      modelId: "qwen/qwen3.7-flash",
+      modelId: "qwen/qwen3.8-flash",
       sourceMode: "text",
       cardCount: 8,
     });
     const withImages = estimateGenerationCredits({
       provider: "openrouter",
-      modelId: "qwen/qwen3.7-flash",
+      modelId: "qwen/qwen3.8-flash",
       sourceMode: "text",
       cardCount: 8,
       illustrations: true,

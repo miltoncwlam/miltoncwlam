@@ -35,7 +35,7 @@ describe("token estimates", () => {
   it("prices notebook ingest like a short title call", () => {
     const ingest = estimateArtifactCredits({
       provider: "openrouter",
-      modelId: "deepseek/deepseek-v4-flash",
+      modelId: "deepseek/deepseek-v4-flash-0731",
       sourceMode: "file",
       sourceSize: { mimeType: "application/pdf", fileBytes: 6_000_000 },
       kind: "ingest",
@@ -46,7 +46,7 @@ describe("token estimates", () => {
   it("prices OCR by page and stays under a weekly grant", () => {
     const ocr = estimateOcrCredits({
       provider: "openrouter",
-      modelId: "qwen/qwen3.7-flash",
+      modelId: "qwen/qwen3.8-flash",
       pageCount: 10,
     });
     expect(ocr.textCredits).toBeGreaterThan(10);

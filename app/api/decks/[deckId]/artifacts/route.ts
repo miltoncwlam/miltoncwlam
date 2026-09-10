@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireApiSession } from "@/lib/auth-server";
 import { estimateArtifactCredits, estimateGenerationCredits } from "@/lib/credits/estimate-generation";
 import { creditsFromTokens } from "@/lib/credits/token-cost";
-import { resolveBillingRates } from "@/lib/llm/models";
+import { DEFAULT_OPENROUTER_MODEL, resolveBillingRates } from "@/lib/llm/models";
 import { LOCALE_CODES, studioCardCount, studioSourceSlice, type StudioDepth, type StudioPurpose } from "@/lib/i18n/locales";
 import { writeAuditLog } from "@/lib/data/audit";
 import { captureException } from "@/lib/sentry";
@@ -134,7 +134,7 @@ async function runArtifactJob(input: {
 
     const rates = resolveBillingRates({
       provider: "openrouter",
-      modelId: input.model || "deepseek/deepseek-v4-flash",
+      modelId: input.model || DEFAULT_OPENROUTER_MODEL,
     });
     const actual = creditsFromTokens(
       usage.inputTokens || usage.outputTokens ? usage : input.estimateTokens,
@@ -241,14 +241,14 @@ export async function POST(
       input.kind === "cards"
         ? estimateGenerationCredits({
             provider: "openrouter",
-            modelId: model || "deepseek/deepseek-v4-flash",
+            modelId: model || DEFAULT_OPENROUTER_MODEL,
             sourceMode: source.sourceMode,
             sourceSize: { charCount: source.charCount },
             cardCount,
           })
         : estimateArtifactCredits({
             provider: "openrouter",
-            modelId: model || "deepseek/deepseek-v4-flash",
+            modelId: model || DEFAULT_OPENROUTER_MODEL,
             sourceMode: source.sourceMode,
             sourceSize: { charCount: source.charCount },
             kind: input.kind,

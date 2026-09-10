@@ -13,13 +13,38 @@ export type PaidOpenRouterModel = {
   outputPerM: number;
 };
 
-export const DEFAULT_OPENROUTER_MODEL = "deepseek/deepseek-v4-flash";
+export const DEFAULT_OPENROUTER_MODEL = "deepseek/deepseek-v4-flash-0731";
 /** Vision model used to transcribe scanned PDF pages. */
-export const DEFAULT_OCR_MODEL = "qwen/qwen3.7-flash";
+export const DEFAULT_OCR_MODEL = "qwen/qwen3.8-flash";
 export const DEFAULT_IMAGE_MODEL = "black-forest-labs/flux.2-klein-4b";
 export const DEFAULT_IMAGE_USD = 0.014;
 
 export const PAID_OPENROUTER_MODELS: PaidOpenRouterModel[] = [
+  {
+    id: "deepseek/deepseek-v4-flash-0731",
+    group: "budget",
+    label: "DeepSeek V4 Flash",
+    inputPerM: 0.05,
+    outputPerM: 0.16,
+  },
+  {
+    id: "qwen/qwen3.8-flash",
+    group: "standard",
+    label: "Qwen 3.8 Flash",
+    inputPerM: 0.15,
+    outputPerM: 0.47,
+  },
+  {
+    id: "deepseek/deepseek-v4.1-flash",
+    group: "standard",
+    label: "DeepSeek V4.1 Flash",
+    inputPerM: 0.15,
+    outputPerM: 0.6,
+  },
+];
+
+/** Notebooks created before 3.9.3 still bill at the old OpenRouter list prices. */
+const LEGACY_PAID_OPENROUTER_RATES: PaidOpenRouterModel[] = [
   {
     id: "deepseek/deepseek-v4-flash",
     group: "budget",
@@ -37,7 +62,10 @@ export const PAID_OPENROUTER_MODELS: PaidOpenRouterModel[] = [
 ];
 
 const PAID_BY_ID = new Map(
-  PAID_OPENROUTER_MODELS.map((model) => [model.id, model]),
+  [...PAID_OPENROUTER_MODELS, ...LEGACY_PAID_OPENROUTER_RATES].map((model) => [
+    model.id,
+    model,
+  ]),
 );
 
 export function isPaidOpenRouterModel(modelId: string): boolean {

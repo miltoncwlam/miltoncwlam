@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { env } from "@/lib/env";
 import { getOpenRouterClient } from "@/lib/llm/config";
-import { isPaidOpenRouterModel } from "@/lib/llm/models";
+import { DEFAULT_OPENROUTER_MODEL, isPaidOpenRouterModel } from "@/lib/llm/models";
 
 export type OpenRouterCatalogModel = {
   id: string;
@@ -233,7 +233,7 @@ export async function isOpenRouterFreeModel(modelId: string): Promise<boolean> {
 export async function resolveOpenRouterModerationModel(): Promise<string> {
   const catalog = await listOpenRouterFreeModels();
   if (catalog[0]?.id) return catalog[0].id;
-  return "deepseek/deepseek-v4-flash";
+  return DEFAULT_OPENROUTER_MODEL;
 }
 
 /** Prefer the OpenRouter catalog router; never fall back to a paid model. */

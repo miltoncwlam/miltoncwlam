@@ -21,6 +21,7 @@ import type {
   SourceRetention,
   SourceType,
 } from "@/lib/types/flashcard";
+import { DEFAULT_OPENROUTER_MODEL } from "@/lib/llm/models";
 import { normalizeLLMProvider } from "@/lib/types/flashcard";
 
 type DeckRow = {
@@ -93,7 +94,7 @@ export function mapDeck(row: DeckRow): Deck {
     generationModel:
       row.generation_model &&
       ["openai", "anthropic", "google"].includes(row.generation_provider ?? "")
-        ? "deepseek/deepseek-v4-flash"
+        ? DEFAULT_OPENROUTER_MODEL
         : row.generation_model,
     generationError: row.generation_error,
     ingestProgress: parseIngestProgress(row.ingest_progress),

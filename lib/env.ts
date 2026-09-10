@@ -25,7 +25,7 @@ const envSchema = z.object({
     return raw;
   }, z.literal("openrouter").default("openrouter")),
   OPENROUTER_API_KEY: optionalSecret,
-  OPENROUTER_MODEL: z.string().min(1).default("deepseek/deepseek-v4-flash"),
+  OPENROUTER_MODEL: z.string().min(1).default("deepseek/deepseek-v4-flash-0731"),
   OPENROUTER_FREE_MODEL_BLOCKLIST: z.string().optional(),
   OLLAMA_BASE_URL: optionalSecret,
   OLLAMA_MODEL: z.string().min(1).optional(),
