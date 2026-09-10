@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.8.1** — one number only (`package.json`).
+**Version 3.8.2** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,16 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.8.2 — 2026-09-10
+
+**Miniscule.** Production can ship again. GitHub quality was blocking Vercel on a duplicated process route and a nullable exam mark in tests.
+
+### Fixed
+- Removed a copied `POST` handler in the notebook OCR tick route so typecheck can pass.
+- Optional-chain exam mark results in studio tests so `tsc` does not fail the required quality check.
 
 ---
 

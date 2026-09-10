@@ -124,10 +124,8 @@ describe("studio parsers", () => {
       ],
     });
     expect(exam.questions[0]?.choices).toEqual(["正確", "錯誤"]);
-    expect(
-      gradeExamExact(exam.questions[0]!, "正確").ok,
-    ).toBe(true);
-    expect(gradeExamExact(exam.questions[0]!, "True").ok).toBe(true);
+    expect(gradeExamExact(exam.questions[0]!, "正確")?.ok).toBe(true);
+    expect(gradeExamExact(exam.questions[0]!, "True")?.ok).toBe(true);
   });
 
   it("maps MCQ options onto choices", () => {
