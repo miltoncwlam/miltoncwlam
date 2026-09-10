@@ -579,6 +579,9 @@
     "takeExam": "开始考试",
     "printNotes": "打印笔记",
     "printMap": "打印思维导图",
+    "expandHint": "点击分支即可展开细节。",
+    "expandAll": "展开全部",
+    "collapseBranches": "收起",
     "types": {
       "long": "长题",
       "short": "短题",

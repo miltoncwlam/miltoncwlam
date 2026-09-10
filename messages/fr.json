@@ -579,6 +579,9 @@
     "takeExam": "Passer l’examen",
     "printNotes": "Imprimer les notes",
     "printMap": "Imprimer la carte",
+    "expandHint": "Cliquez sur une branche pour voir le détail.",
+    "expandAll": "Tout afficher",
+    "collapseBranches": "Replier",
     "types": {
       "long": "Question longue",
       "short": "Question courte",

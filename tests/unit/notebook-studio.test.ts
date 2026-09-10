@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { layoutMindmap } from "@/components/mindmap-tree";
+import { defaultCollapsedBranches, layoutMindmap } from "@/components/mindmap-tree";
 import { estimateArtifactOutputTokens } from "@/lib/credits/estimate-generation";
-import { studioLanguageRules } from "@/lib/i18n/locales";
+import { studioLanguageRules, notesSectionHeadings, mindmapLabelRules } from "@/lib/i18n/locales";
 import { isRetryableGenerateError } from "@/lib/llm/generate-object-retry";
 import {
   examCouldNotMarkResult,
@@ -13,7 +13,7 @@ import {
   parseNotesPayload,
   planExamQuestions,
 } from "@/lib/llm/parse-studio";
-import { parseStudyNotes, sanitizeStudyMarkdown } from "@/lib/study/notes-markdown";
+import { parseStudyNotes, sanitizeStudyMarkdown, splitNoteTerm } from "@/lib/study/notes-markdown";
 import type { ExamQuestion } from "@/lib/types/notebook";
 
 describe("studio parsers", () => {
@@ -320,6 +320,24 @@ describe("study notes and mind map layout", () => {
   it("asks Traditional Chinese models to write 繁體全文", () => {
     expect(studioLanguageRules("zh-Hant")).toMatch(/繁體中文/);
     expect(studioLanguageRules("zh-Hant")).toMatch(/Do not write English paragraphs/);
+    expect(studioLanguageRules("zh-Hant")).toMatch(/Key terms/);
+    expect(notesSectionHeadings("zh-Hant").terms).toBe("重點詞彙");
+    expect(mindmapLabelRules("zh-Hant")).toMatch(/Traditional Chinese/);
+  });
+
+  it("splits a Chinese Key terms wall into a real list", () => {
+    const markdown =
+      "Key terms- 舊石器時代: 距今約170萬年到約8000年前，人類使用打製石器。- 新石器時代: 約7000年前開始，各地出現磨製石器。";
+    const cleaned = sanitizeStudyMarkdown(markdown);
+    expect(cleaned).toMatch(/## 重點詞彙/);
+    expect(cleaned).not.toMatch(/## Key terms/);
+    const blocks = parseStudyNotes(markdown, "史前至夏商周");
+    expect(
+      blocks.some((block) => block.type === "h2" && block.text === "重點詞彙"),
+    ).toBe(true);
+    const list = blocks.find((block) => block.type === "ul");
+    expect(list && list.type === "ul" && list.items.length >= 2).toBe(true);
+    expect(splitNoteTerm("舊石器時代: 距今約170萬年")?.term).toBe("舊石器時代");
   });
 
   it("sanitizes stored notes markdown", () => {
@@ -345,6 +363,20 @@ describe("study notes and mind map layout", () => {
     expect(laid.items).toHaveLength(4);
     expect(laid.items[0]?.x).toBe(laid.cx);
     expect(laid.items.filter((item) => item.parentId === "n1")).toHaveLength(2);
+  });
+
+  it("hides grandchildren until a branch is expanded", () => {
+    const nodes = [
+      { id: "n1", parentId: null, label: "Topic" },
+      { id: "n2", parentId: "n1", label: "Branch A" },
+      { id: "n3", parentId: "n1", label: "Branch B" },
+      { id: "n4", parentId: "n2", label: "Leaf" },
+    ];
+    const collapsed = defaultCollapsedBranches(nodes);
+    expect(collapsed.has("n2")).toBe(true);
+    const laid = layoutMindmap(nodes, collapsed);
+    expect(laid.items).toHaveLength(3);
+    expect(laid.items.some((item) => item.id === "n4")).toBe(false);
   });
 });
 

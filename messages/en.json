@@ -576,6 +576,9 @@
     "takeExam": "Take exam",
     "printNotes": "Print notes",
     "printMap": "Print map",
+    "expandHint": "Click a branch to open its details.",
+    "expandAll": "Show all",
+    "collapseBranches": "Collapse",
     "types": {
       "long": "Long question",
       "short": "Short question",

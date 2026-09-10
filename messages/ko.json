@@ -579,6 +579,9 @@
     "takeExam": "시험 보기",
     "printNotes": "노트 인쇄",
     "printMap": "마인드맵 인쇄",
+    "expandHint": "가지를 누르면 세부 내용이 열립니다.",
+    "expandAll": "모두 보기",
+    "collapseBranches": "접기",
     "types": {
       "long": "서술형(장문)",
       "short": "서술형(단답)",

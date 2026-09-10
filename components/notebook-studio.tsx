@@ -181,7 +181,13 @@ export function NotebookStudio({
         </div>
       </div>
 
-      {mindmap ? <MindmapTree nodes={mindmap.nodes} title={mindmap.title} /> : null}
+      {mindmap ? (
+        <MindmapTree
+          key={mindmap.nodes.map((node) => node.id).join("-")}
+          nodes={mindmap.nodes}
+          title={mindmap.title}
+        />
+      ) : null}
       {notes ? <StudyNotesView markdown={notes.markdown} title={notes.title} /> : null}
       {exam ? (
         <section className="no-print rounded-2xl border border-slate-200 bg-white p-5">

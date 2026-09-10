@@ -1,6 +1,6 @@
 import { generateObject } from "ai";
 
-import { studioLanguageRules } from "@/lib/i18n/locales";
+import { notesSectionHeadings, studioLanguageRules } from "@/lib/i18n/locales";
 import {
   getOpenRouterClient,
   resolveOpenRouterModel,
@@ -37,6 +37,7 @@ export async function generateNotes(input: {
   language?: string;
   model?: string;
 }): Promise<{ notes: NotesPayload; usage: StudioUsage }> {
+  const headings = notesSectionHeadings(input.language ?? "en");
   const result = await generateObjectWithRetry(() =>
     generateObject({
       model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
@@ -46,11 +47,12 @@ export async function generateNotes(input: {
 ${studioLanguageRules(input.language ?? "en")}
 Put the title only in the title field. Do not start markdown with a duplicate # title.
 The markdown field MUST use real newline characters (not a single paragraph).
-Required sections, each starting on its own line:
-## Key terms
-## Facts
-## How to remember
-Use "- " bullets under each heading. Bold a term with **term** on the same line as its meaning.
+Required sections, each starting on its own line with these exact headings:
+## ${headings.terms}
+## ${headings.facts}
+## ${headings.remember}
+Use "- " bullets under each heading. One bullet per line. Bold a term with **term** then its meaning on the same bullet.
+Never glue headings or bullets into one paragraph. Never use the English labels Key terms / Facts / How to remember unless the output language is English.
 Write enough to study from. No invented facts. No Punycode (xn--). Do not mention that you are an AI.
 
 Source:

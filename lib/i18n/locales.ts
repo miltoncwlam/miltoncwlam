@@ -49,25 +49,74 @@ export function promptLanguageName(locale: string): string {
   return LOCALE_PROMPT_NAMES.en;
 }
 
+export type NotesSectionHeadings = {
+  terms: string;
+  facts: string;
+  remember: string;
+};
+
+/** Study-note section titles in the output language (never English for CJK). */
+export function notesSectionHeadings(locale: string): NotesSectionHeadings {
+  if (locale === "zh-Hant") {
+    return { terms: "重點詞彙", facts: "史實與脈絡", remember: "記誦提示" };
+  }
+  if (locale === "zh-Hans") {
+    return { terms: "重点词语", facts: "史实与脉络", remember: "记忆提示" };
+  }
+  if (locale === "ja") {
+    return { terms: "重要用語", facts: "要点", remember: "覚え方" };
+  }
+  if (locale === "ko") {
+    return { terms: "핵심 용어", facts: "핵심 사실", remember: "암기 팁" };
+  }
+  if (locale === "es") {
+    return { terms: "Términos clave", facts: "Hechos", remember: "Cómo recordar" };
+  }
+  if (locale === "fr") {
+    return { terms: "Termes clés", facts: "Faits", remember: "Comment retenir" };
+  }
+  return { terms: "Key terms", facts: "Facts", remember: "How to remember" };
+}
+
+/** Mind-map bubble copy: short labels in the same language as the notes. */
+export function mindmapLabelRules(locale: string): string {
+  if (locale === "zh-Hant" || locale === "zh-Hans") {
+    const script =
+      locale === "zh-Hant" ? "Traditional Chinese (繁體)" : "Simplified Chinese (简体)";
+    return `LABELS (mandatory): every node label in ${script} only.
+Root 4–12 characters. Branches and leaves 2–10 characters. Dates may stay as numbers (e.g. 前2070).
+Never use English titles such as Unit 1, Prehistory, Knowledge, Skills, Values, or Xia Shang Zhou.`;
+  }
+  if (locale === "ja") {
+    return `LABELS: every node in Japanese, 2–12 characters. No English titles.`;
+  }
+  if (locale === "ko") {
+    return `LABELS: every node in Korean, 2–12 characters. No English titles.`;
+  }
+  return `LABELS: 2–6 words in ${promptLanguageName(locale)}. Keep them short enough to fit in a bubble.`;
+}
+
 /** Extra rules so models do not write English with Chinese glosses. */
 export function studioLanguageRules(locale: string): string {
   const name = promptLanguageName(locale);
   if (locale === "zh-Hant") {
-    return `LANGUAGE (mandatory): Write EVERY heading, bullet, and sentence in Traditional Chinese as used in Hong Kong (繁體中文).
+    return `LANGUAGE (mandatory): Write EVERY heading, title, bullet, mind-map label, and sentence in Traditional Chinese as used in Hong Kong (繁體中文).
 Do not write English paragraphs. If a widely used English proper noun is needed, put it in parentheses after the Chinese, e.g. 周朝 (Zhou).
+Never use English UI labels such as Key terms, Facts, How to remember, Unit 1, Knowledge, Skills, or Values.
 Never use Simplified Chinese (no 国/这/会/发/变 as simplified forms — use 國/這/會/發/變).
 Never output Punycode (xn--), HTML, Markdown reference links, or a single wall of text.`;
   }
   if (locale === "zh-Hans") {
-    return `LANGUAGE (mandatory): Write EVERY heading, bullet, and sentence in Simplified Chinese (简体中文).
+    return `LANGUAGE (mandatory): Write EVERY heading, title, bullet, mind-map label, and sentence in Simplified Chinese (简体中文).
 Do not write English paragraphs. Proper nouns may add English in parentheses after the Chinese.
+Never use English UI labels such as Key terms, Facts, or How to remember.
 Never output Punycode (xn--), HTML, or a single wall of text.`;
   }
   if (locale === "ja") {
-    return `LANGUAGE (mandatory): Write EVERY heading, bullet, and sentence in Japanese. Do not write English paragraphs. Never output Punycode (xn--).`;
+    return `LANGUAGE (mandatory): Write EVERY heading, bullet, mind-map label, and sentence in Japanese. Do not write English paragraphs. Never output Punycode (xn--).`;
   }
   if (locale === "ko") {
-    return `LANGUAGE (mandatory): Write EVERY heading, bullet, and sentence in Korean. Do not write English paragraphs. Never output Punycode (xn--).`;
+    return `LANGUAGE (mandatory): Write EVERY heading, bullet, mind-map label, and sentence in Korean. Do not write English paragraphs. Never output Punycode (xn--).`;
   }
   return `LANGUAGE: Write ALL output in ${name}. Do not mix in another language except unavoidable proper nouns. Never output Punycode (xn--).`;
 }

@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.8.0** — one number only (`package.json`).
+**Version 3.8.1** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,20 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.8.1 — 2026-09-10
+
+**Miniscule.** Study notes and mind maps stay in the same language as the notebook, and they are readable instead of a wall of overlapping text.
+
+### Changed
+- Traditional Chinese notes use 重點詞彙 / 史實與脈絡 / 記誦提示 instead of English Key terms / Facts / How to remember.
+- Mind-map labels are required in the same language, with short Chinese bubbles instead of English “2–6 words” titles like Unit 1.
+- Notes split glued `詞：定義` walls into term cards. The mind map starts with branches collapsed so labels do not stack on top of each other.
+
+### Fixed
+- Existing Chinese notes that arrived as one paragraph (`Key terms- 舊石器時代: …。- 新石器時代:`) now parse into real headings and a list.
 
 ---
 

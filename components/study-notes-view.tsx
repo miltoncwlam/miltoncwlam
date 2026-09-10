@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 
 import {
   parseStudyNotes,
+  splitNoteTerm,
   type StudyNoteBlock,
 } from "@/lib/study/notes-markdown";
 
@@ -60,9 +61,18 @@ export function StudyNotesView({
           if (block.type === "ul") {
             return (
               <ul key={index}>
-                {block.items.map((item, itemIndex) => (
-                  <li key={itemIndex}>{renderInline(item)}</li>
-                ))}
+                {block.items.map((item, itemIndex) => {
+                  const split = splitNoteTerm(item);
+                  if (split) {
+                    return (
+                      <li className="study-notes-term" key={itemIndex}>
+                        <strong>{renderInline(split.term)}</strong>
+                        <span>{renderInline(split.meaning)}</span>
+                      </li>
+                    );
+                  }
+                  return <li key={itemIndex}>{renderInline(item)}</li>;
+                })}
               </ul>
             );
           }

@@ -594,6 +594,9 @@
     "takeExam": "開始考試",
     "printNotes": "列印筆記",
     "printMap": "列印心智圖",
+    "expandHint": "點擊分支即可展開細節。",
+    "expandAll": "展開全部",
+    "collapseBranches": "收合",
     "types": {
       "long": "長題",
       "short": "短題",

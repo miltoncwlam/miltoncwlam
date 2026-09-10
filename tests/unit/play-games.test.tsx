@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ExamPlayer } from "@/components/exam-player";
 import { FlashCard } from "@/components/flash-card";
 import { MindmapTree } from "@/components/mindmap-tree";
+import { StudyNotesView } from "@/components/study-notes-view";
 import { PlayDispatcher } from "@/components/play/play-dispatcher";
 import { PLAY_CATALOG_IDS, type PlayCatalogId } from "@/lib/play/templates";
 import { catalogReason } from "@/lib/play/eligibility";
@@ -503,5 +504,27 @@ describe("mind map tree", () => {
     expect(node.querySelectorAll("path").length).toBeGreaterThanOrEqual(2);
     expect(node.textContent).toContain("Topic");
     expect(node.textContent).toContain("Print map");
+  });
+});
+
+describe("study notes view", () => {
+  it("turns a Chinese term wall into term cards", async () => {
+    const node = document.createElement("div");
+    document.body.appendChild(node);
+    const root = createRoot(node);
+    live.push({ root, node });
+    await act(async () => {
+      root.render(
+        <NextIntlClientProvider locale="zh-Hant" messages={en}>
+          <StudyNotesView
+            markdown="Key terms- 舊石器時代: 距今約170萬年。- 新石器時代: 約7000年前開始。"
+            title="史前至夏商周 復習筆記"
+          />
+        </NextIntlClientProvider>,
+      );
+    });
+    expect(node.textContent).toContain("重點詞彙");
+    expect(node.textContent).not.toContain("Key terms");
+    expect(node.querySelectorAll(".study-notes-term").length).toBeGreaterThanOrEqual(2);
   });
 });

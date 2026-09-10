@@ -39,6 +39,41 @@ function visibleChildren(
   return childrenOf(nodes, parentId);
 }
 
+/** Hide grandchildren until a branch is clicked. */
+export function defaultCollapsedBranches(nodes: MindmapNode[]): Set<string> {
+  const roots = childrenOf(nodes, null);
+  const root = roots[0] ?? nodes[0];
+  const collapsed = new Set<string>();
+  if (!root) return collapsed;
+  for (const branch of childrenOf(nodes, root.id)) {
+    if (childrenOf(nodes, branch.id).length) collapsed.add(branch.id);
+  }
+  return collapsed;
+}
+
+function separateOverlaps(items: LaidOut[], minDist: number) {
+  for (let pass = 0; pass < 4; pass += 1) {
+    for (let i = 0; i < items.length; i += 1) {
+      for (let j = i + 1; j < items.length; j += 1) {
+        const a = items[i]!;
+        const b = items[j]!;
+        if (!a.parentId || !b.parentId) continue;
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy) || 0.01;
+        if (dist >= minDist) continue;
+        const push = (minDist - dist) / 2;
+        const ux = dx / dist;
+        const uy = dy / dist;
+        a.x -= ux * push;
+        a.y -= uy * push;
+        b.x += ux * push;
+        b.y += uy * push;
+      }
+    }
+  }
+}
+
 export function layoutMindmap(
   nodes: MindmapNode[],
   collapsed: Set<string>,
@@ -56,12 +91,14 @@ export function layoutMindmap(
   )
     ? 3
     : 2;
-  const r1 = 168;
-  const r2 = 292;
-  const r3 = 400;
-  const radius = depth >= 3 ? r3 : r2;
-  const width = Math.max(720, radius * 2 + 180);
-  const height = Math.max(520, radius * 2 + 140);
+  const ring = Math.max(branches.length, 4);
+  const r1 = Math.max(210, 48 * ring);
+  const r2 = r1 + 150;
+  const r3 = r2 + 140;
+  const radius = depth >= 3 ? r3 : r1 + 40;
+  const pad = 160;
+  const width = Math.max(720, radius * 2 + pad);
+  const height = Math.max(520, radius * 2 + 160);
   const cx = width / 2;
   const cy = height / 2;
   const items: LaidOut[] = [];
@@ -97,7 +134,7 @@ export function layoutMindmap(
     });
 
     kids.forEach((kid, kidIndex) => {
-      const spread = Math.min(step * 0.72 || Math.PI / 5, Math.PI / 4);
+      const spread = Math.min(step * 0.78 || Math.PI / 5, Math.PI / 3.4);
       const ka =
         kids.length === 1
           ? angle
@@ -116,7 +153,7 @@ export function layoutMindmap(
       });
 
       grand.forEach((leaf, leafIndex) => {
-        const leafSpread = spread * 0.55;
+        const leafSpread = spread * 0.6;
         const la =
           grand.length === 1
             ? ka
@@ -136,7 +173,30 @@ export function layoutMindmap(
     });
   });
 
-  return { width, height, cx, cy, items };
+  separateOverlaps(items, 118);
+
+  const xs = items.map((item) => item.x);
+  const ys = items.map((item) => item.y);
+  const minX = Math.min(...xs, cx) - 90;
+  const maxX = Math.max(...xs, cx) + 90;
+  const minY = Math.min(...ys, cy) - 70;
+  const maxY = Math.max(...ys, cy) + 70;
+  const shiftX = minX < 0 ? -minX + 16 : 0;
+  const shiftY = minY < 0 ? -minY + 16 : 0;
+  if (shiftX || shiftY) {
+    for (const item of items) {
+      item.x += shiftX;
+      item.y += shiftY;
+    }
+  }
+
+  return {
+    width: Math.max(width, maxX + shiftX + 24),
+    height: Math.max(height, maxY + shiftY + 24),
+    cx: cx + shiftX,
+    cy: cy + shiftY,
+    items,
+  };
 }
 
 function curve(x1: number, y1: number, x2: number, y2: number) {
@@ -155,8 +215,17 @@ export function MindmapTree({
   nodes: MindmapNode[];
 }) {
   const t = useTranslations("studio");
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const nodeKey = nodes.map((node) => node.id).join(",");
+  const [mapKey, setMapKey] = useState(nodeKey);
+  const [collapsed, setCollapsed] = useState(() => defaultCollapsedBranches(nodes));
   const [expandAll, setExpandAll] = useState(false);
+
+  if (mapKey !== nodeKey) {
+    setMapKey(nodeKey);
+    setCollapsed(defaultCollapsedBranches(nodes));
+    setExpandAll(false);
+  }
+
   const layout = useMemo(
     () => layoutMindmap(nodes, collapsed, expandAll),
     [nodes, collapsed, expandAll],
@@ -167,6 +236,7 @@ export function MindmapTree({
   );
 
   function toggle(id: string) {
+    setExpandAll(false);
     setCollapsed((current) => {
       const next = new Set(current);
       if (next.has(id)) next.delete(id);
@@ -191,11 +261,28 @@ export function MindmapTree({
     <section className="mindmap-tree">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-black">{title}</h2>
-        <button className="secondary-button no-print" onClick={printMap} type="button">
-          {t("printMap")}
-        </button>
+        <div className="flex flex-wrap items-center gap-2 no-print">
+          <button
+            className="secondary-button"
+            onClick={() => {
+              if (expandAll) {
+                setExpandAll(false);
+                setCollapsed(defaultCollapsedBranches(nodes));
+              } else {
+                setExpandAll(true);
+              }
+            }}
+            type="button"
+          >
+            {expandAll ? t("collapseBranches") : t("expandAll")}
+          </button>
+          <button className="secondary-button" onClick={printMap} type="button">
+            {t("printMap")}
+          </button>
+        </div>
       </div>
-      <div className="mindmap-canvas mt-4">
+      <p className="mindmap-hint no-print">{t("expandHint")}</p>
+      <div className="mindmap-canvas mt-3">
         <div
           className="mindmap-stage"
           style={{ width: layout.width, height: layout.height }}
@@ -237,6 +324,7 @@ export function MindmapTree({
                 background: item.parentId ? "var(--paper)" : item.color,
                 color: item.parentId ? "var(--ink)" : "#fff",
               }}
+              title={item.label}
               type="button"
             >
               {item.label}
