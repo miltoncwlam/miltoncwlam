@@ -1,8 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import { defaultCollapsedBranches, layoutMindmap } from "@/components/mindmap-tree";
+import { copyableNotebookSource, notebookIsPublishable } from "@/lib/community/hk-curriculum";
 import { estimateArtifactOutputTokens } from "@/lib/credits/estimate-generation";
-import { studioLanguageRules, notesSectionHeadings, mindmapLabelRules } from "@/lib/i18n/locales";
+import {
+  studioIntentRules,
+  studioLanguageRules,
+  studioSourceSlice,
+  notesSectionHeadings,
+  mindmapLabelRules,
+} from "@/lib/i18n/locales";
 import { isRetryableGenerateError } from "@/lib/llm/generate-object-retry";
 import {
   examCouldNotMarkResult,
@@ -348,19 +355,24 @@ describe("study notes and mind map layout", () => {
     expect(notes.markdown).toMatch(/\*\*abdication/);
   });
 
-  it("lays out a root and branches with connectors", () => {
+  it("places branch children in a vertical column, not a ring", () => {
     const laid = layoutMindmap(
       [
         { id: "n1", parentId: null, label: "Topic" },
         { id: "n2", parentId: "n1", label: "Branch A" },
         { id: "n3", parentId: "n1", label: "Branch B" },
-        { id: "n4", parentId: "n2", label: "Leaf" },
+        { id: "n4", parentId: "n2", label: "Leaf 1" },
+        { id: "n5", parentId: "n2", label: "Leaf 2" },
       ],
       new Set(),
+      true,
     );
-    expect(laid.items).toHaveLength(4);
-    expect(laid.items[0]?.x).toBe(laid.cx);
-    expect(laid.items.filter((item) => item.parentId === "n1")).toHaveLength(2);
+    const kids = laid.items.filter((item) => item.parentId === "n2");
+    expect(kids).toHaveLength(2);
+    expect(Math.abs(kids[0]!.x - kids[1]!.x)).toBeLessThan(2);
+    expect(Math.abs(kids[0]!.y - kids[1]!.y)).toBeGreaterThan(20);
+    const branch = laid.items.find((item) => item.id === "n2");
+    expect(Math.abs((kids[0]?.x ?? 0) - (branch?.x ?? 0))).toBeGreaterThan(80);
   });
 
   it("hides grandchildren until a branch is expanded", () => {
@@ -387,5 +399,74 @@ describe("generate retry", () => {
       false,
     );
     expect(isRetryableGenerateError(new Error("Unauthorized"))).toBe(false);
+  });
+});
+
+describe("studio depth and purpose", () => {
+  it("slices less source on basic and writes first-look rules", () => {
+    const long = "x".repeat(20_000);
+    expect(studioSourceSlice(long, "basic")).toHaveLength(12_000);
+    expect(studioSourceSlice(long, "detailed")).toHaveLength(18_000);
+    expect(studioIntentRules("basic", "starter", "mindmap")).toMatch(/8–14 nodes/);
+    expect(studioIntentRules("detailed", "exam", "notes")).toMatch(/exam revision/);
+  });
+});
+
+describe("community notebook copy and publish", () => {
+  it("keeps real source and rebuilds seed stubs from cards", () => {
+    expect(
+      copyableNotebookSource({
+        sourceContent: "Chlorophyll absorbs light.",
+        cards: [{ front: "Q", back: "A" }],
+      }),
+    ).toBe("Chlorophyll absorbs light.");
+    const fromSeed = copyableNotebookSource({
+      sourceContent: "seed:photosynthesis",
+      cards: [{ front: "What is chlorophyll?", back: "Green pigment", hint: "leaf" }],
+    });
+    expect(fromSeed).toMatch(/What is chlorophyll/);
+    expect(fromSeed).not.toMatch(/^seed:/i);
+  });
+
+  it("lets a complete notebook publish with cards or a studio item", () => {
+    expect(
+      notebookIsPublishable({
+        generationStatus: "complete",
+        cardCount: 3,
+        hasStudioItem: false,
+      }),
+    ).toBe(true);
+    expect(
+      notebookIsPublishable({
+        generationStatus: "complete",
+        cardCount: 0,
+        hasStudioItem: true,
+      }),
+    ).toBe(true);
+    expect(
+      notebookIsPublishable({
+        generationStatus: "complete",
+        cardCount: 2,
+        hasStudioItem: false,
+      }),
+    ).toBe(false);
+    expect(
+      notebookIsPublishable({
+        generationStatus: "processing",
+        cardCount: 8,
+        hasStudioItem: true,
+      }),
+    ).toBe(false);
+  });
+});
+
+describe("studio cards keep notebook source", () => {
+  it("does not call regenerateDeckAction or clearDeckSource from the studio path", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const route = await readFile("app/api/decks/[deckId]/artifacts/route.ts", "utf8");
+    const page = await readFile("app/decks/[deckId]/page.tsx", "utf8");
+    expect(route).toMatch(/completeDeckGeneration/);
+    expect(route).not.toMatch(/clearDeckSource/);
+    expect(page).not.toMatch(/regenerateDeckAction/);
   });
 });

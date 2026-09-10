@@ -1,6 +1,6 @@
 import { generateObject } from "ai";
 
-import { studioLanguageRules } from "@/lib/i18n/locales";
+import { studioIntentRules, studioLanguageRules, studioSourceSlice, type StudioDepth, type StudioPurpose } from "@/lib/i18n/locales";
 import {
   getOpenRouterClient,
   resolveOpenRouterModel,
@@ -61,6 +61,8 @@ export async function generateExam(input: {
   language?: string;
   model?: string;
   difficulty?: "beginner" | "intermediate" | "advanced";
+  depth?: StudioDepth;
+  purpose?: StudioPurpose;
   types: ExamQuestionType[];
   durationMinutes?: number;
 }): Promise<{ exam: ExamPayload; usage: StudioUsage }> {
@@ -70,7 +72,11 @@ export async function generateExam(input: {
   const duration = clampExamDurationMinutes(input.durationMinutes);
   const sequence = planExamQuestions(duration, types);
   const count = sequence.length;
-  const difficulty = input.difficulty ?? "intermediate";
+  const depth = input.depth ?? "basic";
+  const purpose = input.purpose ?? "starter";
+  const difficulty =
+    input.difficulty ??
+    (purpose === "exam" ? "advanced" : depth === "detailed" ? "intermediate" : "beginner");
   const mix = typeCounts(sequence);
   const tf = trueFalseChoices(input.language);
   const result = await generateObjectWithRetry(() =>
@@ -80,6 +86,7 @@ export async function generateExam(input: {
       abortSignal: AbortSignal.timeout(50_000),
       prompt: `Write a ${difficulty} exam paper from this source.
 ${studioLanguageRules(input.language ?? "en")}
+${studioIntentRules(depth, purpose, "exam")}
 This paper must be finishable in ${duration} minutes. Emit EXACTLY ${count} questions, ids q1 to q${count} with no gaps or repeats.
 Question mix (longer types take more time): ${mix}.
 Type rules — choices and pairs are required JSON fields for those types:
@@ -94,7 +101,7 @@ Keep each item short enough that a student can finish all ${count} questions in 
 Questions must be answerable from the source. No invented facts.
 
 Source:
-${input.source.slice(0, 24_000)}`,
+${studioSourceSlice(input.source, depth)}`,
     }),
   );
   let usage = readUsage(result);
@@ -113,10 +120,11 @@ ${input.source.slice(0, 24_000)}`,
           abortSignal: AbortSignal.timeout(20_000),
           prompt: `Add EXACTLY ${missing} more ${difficulty} exam questions from this source.
 ${studioLanguageRules(input.language ?? "en")}
+${studioIntentRules(depth, purpose, "exam")}
 Continue ids after q${exam.questions.length}. Mix: ${mix}.
 Same type rules as a ${duration}-minute paper (choices/pairs required for mcq/tf/matching/cloze_choice). tf choices ${JSON.stringify(tf)}.
 Source:
-${input.source.slice(0, 16_000)}`,
+${studioSourceSlice(input.source, depth)}`,
         }),
       );
       usage = addUsage(usage, readUsage(fill));

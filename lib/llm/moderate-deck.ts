@@ -33,39 +33,42 @@ function pickProvider(): LLMProvider {
 function heuristicGate(
   title: string,
   cards: Flashcard[],
+  hasStudioItem = false,
 ): ModerationResult | null {
-  if (cards.length < 3) {
+  if (cards.length < 3 && !hasStudioItem) {
     return {
       ok: false,
       score: 10,
-      reasons: ["Need at least 3 cards before publishing to the community."],
+      reasons: ["Need at least 3 cards, or notes / a mind map / an exam, before publishing."],
     };
   }
 
-  let teachable = 0;
-  for (const card of cards) {
-    const front = card.front.trim();
-    const back = card.back.trim();
-    if (
-      front.length >= 8 &&
-      front.length <= 200 &&
-      back.length >= 2 &&
-      back.length <= 320 &&
-      !/undefined|lorem ipsum|asdf/i.test(`${front} ${back}`)
-    ) {
-      teachable += 1;
+  if (cards.length >= 3) {
+    let teachable = 0;
+    for (const card of cards) {
+      const front = card.front.trim();
+      const back = card.back.trim();
+      if (
+        front.length >= 8 &&
+        front.length <= 200 &&
+        back.length >= 2 &&
+        back.length <= 320 &&
+        !/undefined|lorem ipsum|asdf/i.test(`${front} ${back}`)
+      ) {
+        teachable += 1;
+      }
     }
-  }
 
-  const ratio = teachable / cards.length;
-  if (ratio < 0.7) {
-    return {
-      ok: false,
-      score: Math.round(ratio * 100),
-      reasons: [
-        "Too many cards look vague, oversized, or not study-ready. Tighten questions and answers, then resubmit.",
-      ],
-    };
+    const ratio = teachable / cards.length;
+    if (ratio < 0.7) {
+      return {
+        ok: false,
+        score: Math.round(ratio * 100),
+        reasons: [
+          "Too many cards look vague, oversized, or not study-ready. Tighten questions and answers, then resubmit.",
+        ],
+      };
+    }
   }
 
   if (!title.trim()) {
@@ -79,8 +82,9 @@ export async function moderateDeckForCommunity(input: {
   title: string;
   subjectTag?: string | null;
   cards: Flashcard[];
+  hasStudioItem?: boolean;
 }): Promise<ModerationResult> {
-  const heuristic = heuristicGate(input.title, input.cards);
+  const heuristic = heuristicGate(input.title, input.cards, Boolean(input.hasStudioItem));
   if (heuristic && !heuristic.ok) return heuristic;
 
   assertLLMReady(pickProvider());

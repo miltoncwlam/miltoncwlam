@@ -1,6 +1,13 @@
 import { generateObject } from "ai";
 
-import { notesSectionHeadings, studioLanguageRules } from "@/lib/i18n/locales";
+import {
+  notesSectionHeadings,
+  studioIntentRules,
+  studioLanguageRules,
+  studioSourceSlice,
+  type StudioDepth,
+  type StudioPurpose,
+} from "@/lib/i18n/locales";
 import {
   getOpenRouterClient,
   resolveOpenRouterModel,
@@ -36,8 +43,12 @@ export async function generateNotes(input: {
   source: string;
   language?: string;
   model?: string;
+  depth?: StudioDepth;
+  purpose?: StudioPurpose;
 }): Promise<{ notes: NotesPayload; usage: StudioUsage }> {
   const headings = notesSectionHeadings(input.language ?? "en");
+  const depth = input.depth ?? "basic";
+  const purpose = input.purpose ?? "starter";
   const result = await generateObjectWithRetry(() =>
     generateObject({
       model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
@@ -45,6 +56,7 @@ export async function generateNotes(input: {
       abortSignal: AbortSignal.timeout(150_000),
       prompt: `Write revision-sheet study notes from this source.
 ${studioLanguageRules(input.language ?? "en")}
+${studioIntentRules(depth, purpose, "notes")}
 Put the title only in the title field. Do not start markdown with a duplicate # title.
 The markdown field MUST use real newline characters (not a single paragraph).
 Required sections, each starting on its own line with these exact headings:
@@ -56,7 +68,7 @@ Never glue headings or bullets into one paragraph. Never use the English labels 
 Write enough to study from. No invented facts. No Punycode (xn--). Do not mention that you are an AI.
 
 Source:
-${input.source.slice(0, 24_000)}`,
+${studioSourceSlice(input.source, depth)}`,
     }),
   );
   return {

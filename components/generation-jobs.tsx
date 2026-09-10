@@ -15,13 +15,14 @@ import {
 } from "react";
 
 import { useToast } from "@/components/toast-provider";
+import { friendlyGenerateError } from "@/lib/friendly-generate-error";
 
 export type GenerationJob = {
   deckId: string;
   title: string;
   status: "pending" | "processing" | "complete" | "failed";
   error: string | null;
-  kind: "ingest" | "mindmap" | "notes" | "exam";
+  kind: "ingest" | "mindmap" | "notes" | "exam" | "cards";
   ocrNext?: number;
   ocrTotal?: number;
 };
@@ -78,7 +79,7 @@ export function GenerationJobsProvider({ children }: { children: ReactNode }) {
             const key = `${jobKey(job)}:failed`;
             if (!seenComplete.current.has(key)) {
               seenComplete.current.add(key);
-              pushToast(job.error);
+              pushToast(friendlyGenerateError(job.error));
             }
           }
         }
@@ -180,7 +181,9 @@ function GenerationBanner({ jobs }: { jobs: GenerationJob[] }) {
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2">
         <p className="font-semibold">
           {job.status === "failed"
-            ? job.error || t("errorTitle")
+            ? job.error
+              ? friendlyGenerateError(job.error)
+              : t("errorTitle")
             : `${job.title}: ${reading}`}
         </p>
         <div className="flex gap-2">

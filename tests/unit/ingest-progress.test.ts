@@ -13,4 +13,16 @@ describe("ingest progress", () => {
     expect(progress?.ocrNext).toBe(2);
     expect(ingestPhaseLabel(progress)).toBe("ocr:2/10");
   });
+
+  it("keeps a cards studio job on ingest_progress", () => {
+    const progress = parseIngestProgress({
+      language: "en",
+      cardsStatus: "processing",
+      cardsError: "",
+    });
+    expect(progress?.cardsStatus).toBe("processing");
+    expect(
+      parseIngestProgress({ language: "en", cardsStatus: "complete" })?.cardsStatus,
+    ).toBeUndefined();
+  });
 });

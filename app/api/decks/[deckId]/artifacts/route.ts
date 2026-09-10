@@ -2,10 +2,10 @@ import { after } from "next/server";
 import { z } from "zod";
 
 import { requireApiSession } from "@/lib/auth-server";
-import { estimateArtifactCredits } from "@/lib/credits/estimate-generation";
+import { estimateArtifactCredits, estimateGenerationCredits } from "@/lib/credits/estimate-generation";
 import { creditsFromTokens } from "@/lib/credits/token-cost";
 import { resolveBillingRates } from "@/lib/llm/models";
-import { LOCALE_CODES } from "@/lib/i18n/locales";
+import { LOCALE_CODES, studioCardCount, studioSourceSlice, type StudioDepth, type StudioPurpose } from "@/lib/i18n/locales";
 import { writeAuditLog } from "@/lib/data/audit";
 import { captureException } from "@/lib/sentry";
 import {
@@ -16,7 +16,7 @@ import {
   refundCredits,
 } from "@/lib/data/credits";
 import { isGuestQuotaError } from "@/lib/credits/config";
-import { getDeckWithCards } from "@/lib/data/decks";
+import { completeDeckGeneration, getDeckWithCards, setCardsJob } from "@/lib/data/decks";
 import {
   markArtifactFailed,
   markArtifactProcessing,
@@ -25,6 +25,11 @@ import {
 import { generateExam } from "@/lib/llm/generate-exam";
 import { generateMindmap } from "@/lib/llm/generate-mindmap";
 import { generateNotes } from "@/lib/llm/generate-notes";
+import {
+  generateFlashcardsFromContent,
+  generateFlashcardsFromTopic,
+  TOPIC_SOURCE_MIME,
+} from "@/lib/llm/generate-flashcards";
 import { loadNotebookSource } from "@/lib/llm/load-notebook-source";
 import {
   clampExamDurationMinutes,
@@ -33,21 +38,27 @@ import {
 import { EXAM_QUESTION_TYPES, type ArtifactKind } from "@/lib/types/notebook";
 import type { DeckWithCards } from "@/lib/types/flashcard";
 
+const STUDIO_KINDS = ["mindmap", "notes", "exam", "cards"] as const;
+
 const bodySchema = z.object({
-  kind: z.enum(["mindmap", "notes", "exam"]),
+  kind: z.enum(STUDIO_KINDS),
   language: z.enum(LOCALE_CODES).optional(),
-  difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
+  depth: z.enum(["basic", "detailed"]).optional(),
+  purpose: z.enum(["starter", "exam"]).optional(),
   durationMinutes: z.number().int().min(10).max(90).optional(),
   types: z.array(z.enum(EXAM_QUESTION_TYPES)).min(1).max(7).optional(),
 });
 
 export const maxDuration = 180;
 
+type StudioKind = (typeof STUDIO_KINDS)[number];
+
 async function runArtifactJob(input: {
   deck: DeckWithCards;
-  kind: ArtifactKind;
+  kind: StudioKind;
   language?: (typeof LOCALE_CODES)[number];
-  difficulty?: "beginner" | "intermediate" | "advanced";
+  depth: StudioDepth;
+  purpose: StudioPurpose;
   durationMinutes: number;
   examTypes: (typeof EXAM_QUESTION_TYPES)[number][];
   model?: string;
@@ -55,47 +66,71 @@ async function runArtifactJob(input: {
   spentTextAmount: number;
   unlimited: boolean;
   estimateTokens: { inputTokens: number; outputTokens: number };
+  cardCount: number;
 }) {
   const { deck, kind, userId } = input;
   try {
     const source = await loadNotebookSource(deck);
-    let payload;
     let usage = { inputTokens: 0, outputTokens: 0 };
-    if (kind === "notes") {
-      const generated = await generateNotes({
-        source: source.text,
-        language: input.language,
+    if (kind === "cards") {
+      const options = {
         model: input.model,
-      });
-      payload = generated.notes;
-      usage = generated.usage;
-    } else if (kind === "mindmap") {
-      const generated = await generateMindmap({
-        source: source.text,
         language: input.language,
-        model: input.model,
-      });
-      payload = generated.mindmap;
-      usage = generated.usage;
+        depth: input.depth,
+        purpose: input.purpose,
+        cardCount: input.cardCount,
+      };
+      const studyText = studioSourceSlice(source.text, input.depth);
+      const generated =
+        deck.sourceMimeType === TOPIC_SOURCE_MIME
+          ? await generateFlashcardsFromTopic(studyText, options)
+          : await generateFlashcardsFromContent(studyText, options);
+      usage = generated.usage ?? usage;
+      await completeDeckGeneration(deck.id, userId, deck.title, generated.cards);
+      await setCardsJob(deck.id, { status: "complete" });
     } else {
-      const generated = await generateExam({
-        source: source.text,
-        language: input.language,
-        model: input.model,
-        difficulty: input.difficulty,
-        types: input.examTypes,
-        durationMinutes: input.durationMinutes,
-      });
-      payload = generated.exam;
-      usage = generated.usage;
-    }
+      let payload;
+      if (kind === "notes") {
+        const generated = await generateNotes({
+          source: source.text,
+          language: input.language,
+          model: input.model,
+          depth: input.depth,
+          purpose: input.purpose,
+        });
+        payload = generated.notes;
+        usage = generated.usage;
+      } else if (kind === "mindmap") {
+        const generated = await generateMindmap({
+          source: source.text,
+          language: input.language,
+          model: input.model,
+          depth: input.depth,
+          purpose: input.purpose,
+        });
+        payload = generated.mindmap;
+        usage = generated.usage;
+      } else {
+        const generated = await generateExam({
+          source: source.text,
+          language: input.language,
+          model: input.model,
+          depth: input.depth,
+          purpose: input.purpose,
+          types: input.examTypes,
+          durationMinutes: input.durationMinutes,
+        });
+        payload = generated.exam;
+        usage = generated.usage;
+      }
 
-    await upsertDeckArtifact({
-      deckId: deck.id,
-      kind,
-      payload,
-      model: input.model,
-    });
+      await upsertDeckArtifact({
+        deckId: deck.id,
+        kind,
+        payload,
+        model: input.model,
+      });
+    }
 
     const rates = resolveBillingRates({
       provider: "openrouter",
@@ -131,7 +166,11 @@ async function runArtifactJob(input: {
       model: input.model,
     });
     const message = error instanceof Error ? error.message : "Generation failed";
-    await markArtifactFailed({ deckId: deck.id, kind, message });
+    if (kind === "cards") {
+      await setCardsJob(deck.id, { status: "failed", error: message });
+    } else {
+      await markArtifactFailed({ deckId: deck.id, kind, message });
+    }
     if (input.spentTextAmount > 0) {
       try {
         await refundCredits({
@@ -195,14 +234,26 @@ export async function POST(
     ];
     const durationMinutes = clampExamDurationMinutes(input.durationMinutes);
     const plannedCount = planExamQuestions(durationMinutes, examTypes).length;
-    const estimate = estimateArtifactCredits({
-      provider: "openrouter",
-      modelId: model || "deepseek/deepseek-v4-flash",
-      sourceMode: source.sourceMode,
-      sourceSize: { charCount: source.charCount },
-      kind: input.kind,
-      questionCount: input.kind === "exam" ? plannedCount : undefined,
-    });
+    const depth = input.depth ?? "basic";
+    const purpose = input.purpose ?? "starter";
+    const cardCount = studioCardCount(depth);
+    const estimate =
+      input.kind === "cards"
+        ? estimateGenerationCredits({
+            provider: "openrouter",
+            modelId: model || "deepseek/deepseek-v4-flash",
+            sourceMode: source.sourceMode,
+            sourceSize: { charCount: source.charCount },
+            cardCount,
+          })
+        : estimateArtifactCredits({
+            provider: "openrouter",
+            modelId: model || "deepseek/deepseek-v4-flash",
+            sourceMode: source.sourceMode,
+            sourceSize: { charCount: source.charCount },
+            kind: input.kind,
+            questionCount: input.kind === "exam" ? plannedCount : undefined,
+          });
     const spent = await assertAndSpendCredits({
       userId,
       textAmount: estimate.textCredits,
@@ -214,24 +265,30 @@ export async function POST(
     charged = true;
     spentTextAmount = spent.isUnlimited ? 0 : estimate.textCredits;
 
-    await markArtifactProcessing({
-      deckId,
-      kind: input.kind,
-      model,
-    });
+    if (input.kind === "cards") {
+      await setCardsJob(deckId, { status: "processing" });
+    } else {
+      await markArtifactProcessing({
+        deckId,
+        kind: input.kind,
+        model,
+      });
+    }
 
     after(() =>
       runArtifactJob({
         deck,
         kind: input.kind,
         language: input.language,
-        difficulty: input.difficulty,
+        depth,
+        purpose,
         durationMinutes,
         examTypes,
         model,
         userId: userId!,
         spentTextAmount,
         unlimited: spent.isUnlimited,
+        cardCount,
         estimateTokens: {
           inputTokens: estimate.inputTokens,
           outputTokens: estimate.outputTokens,
@@ -256,11 +313,15 @@ export async function POST(
           ? error.message
           : "Generation failed";
     if (kind && userId) {
-      await markArtifactFailed({
-        deckId,
-        kind: kind as ArtifactKind,
-        message,
-      }).catch(() => {});
+      if (kind === "cards") {
+        await setCardsJob(deckId, { status: "failed", error: message }).catch(() => {});
+      } else {
+        await markArtifactFailed({
+          deckId,
+          kind: kind as ArtifactKind,
+          message,
+        }).catch(() => {});
+      }
     }
     if (charged && userId && spentTextAmount > 0) {
       try {

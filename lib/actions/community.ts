@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { requireSession } from "@/lib/auth-server";
+import { listDeckArtifacts } from "@/lib/data/artifacts";
+import { notebookIsPublishable } from "@/lib/community/hk-curriculum";
 import {
   copyCommunityDeckToUser,
   setDeckVisibility,
@@ -54,8 +56,18 @@ export async function submitPublicAction(deckIdValue: string) {
   const deckId = idSchema.parse(deckIdValue);
   const deck = await getDeckWithCards(deckId, session.user.id);
   if (!deck) throw new Error("Deck not found");
-  if (deck.generationStatus !== "complete" || !deck.cards.length) {
-    throw new Error("Only completed decks with cards can be published");
+  const artifacts = await listDeckArtifacts(deck.id);
+  const hasStudioItem = artifacts.some(
+    (item) => item.generationStatus === "complete",
+  );
+  if (
+    !notebookIsPublishable({
+      generationStatus: deck.generationStatus,
+      cardCount: deck.cards.length,
+      hasStudioItem,
+    })
+  ) {
+    throw new Error("Only a finished notebook with cards or studio items can be published");
   }
 
   await setDeckVisibility({
@@ -70,6 +82,7 @@ export async function submitPublicAction(deckIdValue: string) {
     title: deck.title,
     subjectTag: deck.subjectTag,
     cards: deck.cards,
+    hasStudioItem,
   });
 
   if (!review.ok) {

@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.8.2** — one number only (`package.json`).
+**Version 3.9.0** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,25 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.9.0 — 2026-09-10
+
+**Minor.** Studio generates four study tools from the same notebook, with poster mind maps and community copies that still have a source.
+
+### Added
+- Shared Generate settings: Depth (Basic / Detailed) and Purpose (First look / Exam revision) apply to notes, mind map, exam, and flashcards.
+- Flashcards as a fourth studio tile. Cards land on the same notebook without wiping the source, so notes and maps stay available.
+- Poster mind maps: pastel rounded cards, children in a column beside each branch, and arrow connectors on a cream canvas. Show all is the default.
+
+### Changed
+- Community copy keeps real source (or rebuilds study text from cards when the pack was a `seed:` stub), and copies notes, maps, and exams with the cards.
+- Publish accepts a complete notebook with cards or a studio item, not cards-only.
+- Community catalog and detail pages talk about notebooks and show map, notes, exam, and cards when they exist.
+
+### Fixed
+- Basic depth slices a shorter source (~12k) so long PDFs are less likely to hit the 150s abort when regenerating notes or a map.
 
 ---
 

@@ -16,14 +16,34 @@ import {
   type CommunityDeckSummary,
 } from "@/lib/data/community";
 
+function kindLabel(
+  kind: string,
+  studio: (key: string) => string,
+) {
+  if (kind === "mindmap" || kind === "notes" || kind === "exam") return studio(kind);
+  return kind;
+}
+
 function DeckCard({
   deck,
   t,
+  studio,
 }: {
   deck: CommunityDeckSummary;
   t: (key: string, values?: Record<string, string | number>) => string;
+  studio: (key: string) => string;
 }) {
   const band = encyclopediaBandFromTitle(deck.title);
+  const kinds = deck.artifactKinds
+    .map((kind) => kindLabel(kind, studio))
+    .filter(Boolean)
+    .join(" · ");
+  const summary = [
+    deck.cardCount ? t("cards", { count: deck.cardCount }) : null,
+    kinds || null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   return (
     <li className="deck-card flex flex-col p-5">
       {deck.coverImageUrl ? (
@@ -49,7 +69,7 @@ function DeckCard({
         </Link>
       </h2>
       <p className="mt-1 text-sm text-[var(--muted)]">
-        {t("cards", { count: deck.cardCount })}
+        {summary || t("notebook")}
         {deck.isSeed ? ` · ${t("bySeed")}` : null}
         {` · ♥ ${deck.likeCount}`}
       </p>
@@ -71,6 +91,7 @@ export default async function CommunityPage({
   await requireSession();
   const params = await searchParams;
   const t = await getTranslations("community");
+  const studio = await getTranslations("studio");
   const decks = await listPublicCommunityDecks({
     query: params.q,
     subject: params.subject,
@@ -164,7 +185,7 @@ export default async function CommunityPage({
                   </h3>
                   <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {packs.map((deck) => (
-                      <DeckCard deck={deck} key={deck.id} t={t} />
+                      <DeckCard deck={deck} key={deck.id} studio={studio} t={t} />
                     ))}
                   </ul>
                 </div>
@@ -175,9 +196,9 @@ export default async function CommunityPage({
             <section className="space-y-3" key={subject}>
               <h2 className="font-display text-xl font-bold">{subject}</h2>
               <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {packs.map((deck) => (
-                  <DeckCard deck={deck} key={deck.id} t={t} />
-                ))}
+                  {packs.map((deck) => (
+                    <DeckCard deck={deck} key={deck.id} studio={studio} t={t} />
+                  ))}
               </ul>
             </section>
           ))}

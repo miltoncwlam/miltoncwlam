@@ -1,6 +1,13 @@
 import { generateObject } from "ai";
 
-import { mindmapLabelRules, studioLanguageRules } from "@/lib/i18n/locales";
+import {
+  mindmapLabelRules,
+  studioIntentRules,
+  studioLanguageRules,
+  studioSourceSlice,
+  type StudioDepth,
+  type StudioPurpose,
+} from "@/lib/i18n/locales";
 import {
   getOpenRouterClient,
   resolveOpenRouterModel,
@@ -36,7 +43,11 @@ export async function generateMindmap(input: {
   source: string;
   language?: string;
   model?: string;
+  depth?: StudioDepth;
+  purpose?: StudioPurpose;
 }): Promise<{ mindmap: MindmapPayload; usage: StudioUsage }> {
+  const depth = input.depth ?? "basic";
+  const purpose = input.purpose ?? "starter";
   const result = await generateObjectWithRetry(() =>
     generateObject({
       model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
@@ -45,14 +56,14 @@ export async function generateMindmap(input: {
       prompt: `Build a study mind map as a flat node list from this source.
 ${studioLanguageRules(input.language ?? "en")}
 ${mindmapLabelRules(input.language ?? "en")}
+${studioIntentRules(depth, purpose, "mindmap")}
 Rules:
 - Exactly one root node with parentId null (the topic). ids n1, n2, n3… with no repeats.
-- 4–6 main branches (parentId = root id) that cover different parts of the source, not synonyms of the title.
-- Each branch has 2–3 children. Avoid grandchildren unless a fact needs one extra level. Max depth 3. About 10–20 nodes total.
+- Main branches (parentId = root id) cover different parts of the source, not synonyms of the title.
 - Leaves are facts or examples from the source. No invented facts.
 
 Source:
-${input.source.slice(0, 24_000)}`,
+${studioSourceSlice(input.source, depth)}`,
     }),
   );
   return {

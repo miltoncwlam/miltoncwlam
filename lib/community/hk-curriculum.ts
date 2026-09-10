@@ -132,3 +132,30 @@ export function encyclopediaBandFromTitle(title: string): EncyclopediaBand | nul
   if (/·\s*Senior$/i.test(title)) return "senior";
   return null;
 }
+
+/** Real notebook text, or a study sheet from cards when the source is a seed stub. */
+export function copyableNotebookSource(source: {
+  sourceContent?: string | null;
+  cards: { front: string; back: string; hint?: string | null }[];
+}): string | null {
+  const raw = source.sourceContent?.trim() ?? "";
+  if (raw && !/^seed:/i.test(raw)) return raw;
+  if (!source.cards.length) return raw || null;
+  const fromCards = source.cards
+    .map((card) => {
+      const hint = card.hint?.trim();
+      return `- ${card.front.trim()}\n  ${card.back.trim()}${hint ? `\n  (${hint})` : ""}`;
+    })
+    .join("\n\n")
+    .trim();
+  return fromCards.slice(0, 20_000) || null;
+}
+
+export function notebookIsPublishable(input: {
+  generationStatus: string;
+  cardCount: number;
+  hasStudioItem: boolean;
+}) {
+  if (input.generationStatus !== "complete") return false;
+  return input.cardCount >= 3 || input.hasStudioItem;
+}

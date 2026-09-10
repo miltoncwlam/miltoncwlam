@@ -3,8 +3,10 @@ import "server-only";
 import { pool } from "@/lib/db";
 import { mapCard, mapDeck } from "@/lib/data/decks";
 import {
+  copyableNotebookSource,
   encyclopediaAnchorGrade,
   encyclopediaBandForGrade,
+  notebookIsPublishable,
 } from "@/lib/community/hk-curriculum";
 import type {
   DeckSummary,
@@ -13,6 +15,22 @@ import type {
 } from "@/lib/types/flashcard";
 
 export const COMMUNITY_SEED_OWNER = "system:study-a-community";
+
+export { copyableNotebookSource, notebookIsPublishable };
+
+function parseKindArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map(String).map((item) => item.trim()).filter(Boolean);
+  }
+  if (typeof value === "string" && value.trim()) {
+    return value
+      .replace(/[{}]/g, "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
 
 export type CommunityDeckSummary = DeckSummary & {
   isSeed: boolean;
@@ -68,12 +86,18 @@ export async function listPublicCommunityDecks(input?: {
       is_featured: boolean;
       like_count: number;
       cover_image_url: string | null;
+      artifact_kinds: string[] | null;
     }
   >(
     `select d.*, count(c.id)::text as card_count,
             (select c2.image_url from cards c2
              where c2.deck_id = d.id and c2.image_url is not null
-             order by c2.sort_order limit 1) as cover_image_url
+             order by c2.sort_order limit 1) as cover_image_url,
+            coalesce((
+              select array_agg(a.kind order by a.kind)
+              from deck_artifacts a
+              where a.deck_id = d.id and a.generation_status = 'complete'
+            ), '{}') as artifact_kinds
      from decks d
      left join cards c on c.deck_id = d.id
      where ${clauses.join(" and ")}
@@ -101,7 +125,7 @@ export async function listPublicCommunityDecks(input?: {
       createdAt: deck.createdAt,
       updatedAt: deck.updatedAt,
       cardCount: Number(row.card_count),
-      artifactKinds: [],
+      artifactKinds: parseKindArray(row.artifact_kinds),
       isSeed: deck.isSeed,
       isFeatured: Boolean(row.is_featured),
       likeCount: Number(row.like_count ?? 0),
@@ -198,15 +222,26 @@ async function insertDeckCopy(
   const client = await pool.connect();
   try {
     await client.query("begin");
+    const rawSource = source.sourceContent?.trim() ?? "";
+    const synthesized = !rawSource || /^seed:/i.test(rawSource);
+    const sourceText = copyableNotebookSource(source);
     const deckResult = await client.query<{ id: string }>(
       `insert into decks (
-        user_id, title, source_type, source_content,
+        user_id, title, source_type, source_content, source_mime_type,
         generation_status, share_token, is_shared, visibility,
         subject_tag, is_seed, class_link_id
       ) values (
-        $1, $2, 'text', null, 'complete', null, false, 'private', $3, false, $4
+        $1, $2, $3, $4, $5, 'complete', null, false, 'private', $6, false, $7
       ) returning id`,
-      [userId, `${source.title} (copy)`, source.subjectTag, classLinkId ?? null],
+      [
+        userId,
+        `${source.title} (copy)`,
+        source.sourceType === "url" ? "url" : "text",
+        sourceText,
+        synthesized ? "text/plain" : source.sourceMimeType,
+        source.subjectTag,
+        classLinkId ?? null,
+      ],
     );
     const deckId = deckResult.rows[0].id;
 

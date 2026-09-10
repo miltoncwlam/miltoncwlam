@@ -675,6 +675,23 @@ export async function saveIngestProgress(
   );
 }
 
+export async function setCardsJob(
+  deckId: string,
+  job: { status: "processing" | "failed" | "complete"; error?: string | null },
+): Promise<void> {
+  const status = job.status === "complete" ? "" : job.status;
+  await pool.query(
+    `update decks
+     set ingest_progress = coalesce(ingest_progress, '{}'::jsonb) || jsonb_build_object(
+       'cardsStatus', $2::text,
+       'cardsError', $3::text
+     ),
+         updated_at = now()
+     where id = $1`,
+    [deckId, status, job.error ?? ""],
+  );
+}
+
 /** Claim one OCR page so two ticks do not transcribe the same page. */
 export async function claimOcrPage(
   deckId: string,
@@ -706,7 +723,7 @@ export type GenerationJobRow = {
   title: string;
   status: Deck["generationStatus"];
   error: string | null;
-  kind: "ingest" | "mindmap" | "notes" | "exam";
+  kind: "ingest" | "mindmap" | "notes" | "exam" | "cards";
   ocrNext?: number;
   ocrTotal?: number;
 };
@@ -779,6 +796,37 @@ export async function listUserGenerationJobs(
       status: row.generation_status,
       error: row.generation_error,
       kind: row.kind,
+    });
+  }
+
+  const cardJobs = await pool.query<{
+    id: string;
+    title: string;
+    ingest_progress: unknown;
+    updated_at: Date;
+  }>(
+    `select id, title, ingest_progress, updated_at
+     from decks
+     where user_id = $1
+       and archived_at is null
+       and ingest_progress->>'cardsStatus' in ('processing', 'failed')
+       and (
+         ingest_progress->>'cardsStatus' = 'processing'
+         or updated_at > now() - interval '2 hours'
+       )
+     order by updated_at desc
+     limit 20`,
+    [userId],
+  );
+  for (const row of cardJobs.rows) {
+    const progress = parseIngestProgress(row.ingest_progress);
+    if (!progress?.cardsStatus) continue;
+    jobs.push({
+      deckId: row.id,
+      title: row.title,
+      status: progress.cardsStatus,
+      error: progress.cardsError ?? null,
+      kind: "cards",
     });
   }
   return jobs;

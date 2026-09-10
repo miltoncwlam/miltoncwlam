@@ -10,7 +10,9 @@ import { StudyNotesView } from "@/components/study-notes-view";
 import { friendlyGenerateError } from "@/lib/friendly-generate-error";
 import { EXAM_QUESTION_TYPES, type ArtifactKind } from "@/lib/types/notebook";
 import type { ExamPayload, MindmapPayload, NotesPayload } from "@/lib/types/notebook";
-import type { AppLocale } from "@/lib/i18n/locales";
+import type { AppLocale, StudioDepth, StudioPurpose } from "@/lib/i18n/locales";
+
+type StudioKind = ArtifactKind | "cards";
 
 export function NotebookStudio({
   deckId,
@@ -18,23 +20,26 @@ export function NotebookStudio({
   mindmap,
   exam,
   hasSource,
+  cardCount = 0,
 }: {
   deckId: string;
   notes: NotesPayload | null;
   mindmap: MindmapPayload | null;
   exam: ExamPayload | null;
   hasSource: boolean;
+  cardCount?: number;
 }) {
   const t = useTranslations("studio");
   const locale = useLocale() as AppLocale;
   const { jobs } = useGenerationJobs();
-  const [pendingKind, setPendingKind] = useState<ArtifactKind | null>(null);
+  const [pendingKind, setPendingKind] = useState<StudioKind | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [types, setTypes] = useState<string[]>([...EXAM_QUESTION_TYPES]);
   const [durationMinutes, setDurationMinutes] = useState(30);
-  const [difficulty, setDifficulty] = useState("intermediate");
+  const [depth, setDepth] = useState<StudioDepth>("basic");
+  const [purpose, setPurpose] = useState<StudioPurpose>("starter");
 
   const tiles = useMemo(
     () =>
@@ -42,11 +47,12 @@ export function NotebookStudio({
         { kind: "mindmap" as const, title: t("mindmap"), ready: Boolean(mindmap) },
         { kind: "notes" as const, title: t("notes"), ready: Boolean(notes) },
         { kind: "exam" as const, title: t("exam"), ready: Boolean(exam) },
+        { kind: "cards" as const, title: t("cards"), ready: cardCount > 0 },
       ] as const,
-    [exam, mindmap, notes, t],
+    [cardCount, exam, mindmap, notes, t],
   );
 
-  function generate(kind: ArtifactKind) {
+  function generate(kind: StudioKind) {
     if (!hasSource) return;
     setError(null);
     setErrorCode(null);
@@ -59,7 +65,8 @@ export function NotebookStudio({
           body: JSON.stringify({
             kind,
             language: locale,
-            difficulty,
+            depth,
+            purpose,
             durationMinutes,
             types: kind === "exam" ? types : undefined,
           }),
@@ -83,9 +90,14 @@ export function NotebookStudio({
     });
   }
 
-  const busyKind = pendingKind || jobs.find(
-    (job) => job.deckId === deckId && job.kind !== "ingest" && job.status === "processing",
-  )?.kind;
+  const busyKind =
+    pendingKind ||
+    jobs.find(
+      (job) =>
+        job.deckId === deckId &&
+        job.kind !== "ingest" &&
+        job.status === "processing",
+    )?.kind;
 
   return (
     <section className="studio-panel space-y-6">
@@ -109,7 +121,7 @@ export function NotebookStudio({
           {t("noSource")}
         </p>
       ) : null}
-      <div className="no-print grid gap-4 sm:grid-cols-3">
+      <div className="no-print grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {tiles.map((tile) => (
           <button
             className="studio-tile"
@@ -132,6 +144,33 @@ export function NotebookStudio({
 
       <div className="no-print rounded-2xl border border-slate-200 bg-white p-4">
         <p className="text-sm font-black uppercase tracking-widest text-slate-500">
+          {t("settings")}
+        </p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label className="block text-sm">
+            {t("depth")}
+            <select
+              className="field mt-1"
+              onChange={(event) => setDepth(event.target.value as StudioDepth)}
+              value={depth}
+            >
+              <option value="basic">{t("depthBasic")}</option>
+              <option value="detailed">{t("depthDetailed")}</option>
+            </select>
+          </label>
+          <label className="block text-sm">
+            {t("purpose")}
+            <select
+              className="field mt-1"
+              onChange={(event) => setPurpose(event.target.value as StudioPurpose)}
+              value={purpose}
+            >
+              <option value="starter">{t("purposeStarter")}</option>
+              <option value="exam">{t("purposeExam")}</option>
+            </select>
+          </label>
+        </div>
+        <p className="mt-4 text-sm font-black uppercase tracking-widest text-slate-500">
           {t("examOptions")}
         </p>
         <label className="mt-3 block text-sm">
@@ -148,18 +187,6 @@ export function NotebookStudio({
             type="number"
             value={durationMinutes}
           />
-        </label>
-        <label className="mt-3 block text-sm">
-          {t("difficulty")}
-          <select
-            className="field mt-1"
-            onChange={(event) => setDifficulty(event.target.value)}
-            value={difficulty}
-          >
-            <option value="beginner">{t("beginner")}</option>
-            <option value="intermediate">{t("intermediate")}</option>
-            <option value="advanced">{t("advanced")}</option>
-          </select>
         </label>
         <div className="mt-3 flex flex-wrap gap-2">
           {EXAM_QUESTION_TYPES.map((type) => (

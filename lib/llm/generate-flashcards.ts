@@ -7,7 +7,8 @@ import {
   resolveOpenRouterModel,
 } from "@/lib/llm/config";
 import { env } from "@/lib/env";
-import { promptLanguageName, studioLanguageRules } from "@/lib/i18n/locales";
+import { promptLanguageName, studioIntentRules, studioLanguageRules } from "@/lib/i18n/locales";
+import type { StudioDepth, StudioPurpose } from "@/lib/i18n/locales";
 import { mergeGeneratedDecks } from "@/lib/llm/merge-decks";
 import {
   extractJsonObject,
@@ -47,6 +48,8 @@ export type GenerationOptions = {
   language?: string;
   questionStyle?: QuestionStyle;
   includeImagePrompts?: boolean;
+  depth?: StudioDepth;
+  purpose?: StudioPurpose;
 };
 
 function getModel(modelOverride?: string) {
@@ -121,7 +124,8 @@ function generationInstructions(options: GenerationOptions) {
   const language = promptLanguageName(options.language ?? "en");
   const style = options.questionStyle ?? "mixed";
   return `Create exactly ${cardCount} high-quality study flashcards (not fewer, not more).
-Difficulty: ${options.difficulty ?? "intermediate"}.
+Difficulty: ${options.difficulty ?? (options.purpose === "exam" ? "advanced" : "beginner")}.
+${options.depth || options.purpose ? studioIntentRules(options.depth ?? "basic", options.purpose ?? "starter", "cards") : ""}
 Language: write every card front and back in ${language}.
 ${studioLanguageRules(options.language ?? "en")}
 Return a short deck title in ${language}.
@@ -146,7 +150,8 @@ function topicGenerationInstructions(options: GenerationOptions) {
   const language = promptLanguageName(options.language ?? "en");
   const style = options.questionStyle ?? "mixed";
   return `Create exactly ${cardCount} high-quality educational flashcards from the topic alone (no study material provided).
-Difficulty: ${options.difficulty ?? "intermediate"}.
+Difficulty: ${options.difficulty ?? (options.purpose === "exam" ? "advanced" : "beginner")}.
+${options.depth || options.purpose ? studioIntentRules(options.depth ?? "basic", options.purpose ?? "starter", "cards") : ""}
 Language: write every card front and back in ${language}.
 ${studioLanguageRules(options.language ?? "en")}
 Return a short deck title in ${language}.

@@ -9,7 +9,6 @@ import { NotebookStudio } from "@/components/notebook-studio";
 import { ShareControls } from "@/components/share-controls";
 import {
   deleteDeckAction,
-  regenerateDeckAction,
   updateCardAction,
 } from "@/lib/actions/decks";
 import { requireSession } from "@/lib/auth-server";
@@ -41,10 +40,6 @@ export default async function DeckDetailPage({
   const isProcessing =
     deck.generationStatus === "pending" ||
     deck.generationStatus === "processing";
-  const canRegenerate = Boolean(
-    deck.generationProvider &&
-      (deck.sourceContent || deck.storagePath),
-  );
   const isFailed = deck.generationStatus === "failed";
   const isEmpty = deck.cards.length === 0;
   const canAssign =
@@ -136,14 +131,6 @@ export default async function DeckDetailPage({
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
             <RetryIngestButton deckId={deck.id} />
-            {canRegenerate ? (
-              <form action={regenerateDeckAction}>
-                <input name="deckId" type="hidden" value={deck.id} />
-                <button className="secondary-button" type="submit">
-                  Regenerate cards
-                </button>
-              </form>
-            ) : null}
           </div>
         </section>
       ) : null}
@@ -151,6 +138,7 @@ export default async function DeckDetailPage({
       {!isFailed ? (
         <div className="mt-10">
           <NotebookStudio
+            cardCount={deck.cards.length}
             deckId={deck.id}
             exam={exam ? (exam.payload as ExamPayload) : null}
             hasSource={hasSource}
@@ -268,15 +256,7 @@ export default async function DeckDetailPage({
           )}
           <div className="rounded-2xl border border-slate-200 bg-white p-4">
             <p className="font-bold">Deck actions</p>
-            {canRegenerate ? (
-              <form action={regenerateDeckAction} className="mt-4">
-                <input name="deckId" type="hidden" value={deck.id} />
-                <button className="secondary-button w-full" type="submit">
-                  Regenerate cards
-                </button>
-              </form>
-            ) : null}
-            <form action={deleteDeckAction} className={canRegenerate ? "mt-3" : "mt-4"}>
+            <form action={deleteDeckAction} className="mt-4">
               <input name="deckId" type="hidden" value={deck.id} />
               <button
                 className="w-full rounded-full border border-rose-200 px-4 py-2 font-bold text-rose-700 hover:bg-rose-50"

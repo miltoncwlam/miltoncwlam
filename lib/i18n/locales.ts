@@ -96,6 +96,46 @@ Never use English titles such as Unit 1, Prehistory, Knowledge, Skills, Values, 
   return `LABELS: 2–6 words in ${promptLanguageName(locale)}. Keep them short enough to fit in a bubble.`;
 }
 
+export type StudioDepth = "basic" | "detailed";
+export type StudioPurpose = "starter" | "exam";
+
+export function studioSourceSlice(source: string, depth: StudioDepth = "basic") {
+  return source.slice(0, depth === "detailed" ? 18_000 : 12_000);
+}
+
+export function studioCardCount(depth: StudioDepth = "basic") {
+  return depth === "detailed" ? 16 : 8;
+}
+
+/** Depth + purpose for every studio tile (notes, map, exam, cards). */
+export function studioIntentRules(
+  depth: StudioDepth = "basic",
+  purpose: StudioPurpose = "starter",
+  kind: "notes" | "mindmap" | "exam" | "cards" = "notes",
+): string {
+  const depthLine =
+    depth === "detailed"
+      ? kind === "mindmap"
+        ? "DEPTH: detailed. 5–6 main branches, 16–28 nodes, optional grandchildren. Short labels still."
+        : kind === "cards"
+          ? "DEPTH: detailed. Cover more facts; still one idea per card."
+          : kind === "exam"
+            ? "DEPTH: detailed. Prefer comparisons, dates, and multi-step items within the time limit."
+            : "DEPTH: detailed. More terms and comparisons. Keep bullets readable, one idea per line."
+      : kind === "mindmap"
+        ? "DEPTH: basic. 4–5 main branches, 8–14 nodes, depth 2 only (no grandchildren)."
+        : kind === "cards"
+          ? "DEPTH: basic. Only the most testable facts. No filler."
+          : kind === "exam"
+            ? "DEPTH: basic. Shorter prompts. One idea per question."
+            : "DEPTH: basic. 1–2 short lines per term. Skip minor asides.";
+  const purposeLine =
+    purpose === "exam"
+      ? "PURPOSE: exam revision. Prefer dates, cause/effect, compare/contrast, and likely exam wording. No trick questions that the source does not support."
+      : "PURPOSE: first look. Teach the topic. Define terms. No trick questions.";
+  return `${depthLine}\n${purposeLine}`;
+}
+
 /** Extra rules so models do not write English with Chinese glosses. */
 export function studioLanguageRules(locale: string): string {
   const name = promptLanguageName(locale);

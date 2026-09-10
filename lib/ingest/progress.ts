@@ -10,12 +10,18 @@ export type IngestProgress = {
   outputTokens?: number;
   spentTextAmount?: number;
   preferredTitle?: string;
+  cardsStatus?: "processing" | "failed";
+  cardsError?: string;
 };
 
 export function parseIngestProgress(value: unknown): IngestProgress | null {
   if (!value || typeof value !== "object") return null;
   const row = value as Record<string, unknown>;
   const language = typeof row.language === "string" ? row.language : "en";
+  const cardsStatus =
+    row.cardsStatus === "processing" || row.cardsStatus === "failed"
+      ? row.cardsStatus
+      : undefined;
   return {
     language: language as AppLocale,
     needsOcr: Boolean(row.needsOcr),
@@ -27,6 +33,8 @@ export function parseIngestProgress(value: unknown): IngestProgress | null {
     spentTextAmount: Number(row.spentTextAmount) || 0,
     preferredTitle:
       typeof row.preferredTitle === "string" ? row.preferredTitle : undefined,
+    cardsStatus,
+    cardsError: typeof row.cardsError === "string" ? row.cardsError : undefined,
   };
 }
 

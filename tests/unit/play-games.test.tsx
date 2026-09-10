@@ -503,6 +503,8 @@ describe("mind map tree", () => {
     });
     expect(node.querySelectorAll("path").length).toBeGreaterThanOrEqual(2);
     expect(node.textContent).toContain("Topic");
+    expect(node.textContent).toContain("Light");
+    expect(node.textContent).toContain("Dark");
     expect(node.textContent).toContain("Print map");
   });
 });
