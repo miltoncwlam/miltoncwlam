@@ -63,8 +63,9 @@ Required sections, each starting on its own line with these exact headings:
 ## ${headings.terms}
 ## ${headings.facts}
 ## ${headings.remember}
-Use "- " bullets under each heading. One bullet per line. Bold a term with **term** then its meaning on the same bullet.
-Never glue headings or bullets into one paragraph. Never use the English labels Key terms / Facts / How to remember unless the output language is English.
+Use "- " bullets under each heading. One bullet per line.
+Each term bullet MUST be one line: - **詞** 解釋 (meaning on the SAME line, no leading colon, no trailing dash).
+Never put the meaning on the next line. Never glue headings or bullets into one paragraph. Never use the English labels Key terms / Facts / How to remember unless the output language is English.
 Write enough to study from. No invented facts. No Punycode (xn--). Do not mention that you are an AI.
 
 Source:

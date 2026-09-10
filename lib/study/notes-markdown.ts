@@ -46,17 +46,25 @@ function applyLocalizedHeadings(text: string) {
     .replace(/^##\s*How to remember\s*$/gim, `## ${headings.remember}`);
 }
 
+function tidyMeaning(meaning: string) {
+  return meaning
+    .replace(/^[：:\s]+/, "")
+    .replace(/\s*[-—–]+\s*$/, "")
+    .trim();
+}
+
 /** Split “term：meaning” or **term** meaning into a heading + body for the notes view. */
 export function splitNoteTerm(item: string): { term: string; meaning: string } | null {
-  const bold = item.match(/^\*\*(.+?)\*\*\s*[—–-]?\s*(.*)$/);
-  if (bold && bold[2].trim()) {
-    return { term: bold[1].trim(), meaning: bold[2].trim() };
+  const cleaned = item.replace(/\s+[-—–]+\s*$/, "").trim();
+  const bold = cleaned.match(/^\*\*(.+?)\*\*\s*[—–:：-]?\s*(.*)$/s);
+  if (bold && tidyMeaning(bold[2] || "")) {
+    return { term: bold[1].trim(), meaning: tidyMeaning(bold[2]) };
   }
-  const colon = item.match(/^(.{1,40}?)[：:]\s*(.+)$/);
+  const colon = cleaned.match(/^(.{1,40}?)[：:]\s*(.+)$/s);
   if (colon) {
     return {
       term: colon[1].replace(/\*\*/g, "").trim(),
-      meaning: colon[2].trim(),
+      meaning: tidyMeaning(colon[2]),
     };
   }
   return null;
@@ -78,8 +86,11 @@ export function sanitizeStudyMarkdown(markdown: string): string {
     (_, heading: string) => `\n## ${heading}\n- `,
   );
   text = text.replace(/(?:^|\n)\s*[•●▪︎]\s+/g, "\n- ");
+  // **term** on one line, meaning on the next starting with a colon
+  text = text.replace(/\*\*([^*\n]+)\*\*\s*\n+-?\s*[：:]\s*/g, "**$1**：");
   // “。- 新石器時代:” glued without a space after the stop
   text = text.replace(/([。．.！？!?])\s*-+\s*/g, "$1\n- ");
+  text = text.replace(/([^\n-])[ \t]+-\s*$/gm, "$1");
   text = text.replace(/([^\n])\s+-\s+(?=[\p{Lu}\u4e00-\u9fff])/gu, "$1\n- ");
   text = text.replace(/([^\n])\s+(\d+[.)]\s+)(?=[\p{Lu}\u4e00-\u9fff])/gu, "$1\n$2");
   text = text.replace(/[ \t]{2,}/g, " ");
@@ -153,5 +164,39 @@ export function parseStudyNotes(markdown: string, title: string): StudyNoteBlock
     blocks.push({ type: "p", text: trimmed });
   }
   flushList();
-  return blocks;
+  return foldTermParagraphs(blocks);
+}
+
+function foldTermParagraphs(blocks: StudyNoteBlock[]): StudyNoteBlock[] {
+  const out: StudyNoteBlock[] = [];
+  for (let index = 0; index < blocks.length; index += 1) {
+    const block = blocks[index]!;
+    const next = blocks[index + 1];
+    if (
+      (block.type === "p" || block.type === "h3") &&
+      next?.type === "p" &&
+      /^[：:]/.test(next.text)
+    ) {
+      const term = block.text.replace(/\*\*/g, "").trim();
+      const meaning = next.text.replace(/^[：:\s]+/, "").replace(/\s*[-—–]+\s*$/, "").trim();
+      const item = `**${term}** ${meaning}`;
+      const last = out[out.length - 1];
+      if (last?.type === "ul") last.items.push(item);
+      else out.push({ type: "ul", items: [item] });
+      index += 1;
+      continue;
+    }
+    if (block.type === "p") {
+      const split = splitNoteTerm(block.text);
+      if (split) {
+        const item = `**${split.term}** ${split.meaning}`;
+        const last = out[out.length - 1];
+        if (last?.type === "ul") last.items.push(item);
+        else out.push({ type: "ul", items: [item] });
+        continue;
+      }
+    }
+    out.push(block);
+  }
+  return out;
 }

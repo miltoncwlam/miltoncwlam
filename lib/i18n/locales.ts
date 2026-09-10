@@ -84,7 +84,9 @@ export function mindmapLabelRules(locale: string): string {
     const script =
       locale === "zh-Hant" ? "Traditional Chinese (繁體)" : "Simplified Chinese (简体)";
     return `LABELS (mandatory): every node label in ${script} only.
-Root 4–12 characters. Branches and leaves 2–10 characters. Dates may stay as numbers (e.g. 前2070).
+Root 4–12 characters. Branches and leaves 2–8 characters so they fit on one line.
+One idea per node — never two eras or two events in the same label (e.g. not 舊石器時代新石器時代).
+Dates may stay as numbers (e.g. 前2070).
 Never use English titles such as Unit 1, Prehistory, Knowledge, Skills, Values, or Xia Shang Zhou.`;
   }
   if (locale === "ja") {
@@ -140,7 +142,8 @@ export function studioIntentRules(
 export function studioLanguageRules(locale: string): string {
   const name = promptLanguageName(locale);
   if (locale === "zh-Hant") {
-    return `LANGUAGE (mandatory): Write EVERY heading, title, bullet, mind-map label, and sentence in Traditional Chinese as used in Hong Kong (繁體中文).
+    return `LANGUAGE (mandatory): Write EVERY heading, title, bullet, mind-map label, and sentence in Traditional Chinese as used in Hong Kong textbooks (繁體書面語).
+Use 的 / 是 / 這, not Cantonese particles 嘅 / 係 / 呢.
 Do not write English paragraphs. If a widely used English proper noun is needed, put it in parentheses after the Chinese, e.g. 周朝 (Zhou).
 Never use English UI labels such as Key terms, Facts, How to remember, Unit 1, Knowledge, Skills, or Values.
 Never use Simplified Chinese (no 国/这/会/发/变 as simplified forms — use 國/這/會/發/變).

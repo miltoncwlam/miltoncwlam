@@ -60,7 +60,7 @@ ${studioIntentRules(depth, purpose, "mindmap")}
 Rules:
 - Exactly one root node with parentId null (the topic). ids n1, n2, n3… with no repeats.
 - Main branches (parentId = root id) cover different parts of the source, not synonyms of the title.
-- Leaves are facts or examples from the source. No invented facts.
+- Leaves are facts or examples from the source. One idea per node. No invented facts.
 
 Source:
 ${studioSourceSlice(input.source, depth)}`,

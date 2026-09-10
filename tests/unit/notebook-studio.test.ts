@@ -323,7 +323,8 @@ describe("study notes and mind map layout", () => {
   });
 
   it("asks Traditional Chinese models to write 繁體全文", () => {
-    expect(studioLanguageRules("zh-Hant")).toMatch(/繁體中文/);
+    expect(studioLanguageRules("zh-Hant")).toMatch(/書面語/);
+    expect(studioLanguageRules("zh-Hant")).toMatch(/嘅/);
     expect(studioLanguageRules("zh-Hant")).toMatch(/Do not write English paragraphs/);
     expect(studioLanguageRules("zh-Hant")).toMatch(/Key terms/);
     expect(notesSectionHeadings("zh-Hant").terms).toBe("重點詞彙");
@@ -343,6 +344,27 @@ describe("study notes and mind map layout", () => {
     const list = blocks.find((block) => block.type === "ul");
     expect(list && list.type === "ul" && list.items.length >= 2).toBe(true);
     expect(splitNoteTerm("舊石器時代: 距今約170萬年")?.term).toBe("舊石器時代");
+  });
+
+  it("joins a term card when the meaning sits on the next line with a colon and dash", () => {
+    const markdown = `## 重點詞彙
+- **舊石器時代**
+：約一百七十萬年前至約八千年前，人類使用打製石器嘅時期 -
+- **新石器時代**
+：約七千年前開始，人類使用磨製石器 -`;
+    const split = splitNoteTerm(
+      "**舊石器時代**：約一百七十萬年前至約八千年前，人類使用打製石器嘅時期 -",
+    );
+    expect(split?.term).toBe("舊石器時代");
+    expect(split?.meaning).toMatch(/^約一百七十/);
+    expect(split?.meaning).not.toMatch(/^[：:]/);
+    expect(split?.meaning).not.toMatch(/-\s*$/);
+    const blocks = parseStudyNotes(markdown, "史前至夏商周");
+    const list = blocks.find((block) => block.type === "ul");
+    expect(list && list.type === "ul" && list.items.length >= 2).toBe(true);
+    const first = splitNoteTerm(list && list.type === "ul" ? list.items[0]! : "");
+    expect(first?.term).toBe("舊石器時代");
+    expect(first?.meaning).toMatch(/打製石器/);
   });
 
   it("sanitizes stored notes markdown", () => {

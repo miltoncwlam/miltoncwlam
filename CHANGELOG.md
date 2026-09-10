@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.9.0** — one number only (`package.json`).
+**Version 3.9.1** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,17 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.9.1 — 2026-09-10
+
+**Miniscule.** Existing study notes and mind maps read as cards, not a colon wall or squeezed labels.
+
+### Fixed
+- Term cards drop the leading `：` and trailing dash when the model put the meaning on the next line.
+- Traditional Chinese notes ask for textbook 書面語 (的, not 嘅).
+- Mind-map chips are wider and no longer break mid-phrase (`周平王東遷`). One idea per node in the prompt.
 
 ---
 
