@@ -56,11 +56,11 @@ function tidyMeaning(meaning: string) {
 /** Split “term：meaning” or **term** meaning into a heading + body for the notes view. */
 export function splitNoteTerm(item: string): { term: string; meaning: string } | null {
   const cleaned = item.replace(/\s+[-—–]+\s*$/, "").trim();
-  const bold = cleaned.match(/^\*\*(.+?)\*\*\s*[—–:：-]?\s*(.*)$/s);
+  const bold = cleaned.match(/^\*\*(.+?)\*\*\s*[—–:：-]?\s*(.*)$/);
   if (bold && tidyMeaning(bold[2] || "")) {
     return { term: bold[1].trim(), meaning: tidyMeaning(bold[2]) };
   }
-  const colon = cleaned.match(/^(.{1,40}?)[：:]\s*(.+)$/s);
+  const colon = cleaned.match(/^(.{1,40}?)[：:]\s*(.+)$/);
   if (colon) {
     return {
       term: colon[1].replace(/\*\*/g, "").trim(),

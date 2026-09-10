@@ -11,6 +11,13 @@ After each finished user task, bump **before** you stop. Skip typo-only edits, o
 
 **Ship without asking.** After the bump lands in `package.json` + `CHANGELOG.md`, commit, push `HEAD` to `miltoncwlam` `ai-flashcard`, and push annotated tag `vx.y.z` to `miltoncwlam` and `origin`. Do not wait for “commit/push/tag?”. Do not force-push `origin/milton`. Skip only if they said not to ship.
 
+**Do not tell the user it shipped until production is live.** After push, wait until GitHub Actions `quality` on `miltoncwlam` `ai-flashcard` is **success** for that commit, then until Vercel production (`https://hkstudya.vercel.app`) is **Ready** for it. Only then reply **Version x.y.z**. If `quality` or Vercel fails, fix and bump again — stay quiet about the version until both are green.
+
+```text
+❌ BAD: tag pushed, then immediately “Version 3.9.1”
+✅ GOOD: quality + Vercel Ready, then “Version 3.9.2”
+```
+
 ## How far to bump
 
 | Kind | Bump | When |
@@ -30,7 +37,7 @@ Only [`CHANGELOG.md`](CHANGELOG.md). Prepend:
 `abc1234`
 ```
 
-Then detailed Added / Changed / Fixed / Removed (what, why, what the user sees). Reply: **Version x.y.z**.
+Then detailed Added / Changed / Fixed / Removed (what, why, what the user sees). Reply **Version x.y.z** only after the production deploy succeeded.
 
 ```text
 ❌ BAD: “v1.5.0 (same as 1.2.6)”

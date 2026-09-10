@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.9.1** — one number only (`package.json`).
+**Version 3.9.2** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,18 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.9.2 — 2026-09-10
+
+**Miniscule.** Production can ship again. The header and footer show **Version 3.9.2** so you can see what is live.
+
+### Added
+- Header and footer show **Version x.y.z** from `package.json`.
+
+### Fixed
+- Removed the `/s` regex flag that made GitHub `quality` (typecheck, ES2017) fail and blocked Vercel after 3.9.1.
 
 ---
 

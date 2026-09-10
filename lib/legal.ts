@@ -1,8 +1,12 @@
+import packageJson from "@/package.json";
+
 function publicEnv(name: string, fallback: string) {
   const value =
     typeof process === "undefined" ? undefined : process.env[name]?.trim();
   return value || fallback;
 }
+
+export const APP_VERSION = packageJson.version;
 
 export const LEGAL = {
   productName: "HK Study A",

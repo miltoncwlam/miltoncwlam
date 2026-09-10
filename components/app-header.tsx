@@ -6,6 +6,7 @@ import { StreakBadge } from "@/components/streak-badge";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { SignOutButton } from "@/components/sign-out-button";
 import { Button } from "@/components/ui/button";
+import { APP_VERSION } from "@/lib/legal";
 import type { AppSession } from "@/lib/auth-server";
 import { isAdminUser } from "@/lib/auth-server";
 
@@ -20,6 +21,7 @@ export async function AppHeader({ session }: { session: AppSession | null }) {
         <Link className="app-brand" href="/">
           <span className="brand-mark">S</span>
           HK Study A
+          <span className="app-version">Version {APP_VERSION}</span>
         </Link>
         <nav
           className="flex flex-wrap items-center justify-end gap-2 font-sans text-[13px] font-medium"
