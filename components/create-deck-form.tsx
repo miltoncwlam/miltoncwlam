@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useRef, useState } from "react";
 
 import { GiftCodeForm } from "@/components/gift-code-form";
+import { useGenerationJobs } from "@/components/generation-jobs";
 import {
   GenerationLoadingScreen,
   type GenerationPhase,
@@ -78,6 +79,7 @@ export function CreateDeckForm({
   const router = useRouter();
   const t = useTranslations("create");
   const tg = useTranslations("generation");
+  const { watchDeck } = useGenerationJobs();
   const locale = useLocale() as AppLocale;
   const [language, setLanguage] = useState<AppLocale>(locale);
   const formRef = useRef<HTMLFormElement>(null);
@@ -231,13 +233,10 @@ export function CreateDeckForm({
         throw fetchError;
       }
 
-      setPhase("save");
-      setLabel(tg("saving"));
-      await new Promise((resolve) => window.setTimeout(resolve, 250));
-      setPhase("done");
-      setLabel(tg("doneTitle"));
-      await new Promise((resolve) => window.setTimeout(resolve, 500));
-      router.push(`/decks/${result.deckId}`);
+      setPending(false);
+      if (!result.deckId) throw new Error("Could not read source");
+      watchDeck(result.deckId, String(payload.title || "") || undefined);
+      router.push("/decks");
       router.refresh();
     } catch (caught) {
       setPending(false);
@@ -270,7 +269,7 @@ export function CreateDeckForm({
     ] as const
   );
 
-  const showOverlay = pending || Boolean(error);
+  const showOverlay = Boolean(error);
   const budgetModels = PAID_OPENROUTER_MODELS.filter((entry) => entry.group === "budget");
   const standardModels = PAID_OPENROUTER_MODELS.filter(
     (entry) => entry.group === "standard",
@@ -518,7 +517,7 @@ export function CreateDeckForm({
         </div>
 
         <Button className="w-full" disabled={pending || overBalance} type="submit">
-          {t("readSource")}
+          {pending ? tg("readingSource") : t("readSource")}
         </Button>
       </form>
     </>

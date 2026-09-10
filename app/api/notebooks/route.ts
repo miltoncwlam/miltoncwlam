@@ -6,11 +6,10 @@ import {
   estimateArtifactCredits,
   estimateOcrCredits,
 } from "@/lib/credits/estimate-generation";
-import { creditsFromTokens, usdFromTokens } from "@/lib/credits/token-cost";
+import { usdFromTokens } from "@/lib/credits/token-cost";
 import { resolveBillingRates } from "@/lib/llm/models";
 import { isPaidOpenRouterModel } from "@/lib/llm/models";
 import { LOCALE_CODES } from "@/lib/i18n/locales";
-import { writeAuditLog } from "@/lib/data/audit";
 import { captureException } from "@/lib/sentry";
 import {
   assertAndSpendCredits,
@@ -21,14 +20,13 @@ import {
 } from "@/lib/data/credits";
 import { isGuestQuotaError } from "@/lib/credits/config";
 import {
-  completeNotebookIngest,
   createPendingDeck,
   failDeckGeneration,
   purgeExpiredSources,
-  purgeFailedGenerations,
 } from "@/lib/data/decks";
 import { extractStudyText, isSparsePdfText, readPdfTextLayer } from "@/lib/ingest/extract-text";
-import { OCR_PAGE_CAP, ocrPdfPages } from "@/lib/ingest/ocr-pdf";
+import { enqueueNotebookProcess } from "@/lib/ingest/notebook-job";
+import { OCR_PAGE_CAP } from "@/lib/ingest/ocr-pdf";
 import { fetchStudyTextFromUrl } from "@/lib/ingest/fetch-url";
 import {
   assertOwnedStoragePath,
@@ -40,7 +38,6 @@ import {
   getLLMConfig,
   resolveOpenRouterModel,
 } from "@/lib/llm/config";
-import { generateNotebookTitle } from "@/lib/llm/generate-notebook-title";
 import { TOPIC_SOURCE_MIME } from "@/lib/llm/generate-flashcards";
 import { DEFAULT_OCR_MODEL } from "@/lib/llm/models";
 import { listOpenRouterFreeModels } from "@/lib/llm/openrouter-models";
@@ -187,7 +184,7 @@ function requireSourceText<T extends { sourceContent: string }>(source: T): T {
   return source;
 }
 
-export const maxDuration = 180;
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
   let deckId: string | undefined;
@@ -201,7 +198,6 @@ export async function POST(request: Request) {
     const session = await requireApiSession();
     userId = session.user.id;
     void purgeExpiredSources(userId);
-    void purgeFailedGenerations(userId).then(cleanupDiscardedGenerations);
     const input = requestSchema.parse(await request.json());
     const provider = assertLLMReady(
       (normalizeLLMProvider(input.provider) ?? "openrouter") as LLMProvider,
@@ -227,7 +223,7 @@ export async function POST(request: Request) {
             : "text";
     const extracted = await readNotebookSource(input, userId);
     storagePath = extracted.storagePath;
-    let sourceContent = extracted.sourceContent;
+    const sourceContent = extracted.sourceContent;
     const sourceFilename = extracted.sourceFilename;
     const sourceMimeType = extracted.sourceMimeType;
     const sourceSizeBytes = extracted.sourceSizeBytes;
@@ -283,13 +279,7 @@ export async function POST(request: Request) {
     charged = true;
     spentTextAmount = spent.isUnlimited ? 0 : textAmount;
 
-    let ocrUsage = { inputTokens: 0, outputTokens: 0 };
-    if (extracted.ocr) {
-      const ocr = await ocrPdfPages(extracted.ocr.data, ocrModel);
-      sourceContent = ocr.text;
-      ocrUsage = ocr.usage;
-    }
-    if (!sourceContent.trim()) {
+    if (!extracted.ocr && !sourceContent.trim()) {
       throw new Error("Could not read this source. Paste the text and try again.");
     }
 
@@ -297,13 +287,15 @@ export async function POST(request: Request) {
       input.title ??
       (input.sourceType === "topic"
         ? input.topic.slice(0, 100)
-        : "Untitled deck");
+        : input.sourceType === "file"
+          ? input.file.name.replace(/\.[^.]+$/, "").slice(0, 100)
+          : "Untitled deck");
 
     deckId = await createPendingDeck({
       userId,
       title: fallbackTitle,
       sourceType: input.sourceType === "topic" ? "text" : input.sourceType,
-      sourceContent,
+      sourceContent: extracted.ocr ? "" : sourceContent,
       storagePath,
       sourceFilename,
       sourceMimeType,
@@ -312,64 +304,19 @@ export async function POST(request: Request) {
       model,
       sourceRetention:
         input.sourceRetention === "none" ? "keep" : input.sourceRetention,
+      ingestProgress: {
+        language: input.language,
+        needsOcr: Boolean(extracted.ocr),
+        ocrNext: 1,
+        ocrTotal: extracted.ocr?.pageCount,
+        ocrBusy: false,
+        spentTextAmount,
+        preferredTitle: input.title,
+      },
     });
 
-    const titled = await generateNotebookTitle({
-      source: sourceContent,
-      language: input.language,
-      model,
-      fallback: fallbackTitle,
-    });
-
-    await completeNotebookIngest(
-      deckId,
-      userId,
-      input.title || titled.title,
-      sourceContent,
-    );
-
-    const rates = resolveBillingRates({
-      provider,
-      modelId: extracted.ocr ? ocrModel : model,
-    });
-    const combinedUsage = {
-      inputTokens: ocrUsage.inputTokens + titled.usage.inputTokens,
-      outputTokens: ocrUsage.outputTokens + titled.usage.outputTokens,
-    };
-    const actualTextCredits = creditsFromTokens(
-      combinedUsage.inputTokens || combinedUsage.outputTokens
-        ? combinedUsage
-        : {
-            inputTokens: titleEstimate.inputTokens + (ocrEstimate?.inputTokens ?? 0),
-            outputTokens:
-              titleEstimate.outputTokens + (ocrEstimate?.outputTokens ?? 0),
-          },
-      rates,
-    );
-    const textRefund =
-      !spent.isUnlimited && spentTextAmount > actualTextCredits
-        ? spentTextAmount - actualTextCredits
-        : 0;
-    if (textRefund > 0) {
-      await refundCredits({
-        userId,
-        textAmount: textRefund,
-        imageAmount: 0,
-        reason: "generate_reconcile",
-        meta: { deckId, kind: "ingest" },
-      });
-      spentTextAmount = actualTextCredits;
-    }
-
-    await writeAuditLog({
-      userId,
-      action: "notebook_ingest",
-      entityType: "deck",
-      entityId: deckId,
-      meta: { provider, model, ocr: Boolean(extracted.ocr) },
-    });
-
-    return Response.json({ deckId });
+    enqueueNotebookProcess(deckId);
+    return Response.json({ deckId, status: "processing" });
   } catch (error) {
     if (error instanceof Response) return error;
     captureException(error, {

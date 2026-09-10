@@ -111,6 +111,39 @@ export async function upsertDeckArtifact(input: {
   return mapArtifact(result.rows[0]);
 }
 
+export async function markArtifactProcessing(input: {
+  deckId: string;
+  kind: ArtifactKind;
+  model?: string | null;
+}): Promise<void> {
+  await pool.query(
+    `insert into deck_artifacts (
+       deck_id, kind, payload, generation_status, generation_model, generation_error, updated_at
+     ) values ($1, $2, '{}'::jsonb, 'processing', $3, null, now())
+     on conflict (deck_id, kind) do update set
+       generation_status = 'processing',
+       generation_model = excluded.generation_model,
+       generation_error = null,
+       updated_at = now()`,
+    [input.deckId, input.kind, input.model ?? null],
+  );
+}
+
+export async function markArtifactFailed(input: {
+  deckId: string;
+  kind: ArtifactKind;
+  message: string;
+}): Promise<void> {
+  await pool.query(
+    `update deck_artifacts
+     set generation_status = 'failed',
+         generation_error = $3,
+         updated_at = now()
+     where deck_id = $1 and kind = $2`,
+    [input.deckId, input.kind, input.message.slice(0, 500)],
+  );
+}
+
 export async function listArtifactKindsForDecks(
   deckIds: string[],
 ): Promise<Map<string, ArtifactKind[]>> {
@@ -137,11 +170,12 @@ export async function insertExamAttempt(input: {
   result: ExamQuestionResult[];
   score: number;
   maxScore: number;
+  classLinkId?: string | null;
 }): Promise<ExamAttempt> {
   const result = await pool.query<AttemptRow>(
     `insert into exam_attempts (
-       deck_id, user_id, answers, result, score, max_score
-     ) values ($1, $2, $3::jsonb, $4::jsonb, $5, $6)
+       deck_id, user_id, answers, result, score, max_score, class_link_id
+     ) values ($1, $2, $3::jsonb, $4::jsonb, $5, $6, $7)
      returning *`,
     [
       input.deckId,
@@ -150,9 +184,48 @@ export async function insertExamAttempt(input: {
       JSON.stringify(input.result),
       input.score,
       input.maxScore,
+      input.classLinkId ?? null,
     ],
   );
   return mapAttempt(result.rows[0]);
+}
+
+export type ClassExamAttempt = {
+  id: string;
+  userId: string;
+  score: number;
+  maxScore: number;
+  createdAt: Date;
+};
+
+export async function listClassExamAttemptsForDeck(
+  teacherDeckId: string,
+  teacherUserId: string,
+): Promise<ClassExamAttempt[]> {
+  const result = await pool.query<{
+    id: string;
+    user_id: string;
+    score: number;
+    max_score: number;
+    created_at: Date;
+  }>(
+    `select ea.id, ea.user_id, ea.score, ea.max_score, ea.created_at
+     from exam_attempts ea
+     join decks d on d.id = ea.deck_id
+     join class_links cl on cl.id = coalesce(ea.class_link_id, d.class_link_id)
+     where cl.deck_id = $1
+       and cl.teacher_user_id = $2
+     order by ea.created_at desc
+     limit 80`,
+    [teacherDeckId, teacherUserId],
+  );
+  return result.rows.map((row) => ({
+    id: row.id,
+    userId: row.user_id,
+    score: row.score,
+    maxScore: row.max_score,
+    createdAt: row.created_at,
+  }));
 }
 
 export async function getLatestExamAttempt(

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ClassLinkControls } from "@/components/class-link-controls";
 import { CommunityVisibilityControls } from "@/components/community-visibility-controls";
 import { DeckLibraryControls } from "@/components/deck-library-controls";
+import { RetryIngestButton } from "@/components/generation-jobs";
 import { NotebookStudio } from "@/components/notebook-studio";
 import { ShareControls } from "@/components/share-controls";
 import {
@@ -31,21 +32,27 @@ export default async function DeckDetailPage({
     deck.sourceMimeType === TOPIC_SOURCE_MIME ? "topic" : deck.sourceType;
   const canStudy =
     deck.generationStatus === "complete" && deck.cards.length > 0;
-  const canShare = canStudy;
-  const classLinks = canStudy
-    ? await listClassLinksForDeck(deck.id, session.user.id)
-    : [];
   const artifacts = await listDeckArtifacts(deck.id);
   const notes = artifacts.find((item) => item.kind === "notes");
   const mindmap = artifacts.find((item) => item.kind === "mindmap");
   const exam = artifacts.find((item) => item.kind === "exam");
-  const hasSource = Boolean(deck.sourceContent || deck.storagePath);
+  const hasSource =
+    deck.generationStatus === "complete" && Boolean(deck.sourceContent);
+  const isProcessing =
+    deck.generationStatus === "pending" ||
+    deck.generationStatus === "processing";
   const canRegenerate = Boolean(
     deck.generationProvider &&
       (deck.sourceContent || deck.storagePath),
   );
   const isFailed = deck.generationStatus === "failed";
   const isEmpty = deck.cards.length === 0;
+  const canAssign =
+    deck.generationStatus === "complete" &&
+    (canStudy || exam?.generationStatus === "complete");
+  const classLinks = canAssign
+    ? await listClassLinksForDeck(deck.id, session.user.id)
+    : [];
 
   return (
     <main className="page-shell">
@@ -94,32 +101,50 @@ export default async function DeckDetailPage({
                 Class scores
               </Link>
             </>
+          ) : canAssign ? (
+            <Link className="secondary-button" href={`/decks/${deck.id}/class`}>
+              Class scores
+            </Link>
           ) : (
             <p className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-500">
               {isFailed
                 ? "Study unavailable — generation failed"
-                : isEmpty
-                  ? "Study unavailable — no cards yet"
-                  : "Study unavailable until generation finishes"}
+                : isProcessing
+                  ? "Reading your source in the background"
+                  : isEmpty
+                    ? "Study unavailable — no cards yet"
+                    : "Study unavailable until generation finishes"}
             </p>
           )}
         </div>
       </div>
 
+      {isProcessing ? (
+        <section className="mt-6 rounded-2xl border border-indigo-200 bg-indigo-50 p-5 text-indigo-950">
+          <p className="font-black">Reading your source</p>
+          <p className="mt-2 text-sm">
+            You can leave this page. We will keep going in the background.
+          </p>
+        </section>
+      ) : null}
+
       {isFailed ? (
         <section className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-rose-900">
           <p className="font-black">Generation failed</p>
           <p className="mt-2 text-sm">
-            {deck.generationError ?? "Something went wrong while creating cards."}
+            {deck.generationError ?? "Something went wrong while reading this source."}
           </p>
-          {canRegenerate ? (
-            <form action={regenerateDeckAction} className="mt-4">
-              <input name="deckId" type="hidden" value={deck.id} />
-              <button className="secondary-button" type="submit">
-                Regenerate cards
-              </button>
-            </form>
-          ) : null}
+          <div className="mt-4 flex flex-wrap gap-3">
+            <RetryIngestButton deckId={deck.id} />
+            {canRegenerate ? (
+              <form action={regenerateDeckAction}>
+                <input name="deckId" type="hidden" value={deck.id} />
+                <button className="secondary-button" type="submit">
+                  Regenerate cards
+                </button>
+              </form>
+            ) : null}
+          </div>
         </section>
       ) : null}
 
@@ -216,7 +241,7 @@ export default async function DeckDetailPage({
             folderTag={deck.folderTag}
             title={deck.title}
           />
-          {canShare ? (
+          {canAssign ? (
             <>
               <ShareControls
                 appUrl={env.NEXT_PUBLIC_APP_URL}

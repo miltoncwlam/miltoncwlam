@@ -3,6 +3,10 @@ import { z } from "zod";
 import { extractJsonObject } from "@/lib/llm/parse-deck-json";
 import { sanitizeStudyMarkdown } from "@/lib/study/notes-markdown";
 import { answersMatch } from "@/lib/quiz/choices";
+import {
+  isTrueFalseChoicePair,
+  trueFalseAnswersMatch,
+} from "@/lib/exam/true-false";
 import { EXAM_QUESTION_TYPES } from "@/lib/types/notebook";
 import type {
   ExamMatchPair,
@@ -239,7 +243,9 @@ function repairExamQuestion(
     question.pairs?.length ? question.pairs : pairsFromAnswer(question.answer);
 
   if (type === "tf") {
-    choices = ["True", "False"];
+    if (!isTrueFalseChoicePair(choices)) {
+      choices = ["True", "False"];
+    }
   }
 
   if ((type === "mcq" || type === "cloze_choice") && question.answer.trim()) {
@@ -432,7 +438,10 @@ export function gradeExamExact(
     question.type === "mcq" ||
     question.type === "cloze_choice"
   ) {
-    const ok = answersMatch(typed, question.answer);
+    const ok =
+      question.type === "tf"
+        ? trueFalseAnswersMatch(typed, question.answer)
+        : answersMatch(typed, question.answer);
     return {
       id: question.id,
       ok,

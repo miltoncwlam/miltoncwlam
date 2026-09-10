@@ -62,7 +62,9 @@ export async function joinClassLink(token: string, studentUserId: string) {
     throw new Error("Teachers cannot join their own class link");
   }
 
-  const copiedId = await copyDeckByIdToUser(link.deck_id, studentUserId);
+  const copiedId = await copyDeckByIdToUser(link.deck_id, studentUserId, {
+    classLinkId: link.id,
+  });
   await pool.query(
     `update class_links set join_count = join_count + 1 where id = $1`,
     [link.id],

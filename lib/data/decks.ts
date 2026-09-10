@@ -2,6 +2,10 @@ import "server-only";
 
 import { pool } from "@/lib/db";
 import type { ImageAttribution } from "@/lib/images/license";
+import {
+  parseIngestProgress,
+  type IngestProgress,
+} from "@/lib/ingest/progress";
 import type {
   CardType,
   Deck,
@@ -33,6 +37,8 @@ type DeckRow = {
   generation_provider: string | null;
   generation_model: string | null;
   generation_error: string | null;
+  ingest_progress: unknown;
+  class_link_id: string | null;
   is_shared: boolean;
   visibility: DeckVisibility;
   subject_tag: string | null;
@@ -90,6 +96,8 @@ export function mapDeck(row: DeckRow): Deck {
         ? "deepseek/deepseek-v4-flash"
         : row.generation_model,
     generationError: row.generation_error,
+    ingestProgress: parseIngestProgress(row.ingest_progress),
+    classLinkId: row.class_link_id ?? null,
     isShared: row.is_shared,
     visibility: row.visibility ?? "private",
     subjectTag: row.subject_tag ?? null,
@@ -169,13 +177,6 @@ export async function listDecks(
 ): Promise<DeckSummary[]> {
   const filter = options?.filter ?? "active";
   const sort = options?.sort ?? "recent";
-  const discarded = await purgeFailedGenerations(userId);
-  if (discarded.length) {
-    const { cleanupDiscardedGenerations } = await import(
-      "@/lib/supabase/storage"
-    );
-    void cleanupDiscardedGenerations(discarded);
-  }
   const clauses = [`d.user_id = $1`];
   const values: unknown[] = [userId];
 
@@ -359,6 +360,7 @@ export async function createPendingDeck(input: {
   provider: LLMProvider;
   model: string;
   sourceRetention?: SourceRetention;
+  ingestProgress?: IngestProgress | null;
 }): Promise<string> {
   const retention = input.sourceRetention ?? "24h";
   const expiresAt =
@@ -370,10 +372,11 @@ export async function createPendingDeck(input: {
       user_id, title, source_type, source_content, storage_path,
       source_filename, source_mime_type, source_size_bytes,
       generation_status, generation_provider, generation_model,
-      share_token, is_shared, visibility, source_retention, source_expires_at
+      share_token, is_shared, visibility, source_retention, source_expires_at,
+      ingest_progress
     ) values (
       $1, $2, $3, $4, $5, $6, $7, $8, 'processing', $9, $10,
-      null, false, 'private', $11, $12
+      null, false, 'private', $11, $12, $13::jsonb
     )
     returning id`,
     [
@@ -389,6 +392,7 @@ export async function createPendingDeck(input: {
       input.model,
       retention,
       expiresAt,
+      input.ingestProgress ? JSON.stringify(input.ingestProgress) : null,
     ],
   );
 
@@ -472,48 +476,36 @@ type DiscardedGeneration = {
   storagePath: string | null;
 };
 
-/** Delete a failed/incomplete generation so it never stays in the user's library. */
+/** Keep a failed notebook in Library so the user can retry. */
 export async function failDeckGeneration(
   deckId: string,
   userId: string,
   message?: string,
 ): Promise<DiscardedGeneration | null> {
-  void message;
-  const result = await pool.query<{ id: string; storage_path: string | null }>(
-    `delete from decks
+  await pool.query(
+    `update decks
+     set generation_status = 'failed',
+         generation_error = $3,
+         ingest_progress = case
+           when ingest_progress is null then ingest_progress
+           else ingest_progress || '{"ocrBusy":false}'::jsonb
+         end,
+         updated_at = now()
      where id = $1
        and user_id = $2
        and coalesce(is_seed, false) = false
-       and generation_status in ('pending', 'processing', 'failed')
-     returning id, storage_path`,
-    [deckId, userId],
+       and generation_status in ('pending', 'processing', 'failed')`,
+    [deckId, userId, (message ?? "Generation failed").slice(0, 500)],
   );
-  const row = result.rows[0];
-  if (!row) return null;
-  return { id: row.id, userId, storagePath: row.storage_path };
+  return null;
 }
 
-/** Remove leftover failed generations from Supabase and user libraries. */
+/** Failed notebooks stay in Library for retry. */
 export async function purgeFailedGenerations(
-  userId?: string,
+  _unused?: string,
 ): Promise<DiscardedGeneration[]> {
-  const result = await pool.query<{
-    id: string;
-    user_id: string;
-    storage_path: string | null;
-  }>(
-    `delete from decks
-     where generation_status = 'failed'
-       and coalesce(is_seed, false) = false
-       ${userId ? "and user_id = $1" : ""}
-     returning id, user_id, storage_path`,
-    userId ? [userId] : [],
-  );
-  return result.rows.map((row) => ({
-    id: row.id,
-    userId: row.user_id,
-    storagePath: row.storage_path,
-  }));
+  void _unused;
+  return [];
 }
 
 /** Apply retention after cards are saved. Returns storage path to delete when cleared. */
@@ -652,6 +644,144 @@ export async function updateCard(
     ],
   );
   return Boolean(result.rowCount);
+}
+
+export async function getDeckById(deckId: string): Promise<Deck | null> {
+  const result = await pool.query<DeckRow>(
+    "select * from decks where id = $1",
+    [deckId],
+  );
+  return result.rows[0] ? mapDeck(result.rows[0]) : null;
+}
+
+export async function saveIngestProgress(
+  deckId: string,
+  progress: IngestProgress,
+  extra?: { sourceContent?: string; generationStatus?: Deck["generationStatus"] },
+): Promise<void> {
+  await pool.query(
+    `update decks
+     set ingest_progress = $2::jsonb,
+         source_content = coalesce($3, source_content),
+         generation_status = coalesce($4, generation_status),
+         updated_at = now()
+     where id = $1`,
+    [
+      deckId,
+      JSON.stringify(progress),
+      extra?.sourceContent ?? null,
+      extra?.generationStatus ?? null,
+    ],
+  );
+}
+
+/** Claim one OCR page so two ticks do not transcribe the same page. */
+export async function claimOcrPage(
+  deckId: string,
+  page: number,
+): Promise<boolean> {
+  const result = await pool.query(
+    `update decks
+     set ingest_progress = coalesce(ingest_progress, '{}'::jsonb) || jsonb_build_object(
+       'ocrBusy', true,
+       'ocrNext', $2::int
+     ),
+         generation_status = 'processing',
+         generation_error = null,
+         updated_at = now()
+     where id = $1
+       and generation_status in ('pending', 'processing', 'failed')
+       and coalesce((ingest_progress->>'ocrNext')::int, 1) = $2
+       and (
+         coalesce((ingest_progress->>'ocrBusy')::boolean, false) = false
+         or updated_at < now() - interval '3 minutes'
+       )`,
+    [deckId, page],
+  );
+  return (result.rowCount ?? 0) > 0;
+}
+
+export type GenerationJobRow = {
+  deckId: string;
+  title: string;
+  status: Deck["generationStatus"];
+  error: string | null;
+  kind: "ingest" | "mindmap" | "notes" | "exam";
+  ocrNext?: number;
+  ocrTotal?: number;
+};
+
+export async function listUserGenerationJobs(
+  userId: string,
+): Promise<GenerationJobRow[]> {
+  const decks = await pool.query<{
+    id: string;
+    title: string;
+    generation_status: Deck["generationStatus"];
+    generation_error: string | null;
+    ingest_progress: unknown;
+  }>(
+    `select id, title, generation_status, generation_error, ingest_progress
+     from decks
+     where user_id = $1
+       and archived_at is null
+       and (
+         generation_status in ('pending', 'processing')
+         or (
+           generation_status = 'failed'
+           and updated_at > now() - interval '2 hours'
+         )
+       )
+     order by updated_at desc
+     limit 20`,
+    [userId],
+  );
+  const artifacts = await pool.query<{
+    deck_id: string;
+    title: string;
+    kind: "mindmap" | "notes" | "exam";
+    generation_status: Deck["generationStatus"];
+    generation_error: string | null;
+  }>(
+    `select a.deck_id, d.title, a.kind, a.generation_status, a.generation_error
+     from deck_artifacts a
+     join decks d on d.id = a.deck_id
+     where d.user_id = $1
+       and d.archived_at is null
+       and (
+         a.generation_status in ('pending', 'processing')
+         or (
+           a.generation_status = 'failed'
+           and a.updated_at > now() - interval '2 hours'
+         )
+       )
+     order by a.updated_at desc
+     limit 20`,
+    [userId],
+  );
+
+  const jobs: GenerationJobRow[] = decks.rows.map((row) => {
+    const progress = parseIngestProgress(row.ingest_progress);
+    return {
+      deckId: row.id,
+      title: row.title,
+      status: row.generation_status,
+      error: row.generation_error,
+      kind: "ingest",
+      ocrNext: progress?.ocrNext,
+      ocrTotal: progress?.ocrTotal,
+    };
+  });
+  for (const row of artifacts.rows) {
+    jobs.push({
+      deckId: row.deck_id,
+      title: row.title,
+      status: row.generation_status,
+      error: row.generation_error,
+      kind: row.kind,
+    });
+  }
+  return jobs;
 }
 
 export async function deleteDeck(

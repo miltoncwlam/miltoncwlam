@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { z } from "zod";
 
 import { requireApiSession } from "@/lib/auth-server";
@@ -16,7 +17,11 @@ import {
 } from "@/lib/data/credits";
 import { isGuestQuotaError } from "@/lib/credits/config";
 import { getDeckWithCards } from "@/lib/data/decks";
-import { upsertDeckArtifact } from "@/lib/data/artifacts";
+import {
+  markArtifactFailed,
+  markArtifactProcessing,
+  upsertDeckArtifact,
+} from "@/lib/data/artifacts";
 import { generateExam } from "@/lib/llm/generate-exam";
 import { generateMindmap } from "@/lib/llm/generate-mindmap";
 import { generateNotes } from "@/lib/llm/generate-notes";
@@ -25,7 +30,8 @@ import {
   clampExamDurationMinutes,
   planExamQuestions,
 } from "@/lib/llm/parse-studio";
-import { EXAM_QUESTION_TYPES } from "@/lib/types/notebook";
+import { EXAM_QUESTION_TYPES, type ArtifactKind } from "@/lib/types/notebook";
+import type { DeckWithCards } from "@/lib/types/flashcard";
 
 const bodySchema = z.object({
   kind: z.enum(["mindmap", "notes", "exam"]),
@@ -36,6 +42,111 @@ const bodySchema = z.object({
 });
 
 export const maxDuration = 180;
+
+async function runArtifactJob(input: {
+  deck: DeckWithCards;
+  kind: ArtifactKind;
+  language?: (typeof LOCALE_CODES)[number];
+  difficulty?: "beginner" | "intermediate" | "advanced";
+  durationMinutes: number;
+  examTypes: (typeof EXAM_QUESTION_TYPES)[number][];
+  model?: string;
+  userId: string;
+  spentTextAmount: number;
+  unlimited: boolean;
+  estimateTokens: { inputTokens: number; outputTokens: number };
+}) {
+  const { deck, kind, userId } = input;
+  try {
+    const source = await loadNotebookSource(deck);
+    let payload;
+    let usage = { inputTokens: 0, outputTokens: 0 };
+    if (kind === "notes") {
+      const generated = await generateNotes({
+        source: source.text,
+        language: input.language,
+        model: input.model,
+      });
+      payload = generated.notes;
+      usage = generated.usage;
+    } else if (kind === "mindmap") {
+      const generated = await generateMindmap({
+        source: source.text,
+        language: input.language,
+        model: input.model,
+      });
+      payload = generated.mindmap;
+      usage = generated.usage;
+    } else {
+      const generated = await generateExam({
+        source: source.text,
+        language: input.language,
+        model: input.model,
+        difficulty: input.difficulty,
+        types: input.examTypes,
+        durationMinutes: input.durationMinutes,
+      });
+      payload = generated.exam;
+      usage = generated.usage;
+    }
+
+    await upsertDeckArtifact({
+      deckId: deck.id,
+      kind,
+      payload,
+      model: input.model,
+    });
+
+    const rates = resolveBillingRates({
+      provider: "openrouter",
+      modelId: input.model || "deepseek/deepseek-v4-flash",
+    });
+    const actual = creditsFromTokens(
+      usage.inputTokens || usage.outputTokens ? usage : input.estimateTokens,
+      rates,
+    );
+    if (!input.unlimited && input.spentTextAmount > actual) {
+      await refundCredits({
+        userId,
+        textAmount: input.spentTextAmount - actual,
+        imageAmount: 0,
+        reason: "generate_reconcile",
+        meta: { deckId: deck.id, kind },
+      });
+    }
+
+    await writeAuditLog({
+      userId,
+      action: "notebook_artifact",
+      entityType: "deck",
+      entityId: deck.id,
+      meta: { kind },
+    });
+  } catch (error) {
+    captureException(error, {
+      deckId: deck.id,
+      userId,
+      route: "artifacts",
+      kind,
+      model: input.model,
+    });
+    const message = error instanceof Error ? error.message : "Generation failed";
+    await markArtifactFailed({ deckId: deck.id, kind, message });
+    if (input.spentTextAmount > 0) {
+      try {
+        await refundCredits({
+          userId,
+          textAmount: input.spentTextAmount,
+          imageAmount: 0,
+          reason: "generate_refund",
+          meta: { deckId: deck.id, error: message.slice(0, 200) },
+        });
+      } catch {
+        // ignore
+      }
+    }
+  }
+}
 
 export async function POST(
   request: Request,
@@ -54,6 +165,12 @@ export async function POST(
     const deck = await getDeckWithCards(deckId, userId);
     if (!deck) {
       return Response.json({ error: "Notebook not found" }, { status: 404 });
+    }
+    if (deck.generationStatus !== "complete") {
+      return Response.json(
+        { error: "Wait until this notebook has finished reading." },
+        { status: 409 },
+      );
     }
     const input = bodySchema.parse(await request.json());
     kind = input.kind;
@@ -97,75 +214,32 @@ export async function POST(
     charged = true;
     spentTextAmount = spent.isUnlimited ? 0 : estimate.textCredits;
 
-    const language = input.language;
-    let payload;
-    let usage = { inputTokens: 0, outputTokens: 0 };
-    if (input.kind === "notes") {
-      const generated = await generateNotes({
-        source: source.text,
-        language,
-        model,
-      });
-      payload = generated.notes;
-      usage = generated.usage;
-    } else if (input.kind === "mindmap") {
-      const generated = await generateMindmap({
-        source: source.text,
-        language,
-        model,
-      });
-      payload = generated.mindmap;
-      usage = generated.usage;
-    } else {
-      const generated = await generateExam({
-        source: source.text,
-        language,
-        model,
-        difficulty: input.difficulty,
-        types: examTypes,
-        durationMinutes,
-      });
-      payload = generated.exam;
-      usage = generated.usage;
-    }
-
-    const artifact = await upsertDeckArtifact({
+    await markArtifactProcessing({
       deckId,
       kind: input.kind,
-      payload,
       model,
     });
 
-    const rates = resolveBillingRates({
-      provider: "openrouter",
-      modelId: model || "deepseek/deepseek-v4-flash",
-    });
-    const actual = creditsFromTokens(
-      usage.inputTokens || usage.outputTokens ? usage : {
-        inputTokens: estimate.inputTokens,
-        outputTokens: estimate.outputTokens,
-      },
-      rates,
+    after(() =>
+      runArtifactJob({
+        deck,
+        kind: input.kind,
+        language: input.language,
+        difficulty: input.difficulty,
+        durationMinutes,
+        examTypes,
+        model,
+        userId: userId!,
+        spentTextAmount,
+        unlimited: spent.isUnlimited,
+        estimateTokens: {
+          inputTokens: estimate.inputTokens,
+          outputTokens: estimate.outputTokens,
+        },
+      }),
     );
-    if (!spent.isUnlimited && spentTextAmount > actual) {
-      await refundCredits({
-        userId,
-        textAmount: spentTextAmount - actual,
-        imageAmount: 0,
-        reason: "generate_reconcile",
-        meta: { deckId, kind: input.kind },
-      });
-    }
 
-    await writeAuditLog({
-      userId,
-      action: "notebook_artifact",
-      entityType: "deck",
-      entityId: deckId,
-      meta: { kind: input.kind },
-    });
-
-    return Response.json({ ok: true, kind: artifact.kind });
+    return Response.json({ ok: true, accepted: true, kind: input.kind, status: "processing" });
   } catch (error) {
     if (error instanceof Response) return error;
     captureException(error, {
@@ -181,6 +255,13 @@ export async function POST(
         : error instanceof Error
           ? error.message
           : "Generation failed";
+    if (kind && userId) {
+      await markArtifactFailed({
+        deckId,
+        kind: kind as ArtifactKind,
+        message,
+      }).catch(() => {});
+    }
     if (charged && userId && spentTextAmount > 0) {
       try {
         await refundCredits({

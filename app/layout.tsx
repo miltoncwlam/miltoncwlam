@@ -6,6 +6,7 @@ import { getLocale, getMessages } from "next-intl/server";
 
 import { AppHeader } from "@/components/app-header";
 import { AuthProviders } from "@/components/auth-providers";
+import { GenerationJobsProvider } from "@/components/generation-jobs";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToastProvider } from "@/components/toast-provider";
@@ -58,9 +59,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <AuthProviders appUrl={env.NEXT_PUBLIC_APP_URL}>
             <NextIntlClientProvider locale={locale} messages={messages}>
               <ToastProvider>
+                <GenerationJobsProvider>
                 <AppHeader session={session} />
                 <div className="flex min-h-0 flex-1 flex-col">{children}</div>
                 <SiteFooter />
+                </GenerationJobsProvider>
               </ToastProvider>
             </NextIntlClientProvider>
           </AuthProviders>

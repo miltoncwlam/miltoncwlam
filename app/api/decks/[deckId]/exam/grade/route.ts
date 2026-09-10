@@ -44,6 +44,7 @@ export async function POST(
       result,
       score,
       maxScore,
+      classLinkId: deck.classLinkId,
     });
     return Response.json({
       attemptId: attempt.id,

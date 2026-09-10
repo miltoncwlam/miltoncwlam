@@ -160,6 +160,7 @@ export async function getPublicCommunityDeck(
 export async function copyDeckByIdToUser(
   sourceDeckId: string,
   userId: string,
+  options?: { classLinkId?: string | null },
 ): Promise<string> {
   const deckResult = await pool.query(
     `select * from decks where id = $1 and generation_status = 'complete'`,
@@ -176,7 +177,7 @@ export async function copyDeckByIdToUser(
     ).rows.map(mapCard),
   };
 
-  return insertDeckCopy(source, userId);
+  return insertDeckCopy(source, userId, options?.classLinkId);
 }
 
 export async function copyCommunityDeckToUser(
@@ -191,6 +192,7 @@ export async function copyCommunityDeckToUser(
 async function insertDeckCopy(
   source: DeckWithCards,
   userId: string,
+  classLinkId?: string | null,
 ): Promise<string> {
 
   const client = await pool.connect();
@@ -200,11 +202,11 @@ async function insertDeckCopy(
       `insert into decks (
         user_id, title, source_type, source_content,
         generation_status, share_token, is_shared, visibility,
-        subject_tag, is_seed
+        subject_tag, is_seed, class_link_id
       ) values (
-        $1, $2, 'text', null, 'complete', null, false, 'private', $3, false
+        $1, $2, 'text', null, 'complete', null, false, 'private', $3, false, $4
       ) returning id`,
-      [userId, `${source.title} (copy)`, source.subjectTag],
+      [userId, `${source.title} (copy)`, source.subjectTag, classLinkId ?? null],
     );
     const deckId = deckResult.rows[0].id;
 
@@ -227,6 +229,14 @@ async function insertDeckCopy(
         ],
       );
     }
+
+    await client.query(
+      `insert into deck_artifacts (deck_id, kind, payload, generation_status, generation_model)
+       select $2, kind, payload, generation_status, generation_model
+       from deck_artifacts
+       where deck_id = $1 and generation_status = 'complete'`,
+      [source.id, deckId],
+    );
 
     await client.query("commit");
     return deckId;

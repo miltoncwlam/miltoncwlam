@@ -154,21 +154,26 @@ export async function getOrRefreshCredits(
   return mapRow(row);
 }
 
+export async function countGuestGeneratesUsed(userId: string): Promise<number> {
+  const result = await pool.query<{ used: string }>(
+    `select greatest(0,
+       (select count(*) from credit_ledger
+        where user_id = $1 and pool = 'text' and reason = any($2::text[]))
+       - (select count(*) from credit_ledger
+          where user_id = $1 and pool = 'text' and reason = 'generate_refund')
+     )::text as used`,
+    [userId, [...GENERATE_REASONS]],
+  );
+  return Number(result.rows[0]?.used ?? 0);
+}
+
 export async function assertGuestGenerateQuota(
   userId: string,
   isGuest: boolean | undefined,
 ): Promise<void> {
   if (!isGuest) return;
-  const result = await pool.query<{ count: string }>(
-    `select count(*)::text as count
-     from credit_ledger
-     where user_id = $1
-       and pool = 'text'
-       and reason = any($2::text[])`,
-    [userId, [...GENERATE_REASONS]],
-  );
-  const count = Number(result.rows[0]?.count ?? 0);
-  if (count >= GUEST_GENERATE_LIMIT) {
+  const used = await countGuestGeneratesUsed(userId);
+  if (used >= GUEST_GENERATE_LIMIT) {
     throw new GuestQuotaError();
   }
 }

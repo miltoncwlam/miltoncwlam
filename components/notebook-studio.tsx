@@ -3,9 +3,8 @@
 import { useMemo, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
-import { GenerationLoadingScreen } from "@/components/generation-loading-screen";
+import { useGenerationJobs } from "@/components/generation-jobs";
 import { MindmapTree } from "@/components/mindmap-tree";
 import { StudyNotesView } from "@/components/study-notes-view";
 import { friendlyGenerateError } from "@/lib/friendly-generate-error";
@@ -28,9 +27,8 @@ export function NotebookStudio({
 }) {
   const t = useTranslations("studio");
   const locale = useLocale() as AppLocale;
-  const router = useRouter();
+  const { jobs } = useGenerationJobs();
   const [pendingKind, setPendingKind] = useState<ArtifactKind | null>(null);
-  const [lastKind, setLastKind] = useState<ArtifactKind | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -52,7 +50,6 @@ export function NotebookStudio({
     if (!hasSource) return;
     setError(null);
     setErrorCode(null);
-    setLastKind(kind);
     setPendingKind(kind);
     startTransition(async () => {
       try {
@@ -74,7 +71,6 @@ export function NotebookStudio({
             friendlyGenerateError(result.error || "Generation failed", result.code),
           );
         }
-        router.refresh();
       } catch (caught) {
         setError(
           caught instanceof Error
@@ -87,36 +83,21 @@ export function NotebookStudio({
     });
   }
 
-  const showOverlay = Boolean(pendingKind) || Boolean(error);
+  const busyKind = pendingKind || jobs.find(
+    (job) => job.deckId === deckId && job.kind !== "ingest" && job.status === "processing",
+  )?.kind;
 
   return (
     <section className="studio-panel space-y-6">
-      {showOverlay ? (
-        <GenerationLoadingScreen
-          error={error}
-          includeUpload={false}
-          label={t("generating")}
-          onDismiss={() => {
-            setError(null);
-            setErrorCode(null);
-            setPendingKind(null);
-          }}
-          errorAction={
-            errorCode === "GUEST_QUOTA" ? (
-              <Link className="primary-button flex-1 text-center" href="/account?upgrade=1">
-                {t("guestCreateAccount")}
-              </Link>
-            ) : null
-          }
-          onRetry={
-            errorCode === "GUEST_QUOTA"
-              ? undefined
-              : () => {
-                  if (lastKind) generate(lastKind);
-                }
-          }
-          phase="generate"
-        />
+      {error ? (
+        <p className="no-print rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-900">
+          {error}{" "}
+          {errorCode === "GUEST_QUOTA" ? (
+            <Link className="text-button" href="/account?upgrade=1">
+              {t("guestCreateAccount")}
+            </Link>
+          ) : null}
+        </p>
       ) : null}
       <div className="no-print">
         <p className="eyebrow">{t("eyebrow")}</p>
@@ -132,14 +113,14 @@ export function NotebookStudio({
         {tiles.map((tile) => (
           <button
             className="studio-tile"
-            disabled={!hasSource || isPending}
+            disabled={!hasSource || isPending || Boolean(busyKind)}
             key={tile.kind}
             onClick={() => generate(tile.kind)}
             type="button"
           >
             <p className="font-black">{tile.title}</p>
             <p className="mt-2 text-sm text-slate-600">
-              {pendingKind === tile.kind
+              {busyKind === tile.kind
                 ? t("generating")
                 : tile.ready
                   ? t("regenerate")

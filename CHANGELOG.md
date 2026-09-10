@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.7.4** — one number only (`package.json`).
+**Version 3.8.0** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,27 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 3.8.0 — 2026-09-10
+
+**Minor.** Create a notebook and leave. Come back to Library when it is ready. Class scores now include exams.
+
+### Added
+- Create and studio generate return immediately. A slim banner plus the Generating badge replace the full-screen overlay, so you can open other notebooks while reading/writing continues.
+- Server ticks keep OCR going after you close the tab: one scan page per request, up to 10 pages, with partial text saved if a later page fails.
+- Failed notebooks stay in Incomplete with Retry instead of disappearing.
+- Class scoreboard lists exam attempts next to play runs, and shows Clerk names when available.
+- Traditional Chinese exam papers use 正確/錯誤, and the landing page leads with exam / class / 繁體 scans.
+
+### Changed
+- Guest trial count ignores refunded failed generates, so a timeout no longer burns the two-try quota.
+- Class join copies the exam/notes/mind map onto the student notebook and tags the copy with the class link.
+- Studio tiles stay usable while a job runs in the background.
+
+### Fixed
+- Dense scans were capped at 3 pages inside one 180s request. Pages now run one-at-a-time so a 中史 photocopied chapter can finish.
 
 ---
 

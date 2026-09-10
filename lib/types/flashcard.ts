@@ -1,4 +1,5 @@
 import type { ImageAttribution } from "@/lib/images/license";
+import type { IngestProgress } from "@/lib/ingest/progress";
 
 export type SourceType = "text" | "file" | "photo" | "url";
 
@@ -48,6 +49,8 @@ export type Deck = {
   generationProvider: LLMProvider | null;
   generationModel: string | null;
   generationError: string | null;
+  ingestProgress: IngestProgress | null;
+  classLinkId: string | null;
   isShared: boolean;
   visibility: DeckVisibility;
   subjectTag: string | null;

@@ -108,6 +108,28 @@ describe("studio parsers", () => {
     expect(exam.questions[0].type).toBe("tf");
   });
 
+  it("keeps Traditional Chinese true/false choices", () => {
+    const exam = parseExamPayload({
+      title: "試卷",
+      instructions: "全答。",
+      questions: [
+        {
+          id: "q1",
+          type: "tf",
+          prompt: "夏朝是傳說中的朝代。",
+          marks: 1,
+          answer: "正確",
+          choices: ["正確", "錯誤"],
+        },
+      ],
+    });
+    expect(exam.questions[0]?.choices).toEqual(["正確", "錯誤"]);
+    expect(
+      gradeExamExact(exam.questions[0]!, "正確").ok,
+    ).toBe(true);
+    expect(gradeExamExact(exam.questions[0]!, "True").ok).toBe(true);
+  });
+
   it("maps MCQ options onto choices", () => {
     const exam = parseExamPayload({
       title: "Paper",

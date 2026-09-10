@@ -11,6 +11,7 @@ import type {
   ExamQuestionResult,
   ExamStudentAnswer,
 } from "@/lib/types/notebook";
+import { normalizeTrueFalse } from "@/lib/exam/true-false";
 
 function shuffle<T>(items: T[]) {
   return [...items].sort(() => Math.random() - 0.5);
@@ -21,6 +22,13 @@ function formatMmSs(ms: number) {
   const minutes = Math.floor(total / 60);
   const seconds = total % 60;
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function choiceLabel(choice: string, t: (key: "true" | "false") => string) {
+  const flag = normalizeTrueFalse(choice);
+  if (flag === "true") return t("true");
+  if (flag === "false") return t("false");
+  return choice;
 }
 
 function formatStudentAnswer(value: ExamStudentAnswer | undefined) {
@@ -90,7 +98,7 @@ function QuestionField({
             <span className="font-black text-slate-500">
               {String.fromCharCode(65 + index)}.
             </span>
-            {choice}
+            {choiceLabel(choice, t)}
           </label>
         ))}
       </div>

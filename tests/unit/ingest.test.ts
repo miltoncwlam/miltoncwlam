@@ -5,6 +5,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { extractStudyText, isSparsePdfText, readPdfTextLayer } from "@/lib/ingest/extract-text";
+import { OCR_PAGE_CAP } from "@/lib/ingest/ocr-pdf";
+import { MAX_OCR_PAGES } from "@/lib/credits/config";
 import {
   assertOwnedStoragePath,
   validateUpload,
@@ -16,6 +18,10 @@ import {
 } from "@/tests/fixtures/test-sources";
 
 describe("source ingestion", () => {
+  it("OCRs up to the advertised page cap, one page per tick", () => {
+    expect(OCR_PAGE_CAP).toBe(MAX_OCR_PAGES);
+    expect(OCR_PAGE_CAP).toBe(10);
+  });
   it("accepts matching allowed uploads", () => {
     expect(
       validateUpload({

@@ -8,7 +8,7 @@ vi.mock("@/lib/db", () => ({
   pool: { query },
 }));
 
-import { deleteDeck, getDeckWithCards, purgeFailedGenerations } from "@/lib/data/decks";
+import { deleteDeck, getDeckWithCards, listDecks } from "@/lib/data/decks";
 
 describe("data authorization boundaries", () => {
   beforeEach(() => query.mockReset());
@@ -35,18 +35,13 @@ describe("data authorization boundaries", () => {
     );
   });
 
-  it("only purges failed generations for the authenticated user", async () => {
+  it("does not delete failed notebooks when listing the library", async () => {
     query.mockResolvedValueOnce({ rows: [] });
 
-    await purgeFailedGenerations("user-id");
+    await listDecks("user-id");
 
-    expect(query).toHaveBeenCalledWith(
-      expect.stringContaining("generation_status = 'failed'"),
-      ["user-id"],
-    );
-    expect(query).toHaveBeenCalledWith(
-      expect.stringContaining("and user_id = $1"),
-      ["user-id"],
+    expect(query.mock.calls.some((call) => /delete from decks/i.test(String(call[0])))).toBe(
+      false,
     );
   });
 });

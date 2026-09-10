@@ -14,6 +14,7 @@ import {
   planExamQuestions,
 } from "@/lib/llm/parse-studio";
 import type { ExamPayload, ExamQuestionType } from "@/lib/types/notebook";
+import { trueFalseChoices } from "@/lib/exam/true-false";
 
 export type StudioUsage = {
   inputTokens: number;
@@ -71,6 +72,7 @@ export async function generateExam(input: {
   const count = sequence.length;
   const difficulty = input.difficulty ?? "intermediate";
   const mix = typeCounts(sequence);
+  const tf = trueFalseChoices(input.language);
   const result = await generateObjectWithRetry(() =>
     generateObject({
       model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
@@ -83,7 +85,7 @@ Question mix (longer types take more time): ${mix}.
 Type rules — choices and pairs are required JSON fields for those types:
 - long: extended written answer, marks 4–8, include markScheme.
 - short: 1–3 sentence answer, marks 2–3, include markScheme.
-- tf: prompt is a statement; choices must be ["True","False"]; answer is True or False.
+- tf: prompt is a statement; choices must be ${JSON.stringify(tf)}; answer is ${tf[0]} or ${tf[1]}.
 - mcq: exactly 4 choices; answer is the correct choice text exactly.
 - matching: 3–6 pairs {left, right}; answer is each left -> right on its own line.
 - cloze_choice: prompt has one ____ blank; 4 choices; answer is the missing word.
@@ -112,7 +114,7 @@ ${input.source.slice(0, 24_000)}`,
           prompt: `Add EXACTLY ${missing} more ${difficulty} exam questions from this source.
 ${studioLanguageRules(input.language ?? "en")}
 Continue ids after q${exam.questions.length}. Mix: ${mix}.
-Same type rules as a ${duration}-minute paper (choices/pairs required for mcq/tf/matching/cloze_choice).
+Same type rules as a ${duration}-minute paper (choices/pairs required for mcq/tf/matching/cloze_choice). tf choices ${JSON.stringify(tf)}.
 Source:
 ${input.source.slice(0, 16_000)}`,
         }),

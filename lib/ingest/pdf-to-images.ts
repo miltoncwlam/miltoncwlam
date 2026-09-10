@@ -269,20 +269,37 @@ function isPathTypeError(error: unknown) {
 
 export async function pdfPagesToImages(
   data: Uint8Array,
-  options: { maxPages?: number; maxDimension?: number } = {},
+  options: {
+    maxPages?: number;
+    maxDimension?: number;
+    pageNumber?: number;
+  } = {},
 ): Promise<PdfPageImage[]> {
   const maxPages = Math.max(1, options.maxPages ?? DEFAULT_MAX_PAGES);
   const maxDimension = options.maxDimension ?? DEFAULT_MAX_DIMENSION;
+  const pageNumber = options.pageNumber;
 
-  const jpegs = extractEmbeddedJpegs(data).slice(0, maxPages);
+  const jpegs = extractEmbeddedJpegs(data);
   if (jpegs.length) {
+    const picked =
+      pageNumber != null
+        ? jpegs[pageNumber - 1]
+          ? [{ jpeg: jpegs[pageNumber - 1]!, pageNumber }]
+          : []
+        : jpegs.slice(0, maxPages).map((jpeg, index) => ({
+            jpeg,
+            pageNumber: index + 1,
+          }));
+    if (!picked.length) {
+      throw new Error("Could not convert any PDF pages to images");
+    }
     return Promise.all(
-      jpegs.map((jpeg, index) =>
+      picked.map((entry) =>
         fitPageImage(
           {
-            data: jpeg,
+            data: entry.jpeg,
             mediaType: "image/jpeg",
-            pageNumber: index + 1,
+            pageNumber: entry.pageNumber,
           },
           maxDimension,
         ),
@@ -290,11 +307,18 @@ export async function pdfPagesToImages(
     );
   }
 
+  const convertMax =
+    pageNumber != null ? Math.max(pageNumber, 1) : maxPages;
+
   try {
-    const extracted = await pagesFromExtractedImages(data, maxPages);
-    if (extracted.length) {
+    const extracted = await pagesFromExtractedImages(data, convertMax);
+    const pages =
+      pageNumber != null
+        ? extracted.filter((page) => page.pageNumber === pageNumber)
+        : extracted;
+    if (pages.length) {
       return Promise.all(
-        extracted.map((page) => fitPageImage(page, maxDimension)),
+        pages.map((page) => fitPageImage(page, maxDimension)),
       );
     }
   } catch (error) {
@@ -302,10 +326,14 @@ export async function pdfPagesToImages(
   }
 
   try {
-    const rendered = await pagesFromRender(data, maxPages, maxDimension);
-    if (rendered.length) {
+    const rendered = await pagesFromRender(data, convertMax, maxDimension);
+    const pages =
+      pageNumber != null
+        ? rendered.filter((page) => page.pageNumber === pageNumber)
+        : rendered;
+    if (pages.length) {
       return Promise.all(
-        rendered.map((page) => fitPageImage(page, maxDimension)),
+        pages.map((page) => fitPageImage(page, maxDimension)),
       );
     }
   } catch (error) {

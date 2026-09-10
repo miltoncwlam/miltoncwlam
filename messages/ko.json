@@ -27,7 +27,15 @@
     "createAccount": "계정 만들기",
     "agree": "계속하면 <terms>이용약관</terms> 및 <privacy>개인정보 처리방침</privacy>에 동의하게 됩니다.",
     "authNote": "Try a short guest trial with no energy meter, or sign in with email.",
-    "tryGuest": "Try as guest"
+    "tryGuest": "Try as guest",
+    "featuresTitle": "Built to beat a generic notebook in class",
+    "featuresIntro": "Leave the loading screen. Come back to a notebook, a sit-down exam, due-today cards, and a teacher scoreboard.",
+    "feature1Title": "Walk away",
+    "feature1Copy": "Upload a scan or URL and go back to Library. We keep reading pages in the background.",
+    "feature2Title": "Exam homework",
+    "feature2Copy": "Timed papers with 正確/錯誤, AI marking, print, and scores on the class board.",
+    "feature3Title": "Drill, don’t only summarise",
+    "feature3Copy": "SM-2 due-today cards and two classroom games, plus HK community packs."
   },
   "auth": {
     "signInEyebrow": "다시 오신 것을 환영합니다",
@@ -141,7 +149,11 @@
     ],
     "errorTitle": "Generation stopped",
     "retry": "Retry",
-    "dismiss": "Back to form"
+    "dismiss": "Back to form",
+    "openNotebook": "Open notebook",
+    "readingPage": "Reading page {current} of {total}",
+    "studioReady": "Studio item ready",
+    "studioWorking": "Writing {kind}…"
   },
   "study": {
     "showAnswer": "답 보기",
@@ -602,6 +614,23 @@
       "matching": "짝짓기",
       "cloze_choice": "빈칸(선택지)",
       "cloze_free": "빈칸(직접 입력)"
-    }
+    },
+    "true": "True",
+    "false": "False"
+  },
+  "class": {
+    "eyebrow": "Class",
+    "subtitle": "Students copy this notebook, then play or take the exam. Scores below include class-link play and exam attempts.",
+    "playScores": "Play scores",
+    "examScores": "Exam scores",
+    "student": "Student",
+    "activity": "Activity",
+    "score": "Score",
+    "energy": "Energy",
+    "finished": "Finished",
+    "exam": "Exam",
+    "emptyPlay": "No play homework yet.",
+    "emptyExam": "No exam attempts yet. Generate the exam paper before sharing the class link.",
+    "generateExamFirst": "Generate the exam in Studio first so joining students get the paper."
   }
 }

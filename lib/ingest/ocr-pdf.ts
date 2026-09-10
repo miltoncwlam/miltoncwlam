@@ -6,16 +6,15 @@ import { MAX_OCR_PAGES } from "@/lib/credits/config";
 import { fitPageImage, pdfPagesToImages } from "@/lib/ingest/pdf-to-images";
 import { DEFAULT_OCR_MODEL } from "@/lib/llm/models";
 
-/** Leave room for title + refund inside notebooks `maxDuration` (180s). */
 const OCR_BUDGET_MS = 125_000;
-const OCR_FIRST_PAGE_MS = 115_000;
-const OCR_PAGE_MS = 40_000;
+const OCR_FIRST_PAGE_MS = 80_000;
+const OCR_PAGE_MS = 70_000;
 const OCR_RETRY_MS = 45_000;
 const OCR_RETRY_DIMENSION = 640;
 const OCR_FIRST_DIMENSION = 768;
 const MAX_SOURCE = 80_000;
-/** Read a few pages well instead of timing out on ten huge scans. */
-export const OCR_PAGE_CAP = Math.min(3, MAX_OCR_PAGES);
+/** One page per serverless tick, so we can use the advertised page cap. */
+export const OCR_PAGE_CAP = MAX_OCR_PAGES;
 
 function readUsage(result: {
   usage?: {
@@ -89,6 +88,48 @@ If a page is blank, output nothing.`,
       },
     ],
   });
+}
+
+export async function ocrPdfPage(
+  data: Uint8Array,
+  pageNumber: number,
+  modelId = DEFAULT_OCR_MODEL,
+): Promise<{
+  text: string;
+  pageNumber: number;
+  usage: { inputTokens: number; outputTokens: number };
+}> {
+  const pages = await pdfPagesToImages(data, {
+    pageNumber,
+    maxPages: pageNumber,
+    maxDimension: OCR_FIRST_DIMENSION,
+  });
+  const page = pages[0];
+  if (!page) {
+    throw new Error("Could not convert any PDF pages to images");
+  }
+  const { getOpenRouterClient } = await import("@/lib/llm/config");
+  const client = getOpenRouterClient();
+  const model = client(modelId || DEFAULT_OCR_MODEL);
+  try {
+    const result = await transcribePage(model, page, OCR_PAGE_MS);
+    const used = readUsage(result);
+    return {
+      text: result.text.trim(),
+      pageNumber: page.pageNumber,
+      usage: used,
+    };
+  } catch (error) {
+    if (!isTransientOcrError(error)) throw error;
+    const smaller = await fitPageImage(page, OCR_RETRY_DIMENSION, 45);
+    const result = await transcribePage(model, smaller, OCR_RETRY_MS);
+    const used = readUsage(result);
+    return {
+      text: result.text.trim(),
+      pageNumber: page.pageNumber,
+      usage: used,
+    };
+  }
 }
 
 export async function ocrPdfPages(

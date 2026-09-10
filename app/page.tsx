@@ -44,35 +44,28 @@ export default async function Home() {
       </section>
 
       <section className="mx-auto max-w-6xl px-5 py-20">
-        <p className="landing-kicker">What you can do</p>
+        <p className="landing-kicker">{t("featuresTitle")}</p>
         <h2 className="landing-section-title mt-4 text-center">
-          From notes to a deck worth collecting
+          {t("featuresTitle")}
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-center text-[length:clamp(1.05rem,1.5vw,1.2rem)] leading-7 text-[var(--muted)]">
-          Paste text, import a URL, or upload a PDF. Study with spaced
-          repetition, quiz battles, and shareable embeds.
+          {t("featuresIntro")}
         </p>
         <div className="landing-features">
           <div>
             <p className="landing-feature-num">01</p>
-            <h3 className="landing-feature-title">Generate</h3>
-            <p className="landing-feature-copy">
-              Turn notes and PDFs into clear flashcards with AI.
-            </p>
+            <h3 className="landing-feature-title">{t("feature1Title")}</h3>
+            <p className="landing-feature-copy">{t("feature1Copy")}</p>
           </div>
           <div>
             <p className="landing-feature-num">02</p>
-            <h3 className="landing-feature-title">Study</h3>
-            <p className="landing-feature-copy">
-              Flip, rate Hard / OK / Easy, and keep a spaced-repetition queue.
-            </p>
+            <h3 className="landing-feature-title">{t("feature2Title")}</h3>
+            <p className="landing-feature-copy">{t("feature2Copy")}</p>
           </div>
           <div>
             <p className="landing-feature-num">03</p>
-            <h3 className="landing-feature-title">Quiz</h3>
-            <p className="landing-feature-copy">
-              Run a trainer-style quiz, then share or embed the deck.
-            </p>
+            <h3 className="landing-feature-title">{t("feature3Title")}</h3>
+            <p className="landing-feature-copy">{t("feature3Copy")}</p>
           </div>
         </div>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
