@@ -1,5 +1,5 @@
 export const STABLE_VERSION = "3.9.3";
-export const BETA_VERSION = "4.0.0";
+export const BETA_VERSION = "4.0.0 beta";
 export const BETA_COOKIE = "hkstudya-beta";
 export const BETA_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 

@@ -37,10 +37,20 @@
     "authNote": "Try a short guest trial with no energy meter, or sign in with email.",
     "tryGuest": "Try as guest",
     "betaKicker": "測試版",
-    "betaTitle": "Version 4.0 現已推出測試版",
+    "betaTitle": "Version 4.0.0 現已推出測試版",
     "betaBody": "放下來源，留在筆記本。對話或點一下，就能做出可坐的卷，並選 HKDSE、IGCSE 或 A-level。",
-    "betaEnter": "進入 Version 4.0 測試版",
-    "betaEntering": "開啟中…"
+    "betaEnter": "進入 Version 4.0.0 測試版",
+    "betaEntering": "開啟中…",
+    "betaStay": "暫時不用",
+    "betaFeedback": "測試版意見",
+    "betaComment": "留言",
+    "betaBug": "回報錯誤",
+    "betaPlaceholder": "發生了什麼，或你希望我們改什麼？",
+    "betaSend": "送出",
+    "betaSending": "送出中…",
+    "betaThanks": "已收到，謝謝。",
+    "betaSendError": "送不出，請再試一次。",
+    "betaClose": "關閉"
   },
   "auth": {
     "signInEyebrow": "歡迎回來",

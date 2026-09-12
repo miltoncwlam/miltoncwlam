@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 4.0.1** — one number only (`package.json`).
+**Version 4.0.0 beta** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -21,20 +21,7 @@ git checkout archive/milton-2026-09-06
 
 ---
 
-## Version 4.0.1 — 2026-09-12
-
-**Miniscule.** Version 4.0.0 stays on beta. The production home shows Version 3.9.3 until you enter.
-
-### Added
-- Home popup: **Version 4.0 is now on beta**, with **Enter Version 4.0 beta**. That sets a cookie and shows Version 4.0.0. `/beta` does the same.
-- Vercel preview deployments skip the gate and already show Version 4.0.0.
-
-### Changed
-- Production home (no beta cookie) shows Version 3.9.3 and the 3.9.3 flashcard hero. Signed-in users stay on home until they enter, then go to the library.
-
----
-
-## Version 4.0.0 — 2026-09-12
+## Version 4.0.0 beta — 2026-09-12
 
 **Major.** Drop a source. Stay in the notebook. Chat or tap — it makes things you can sit, in HKDSE, IGCSE, or A-level shape.
 
@@ -44,6 +31,8 @@ git checkout archive/milton-2026-09-06
 - Notebook chat, pinned to DeepSeek V4 Flash 0731. Replies persist. DSE + Chinese uses 書面語. You can say “make cards”.
 - Exam lane chips: HKDSE (default), IGCSE, A-level. They shape notes, maps, papers, and cards.
 - Long sources generate notes and maps in sections, then merge.
+- Home offers **Version 4.0.0 beta**. Production home shows Version 3.9.3 until you enter. **Not now**, Escape, or a click outside closes the popup — you do not have to enter.
+- In beta, a **Beta feedback** panel for comments and bug reports. Crashes and uncaught errors in 4.0.0 beta are recorded automatically.
 
 ### Changed
 - Create is drop-first. Model, language, and retention sit under Advanced.

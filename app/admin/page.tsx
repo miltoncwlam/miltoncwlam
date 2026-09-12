@@ -48,6 +48,9 @@ export default async function AdminPage() {
           Set energy limits and moderate community. Learners sign up with Clerk.
         </p>
         <div className="flex flex-wrap gap-3 text-sm font-semibold">
+          <Link className="text-indigo-700 underline" href="/admin/beta">
+            Version 4.0.0 beta
+          </Link>
           <Link className="text-indigo-700 underline" href="/admin/energy">
             Energy ledger
           </Link>

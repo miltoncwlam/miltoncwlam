@@ -11,8 +11,8 @@ import { BETA_COOKIE, hasV4BetaAccess } from "@/lib/beta";
 
 export default async function Home() {
   const session = await getSession();
+  if (session) redirect("/decks");
   const beta = hasV4BetaAccess((await cookies()).get(BETA_COOKIE)?.value);
-  if (session && beta) redirect("/decks");
   const t = await getTranslations("landing");
   const localDev = isLocalAppHost((await headers()).get("host"));
 

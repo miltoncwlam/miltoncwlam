@@ -80,6 +80,7 @@ export function privacyBlocks(v: LegalValues): LegalBlock[] {
     ], [
       "Account data: Clerk user ID, email address, and display name used to keep you signed in. Clerk stores sign-in credentials (including email/password if you use them) under its own terms. We may treat an allowlisted email as admin.",
       "Study data: decks, cards (front, back, hints, quiz options), ratings, spaced-repetition state, quiz answers and scores, share/visibility settings, subject and grade tags, and weekly energy (study allowance) balances. Energy is an in-app limit, not money.",
+      "Beta feedback: if you enter Version 4.0.0 beta, comments and bug reports you send, plus automatic records of crashes and uncaught errors (page path, a short message, and a stack when the browser gives one). We use this to fix the beta. It is not used for ads.",
       "Uploads and sources: text you paste, topics, fetched URL/YouTube study text, and files (PDF, images, Markdown, TXT) stored in private Supabase Storage when you upload. You can choose to drop source files immediately, keep them about 24 hours, or keep them with the deck.",
       "Community data: public or unlisted decks you submit, copies you make of library packs, likes, and moderation reports. Seed encyclopedia packs are published by us, not by learners.",
       "Media: card images we store (licensed Wikimedia Commons or Openverse photos with attribution, or rarely AI-generated community art labelled as such). We keep author, licence, and source URL with the card.",

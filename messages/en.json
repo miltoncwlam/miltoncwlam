@@ -37,10 +37,20 @@
     "authNote": "Try a short guest trial with no energy meter, or sign in with email.",
     "tryGuest": "Try as guest",
     "betaKicker": "Beta",
-    "betaTitle": "Version 4.0 is now on beta",
+    "betaTitle": "Version 4.0.0 is now on beta",
     "betaBody": "Drop a source. Stay in the notebook. Chat or tap — it makes things you can sit, in HKDSE, IGCSE, or A-level shape.",
-    "betaEnter": "Enter Version 4.0 beta",
-    "betaEntering": "Opening…"
+    "betaEnter": "Enter Version 4.0.0 beta",
+    "betaEntering": "Opening…",
+    "betaStay": "Not now",
+    "betaFeedback": "Beta feedback",
+    "betaComment": "Comment",
+    "betaBug": "Report a bug",
+    "betaPlaceholder": "What happened, or what should we change?",
+    "betaSend": "Send",
+    "betaSending": "Sending…",
+    "betaThanks": "Thanks — we saved that.",
+    "betaSendError": "Could not send that. Try again.",
+    "betaClose": "Close"
   },
   "auth": {
     "signInEyebrow": "Welcome back",

@@ -1,11 +1,24 @@
 "use client";
 
+import { useEffect } from "react";
+
+import { reportBetaEvent } from "@/lib/beta-client";
+
 export default function DecksError({
+  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    void reportBetaEvent({
+      kind: "error",
+      message: error.message || "We could not load this part of your library.",
+      details: { source: "app/decks/error", digest: error.digest, stack: error.stack },
+    }).catch(() => {});
+  }, [error]);
+
   return (
     <main className="page-shell">
       <section className="empty-state">
