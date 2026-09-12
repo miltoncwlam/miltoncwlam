@@ -228,6 +228,11 @@ export function cookieRows(v: LegalValues): CookieRow[] {
       purpose: "Remember the interface language you picked.",
       duration: "About 1 year.",
     },
+    {
+      name: "hkstudya-beta",
+      purpose: "Remember that you entered the Version 4.0 beta from the home screen.",
+      duration: "About 1 year.",
+    },
   ];
 }
 

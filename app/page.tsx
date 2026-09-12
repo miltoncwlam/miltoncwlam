@@ -1,15 +1,18 @@
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { LandingAuthCta } from "@/components/landing-auth-cta";
+import { V4BetaPopup } from "@/components/v4-beta-popup";
 import { isLocalAppHost } from "@/lib/auth-local";
 import { getSession } from "@/lib/auth-server";
+import { BETA_COOKIE, hasV4BetaAccess } from "@/lib/beta";
 
 export default async function Home() {
   const session = await getSession();
-  if (session) redirect("/decks");
+  const beta = hasV4BetaAccess((await cookies()).get(BETA_COOKIE)?.value);
+  if (session && beta) redirect("/decks");
   const t = await getTranslations("landing");
   const localDev = isLocalAppHost((await headers()).get("host"));
 
@@ -34,16 +37,31 @@ export default async function Home() {
             </div>
           </div>
           <div className="landing-hero-card" aria-hidden="true">
-            <span className="card-rarity">HKDSE</span>
-            <span className="font-label text-[0.6875rem] font-medium uppercase tracking-[0.22em] text-[var(--muted)]">
-              Biology · Paper 1
-            </span>
-            <strong className="landing-hero-card-q">
-              Explain how chlorophyll captures light.
-            </strong>
-            <span className="rounded-2xl bg-[var(--secondary)] p-4 font-medium text-[var(--muted)]">
-              30 min · sit this paper in the notebook
-            </span>
+            {beta ? (
+              <>
+                <span className="card-rarity">HKDSE</span>
+                <span className="font-label text-[0.6875rem] font-medium uppercase tracking-[0.22em] text-[var(--muted)]">
+                  Biology · Paper 1
+                </span>
+                <strong className="landing-hero-card-q">
+                  Explain how chlorophyll captures light.
+                </strong>
+                <span className="rounded-2xl bg-[var(--secondary)] p-4 font-medium text-[var(--muted)]">
+                  30 min · sit this paper in the notebook
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="card-rarity">HK STUDY A</span>
+                <span className="font-label text-[0.6875rem] font-medium uppercase tracking-[0.22em] text-[var(--muted)]">
+                  Biology
+                </span>
+                <strong className="landing-hero-card-q">What powers the cell?</strong>
+                <span className="rounded-2xl bg-[var(--secondary)] p-4 font-medium text-[var(--muted)]">
+                  Flip to reveal the answer
+                </span>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -82,6 +100,7 @@ export default async function Home() {
           </Link>
         </div>
       </section>
+      {beta ? null : <V4BetaPopup />}
     </main>
   );
 }

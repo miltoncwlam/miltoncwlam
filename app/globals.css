@@ -3607,6 +3607,38 @@ html[data-theme="dark"] .play-lantern-text {
   color: var(--muted);
 }
 
+.v4-beta-popup-card {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  height: fit-content;
+  width: min(32rem, calc(100% - 2rem));
+  border: 0;
+  border-radius: 1.5rem;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 1.5rem 1.5rem 1.25rem;
+  box-shadow: 0 24px 50px rgb(0 0 0 / 22%);
+}
+
+.v4-beta-popup-card::backdrop {
+  background: rgb(20 32 27 / 48%);
+}
+
+html:has(dialog.v4-beta-popup-card[open]) .app-header {
+  z-index: 0;
+  backdrop-filter: none;
+  pointer-events: none;
+}
+
+.v4-beta-popup-card .page-title {
+  font-size: 1.65rem;
+}
+
+.v4-beta-popup-card .page-subtitle {
+  color: var(--muted);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .play-slip-row.is-drift .play-slip,
   .play-flyer,

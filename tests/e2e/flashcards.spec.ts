@@ -2,9 +2,15 @@ import { expect, test } from "@playwright/test";
 
 test("landing and protected route redirect to sign-in", async ({ page }) => {
   await page.goto("/");
+  await expect(page.getByText("Version 3.9.3").first()).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /version 4\.0 is now on beta/i }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: /enter version 4\.0 beta/i }).click();
   await expect(
     page.getByRole("heading", { name: /stay in the notebook/i }),
   ).toBeVisible();
+  await expect(page.getByText("Version 4.0.0").first()).toBeVisible();
 
   await page.goto("/decks");
   await expect(page).toHaveURL(/sign-in|accounts\.dev/i);
@@ -12,6 +18,7 @@ test("landing and protected route redirect to sign-in", async ({ page }) => {
 
 test("landing offers guest trial", async ({ page }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: /enter version 4\.0 beta/i }).click();
   await expect(page.getByRole("button", { name: /try as guest/i })).toBeVisible();
 });
 

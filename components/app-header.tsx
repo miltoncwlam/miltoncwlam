@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 
 import { EnergyBadge } from "@/components/energy-badge";
@@ -6,9 +7,13 @@ import { StreakBadge } from "@/components/streak-badge";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { SignOutButton } from "@/components/sign-out-button";
 import { Button } from "@/components/ui/button";
-import { APP_VERSION } from "@/lib/legal";
 import type { AppSession } from "@/lib/auth-server";
 import { isAdminUser } from "@/lib/auth-server";
+import {
+  BETA_COOKIE,
+  displayAppVersion,
+  hasV4BetaAccess,
+} from "@/lib/beta";
 
 export async function AppHeader({
   localDev = false,
@@ -20,6 +25,9 @@ export async function AppHeader({
   const t = await getTranslations("nav");
   const signedIn = Boolean(session);
   const isAdmin = session ? isAdminUser(session.user) : false;
+  const version = displayAppVersion(
+    hasV4BetaAccess((await cookies()).get(BETA_COOKIE)?.value),
+  );
 
   return (
     <header className="app-header">
@@ -27,7 +35,7 @@ export async function AppHeader({
         <Link className="app-brand" href="/">
           <span className="brand-mark">S</span>
           HK Study A
-          <span className="app-version">Version {APP_VERSION}</span>
+          <span className="app-version">Version {version}</span>
         </Link>
         <nav
           className="flex flex-wrap items-center justify-end gap-2 font-sans text-[13px] font-medium"

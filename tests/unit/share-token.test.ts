@@ -107,10 +107,12 @@ describe("public app urls", () => {
     const { readFile } = await import("node:fs/promises");
     const landing = await readFile("messages/en.json", "utf8");
     expect(landing).toMatch(/Stay in the notebook/);
+    expect(landing).toMatch(/Version 4.0 is now on beta/);
     expect(landing).not.toMatch(/assign them with a class link/);
     const page = await readFile("app/page.tsx", "utf8");
     expect(page).toMatch(/sit this paper in the notebook/);
-    expect(page).not.toMatch(/Flip to reveal the answer/);
+    expect(page).toMatch(/Flip to reveal the answer/);
+    expect(page).toMatch(/V4BetaPopup/);
   });
 
   it("sends sign-in to Clerk Account Portal with an absolute return url", () => {

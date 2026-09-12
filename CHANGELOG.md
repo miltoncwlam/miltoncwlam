@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 4.0.0** — one number only (`package.json`).
+**Version 4.0.1** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,19 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 4.0.1 — 2026-09-12
+
+**Miniscule.** Version 4.0.0 stays on beta. The production home shows Version 3.9.3 until you enter.
+
+### Added
+- Home popup: **Version 4.0 is now on beta**, with **Enter Version 4.0 beta**. That sets a cookie and shows Version 4.0.0. `/beta` does the same.
+- Vercel preview deployments skip the gate and already show Version 4.0.0.
+
+### Changed
+- Production home (no beta cookie) shows Version 3.9.3 and the 3.9.3 flashcard hero. Signed-in users stay on home until they enter, then go to the library.
 
 ---
 

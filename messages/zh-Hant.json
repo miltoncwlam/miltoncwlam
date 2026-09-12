@@ -35,7 +35,12 @@
     "createAccount": "建立帳號",
     "agree": "繼續即表示你同意我們的 <terms>服務條款</terms> 與 <privacy>隱私權政策</privacy>。",
     "authNote": "Try a short guest trial with no energy meter, or sign in with email.",
-    "tryGuest": "Try as guest"
+    "tryGuest": "Try as guest",
+    "betaKicker": "測試版",
+    "betaTitle": "Version 4.0 現已推出測試版",
+    "betaBody": "放下來源，留在筆記本。對話或點一下，就能做出可坐的卷，並選 HKDSE、IGCSE 或 A-level。",
+    "betaEnter": "進入 Version 4.0 測試版",
+    "betaEntering": "開啟中…"
   },
   "auth": {
     "signInEyebrow": "歡迎回來",

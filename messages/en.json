@@ -35,7 +35,12 @@
     "createAccount": "Create account",
     "agree": "By continuing, you agree to our <terms>Terms</terms> and <privacy>Privacy Policy</privacy>.",
     "authNote": "Try a short guest trial with no energy meter, or sign in with email.",
-    "tryGuest": "Try as guest"
+    "tryGuest": "Try as guest",
+    "betaKicker": "Beta",
+    "betaTitle": "Version 4.0 is now on beta",
+    "betaBody": "Drop a source. Stay in the notebook. Chat or tap — it makes things you can sit, in HKDSE, IGCSE, or A-level shape.",
+    "betaEnter": "Enter Version 4.0 beta",
+    "betaEntering": "Opening…"
   },
   "auth": {
     "signInEyebrow": "Welcome back",
