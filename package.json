@@ -1,6 +1,6 @@
 {
   "name": "flashcard-generator",
-  "version": "3.9.3",
+  "version": "4.0.0",
   "private": true,
   "scripts": {
     "dev": "env WATCHPACK_POLLING=true NODE_OPTIONS=--dns-result-order=ipv4first next dev --hostname localhost --port 3000",

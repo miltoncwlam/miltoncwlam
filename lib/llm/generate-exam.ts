@@ -1,11 +1,13 @@
 import { generateObject } from "ai";
 
 import { studioIntentRules, studioLanguageRules, studioSourceSlice, type StudioDepth, type StudioPurpose } from "@/lib/i18n/locales";
+import { examProfileRules, type ExamSubjectBrain, type ExamSystem } from "@/lib/llm/exam-profiles";
 import {
   getOpenRouterClient,
   resolveOpenRouterModel,
 } from "@/lib/llm/config";
 import { generateObjectWithRetry } from "@/lib/llm/generate-object-retry";
+import { ollamaGenerateJson } from "@/lib/llm/ollama";
 import {
   clampExamDurationMinutes,
   examFillSchema,
@@ -14,6 +16,7 @@ import {
   planExamQuestions,
 } from "@/lib/llm/parse-studio";
 import type { ExamPayload, ExamQuestionType } from "@/lib/types/notebook";
+import type { LLMProvider } from "@/lib/types/flashcard";
 import { trueFalseChoices } from "@/lib/exam/true-false";
 
 export type StudioUsage = {
@@ -65,6 +68,9 @@ export async function generateExam(input: {
   purpose?: StudioPurpose;
   types: ExamQuestionType[];
   durationMinutes?: number;
+  provider?: LLMProvider;
+  examSystem?: ExamSystem;
+  examSubject?: ExamSubjectBrain;
 }): Promise<{ exam: ExamPayload; usage: StudioUsage }> {
   const types = input.types.length
     ? input.types
@@ -79,14 +85,14 @@ export async function generateExam(input: {
     (purpose === "exam" ? "advanced" : depth === "detailed" ? "intermediate" : "beginner");
   const mix = typeCounts(sequence);
   const tf = trueFalseChoices(input.language);
-  const result = await generateObjectWithRetry(() =>
-    generateObject({
-      model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
-      schema: examSchema,
-      abortSignal: AbortSignal.timeout(50_000),
-      prompt: `Write a ${difficulty} exam paper from this source.
+  const examPrompt = `Write a ${difficulty} exam paper from this source.
 ${studioLanguageRules(input.language ?? "en")}
 ${studioIntentRules(depth, purpose, "exam")}
+${examProfileRules({
+  system: input.examSystem ?? "dse",
+  subject: input.examSubject,
+  kind: "exam",
+})}
 This paper must be finishable in ${duration} minutes. Emit EXACTLY ${count} questions, ids q1 to q${count} with no gaps or repeats.
 Question mix (longer types take more time): ${mix}.
 Type rules — choices and pairs are required JSON fields for those types:
@@ -101,9 +107,21 @@ Keep each item short enough that a student can finish all ${count} questions in 
 Questions must be answerable from the source. No invented facts.
 
 Source:
-${studioSourceSlice(input.source, depth)}`,
-    }),
-  );
+${studioSourceSlice(input.source, depth)}`;
+  const result =
+    input.provider === "ollama"
+      ? {
+          object: examSchema.parse(await ollamaGenerateJson(examPrompt)),
+          usage: { inputTokens: 0, outputTokens: 0 },
+        }
+      : await generateObjectWithRetry(() =>
+          generateObject({
+            model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
+            schema: examSchema,
+            abortSignal: AbortSignal.timeout(50_000),
+            prompt: examPrompt,
+          }),
+        );
   let usage = readUsage(result);
   let exam = parseExamPayload({
     ...result.object,
@@ -112,21 +130,33 @@ ${studioSourceSlice(input.source, depth)}`,
 
   if (exam.questions.length < count) {
     const missing = count - exam.questions.length;
-    try {
-      const fill = await generateObjectWithRetry(() =>
-        generateObject({
-          model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
-          schema: examFillSchema,
-          abortSignal: AbortSignal.timeout(20_000),
-          prompt: `Add EXACTLY ${missing} more ${difficulty} exam questions from this source.
+    const fillPrompt = `Add EXACTLY ${missing} more ${difficulty} exam questions from this source.
 ${studioLanguageRules(input.language ?? "en")}
 ${studioIntentRules(depth, purpose, "exam")}
+${examProfileRules({
+  system: input.examSystem ?? "dse",
+  subject: input.examSubject,
+  kind: "exam",
+})}
 Continue ids after q${exam.questions.length}. Mix: ${mix}.
 Same type rules as a ${duration}-minute paper (choices/pairs required for mcq/tf/matching/cloze_choice). tf choices ${JSON.stringify(tf)}.
 Source:
-${studioSourceSlice(input.source, depth)}`,
-        }),
-      );
+${studioSourceSlice(input.source, depth)}`;
+    try {
+      const fill =
+        input.provider === "ollama"
+          ? {
+              object: examFillSchema.parse(await ollamaGenerateJson(fillPrompt)),
+              usage: { inputTokens: 0, outputTokens: 0 },
+            }
+          : await generateObjectWithRetry(() =>
+              generateObject({
+                model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
+                schema: examFillSchema,
+                abortSignal: AbortSignal.timeout(20_000),
+                prompt: fillPrompt,
+              }),
+            );
       usage = addUsage(usage, readUsage(fill));
       exam = parseExamPayload({
         title: exam.title,

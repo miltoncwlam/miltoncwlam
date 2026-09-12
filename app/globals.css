@@ -3350,6 +3350,44 @@ html[data-theme="dark"] .play-lantern-text {
 .play-mosaic-paddle.is-hot-2 { left: 24%; }
 .play-mosaic-paddle.is-hot-3 { left: 74%; }
 
+.exam-lane-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.exam-lane-chip {
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.exam-lane-chip[aria-pressed="true"] {
+  border-color: var(--accent, #4f46e5);
+  background: #eef2ff;
+  color: #312e81;
+}
+
+.notebook-source {
+  border-radius: 1.5rem;
+  border: 1px solid var(--border);
+  background: var(--paper);
+  padding: 1.4rem;
+}
+
+.notebook-source-body {
+  margin-top: 0.75rem;
+  max-height: min(70vh, 36rem);
+  overflow: auto;
+  white-space: pre-wrap;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
 .studio-panel {
   border-radius: 1.5rem;
   border: 1px solid var(--border);
@@ -3367,6 +3405,39 @@ html[data-theme="dark"] .play-lantern-text {
 
 .studio-tile:disabled {
   opacity: 0.55;
+}
+
+.notebook-chat {
+  margin-top: 2.5rem;
+  border-radius: 1.5rem;
+  border: 1px solid var(--border);
+  background: var(--paper);
+  padding: 1.4rem;
+}
+
+.notebook-chat-log {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.65rem;
+  max-height: 18rem;
+  overflow: auto;
+}
+
+.notebook-chat-user,
+.notebook-chat-assistant {
+  margin: 0;
+  border-radius: 0.9rem;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.notebook-chat-user {
+  background: var(--secondary);
+}
+
+.notebook-chat-assistant {
+  background: var(--surface-soft);
 }
 
 .mindmap-tree {

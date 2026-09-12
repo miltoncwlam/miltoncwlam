@@ -3,6 +3,7 @@ import { UserProfile } from "@clerk/nextjs";
 import { getTranslations } from "next-intl/server";
 
 import { GiftCodeForm } from "@/components/gift-code-form";
+import { LOCAL_DEV_USER_ID } from "@/lib/auth-local";
 import { requireSession } from "@/lib/auth-server";
 import { getOrRefreshCredits } from "@/lib/data/credits";
 import { LEGAL } from "@/lib/legal";
@@ -81,9 +82,15 @@ export default async function AccountPage({
           </p>
         </div>
       )}
-      <div className="mt-8 flex justify-center">
-        <UserProfile routing="hash" />
-      </div>
+      {session.user.id === LOCAL_DEV_USER_ID ? (
+        <p className="mt-8 text-sm text-slate-600">
+          Localhost learner — Clerk profile is off here.
+        </p>
+      ) : (
+        <div className="mt-8 flex justify-center">
+          <UserProfile routing="hash" />
+        </div>
+      )}
     </main>
   );
 }

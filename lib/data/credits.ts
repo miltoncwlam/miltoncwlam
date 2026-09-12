@@ -16,6 +16,7 @@ import {
 } from "@/lib/credits/config";
 import { giftCodeMatches } from "@/lib/credits/gift-code";
 import { PLAY_STAKE_LIMIT_HOUR } from "@/lib/credits/play";
+import { isLocalDevUnlimitedUser } from "@/lib/auth-local";
 import { isPaidOpenRouterModel } from "@/lib/llm/models";
 
 export type CreditPool = "text" | "image";
@@ -43,7 +44,7 @@ type CreditRow = {
 };
 
 function mapRow(row: CreditRow): UserCreditBalance {
-  return {
+  return applyLocalUnlimited({
     userId: row.user_id,
     balance: row.balance,
     imageBalance: row.image_balance,
@@ -52,18 +53,30 @@ function mapRow(row: CreditRow): UserCreditBalance {
     periodGrant: row.period_grant,
     imagePeriodGrant: row.image_period_grant,
     isUnlimited: Boolean(row.is_unlimited),
-  };
+  });
+}
+
+function applyLocalUnlimited(credits: UserCreditBalance): UserCreditBalance {
+  if (!isLocalDevUnlimitedUser(credits.userId)) return credits;
+  return { ...credits, isUnlimited: true };
 }
 
 const CREDIT_SELECT = `user_id, balance, image_balance, period_start, period_end, period_grant, image_period_grant, is_unlimited`;
 
-const GENERATE_REASONS = [
+/** Guest trial counts ingest + studio tiles, not chat. */
+export const GUEST_GENERATE_REASONS = [
   "generate_deck",
   "generate_quiz",
   "generate_ingest",
   "generate_mindmap",
   "generate_notes",
   "generate_exam",
+  "generate_cards",
+] as const;
+
+const RATE_LIMIT_GENERATE_REASONS = [
+  ...GUEST_GENERATE_REASONS,
+  "generate_chat",
 ] as const;
 
 async function ensureRow(userId: string): Promise<UserCreditBalance> {
@@ -162,7 +175,7 @@ export async function countGuestGeneratesUsed(userId: string): Promise<number> {
        - (select count(*) from credit_ledger
           where user_id = $1 and pool = 'text' and reason = 'generate_refund')
      )::text as used`,
-    [userId, [...GENERATE_REASONS]],
+    [userId, [...GUEST_GENERATE_REASONS]],
   );
   return Number(result.rows[0]?.used ?? 0);
 }
@@ -214,7 +227,8 @@ export async function assertAndSpendCredits(input: {
     );
     let row = locked.rows[0];
 
-    if (row.is_unlimited || input.skipBalance) {
+    const localUnlimited = isLocalDevUnlimitedUser(input.userId);
+    if (row.is_unlimited || input.skipBalance || localUnlimited) {
       if (textAmount > 0) {
         await insertLedger(client, {
           userId: input.userId,
@@ -223,7 +237,7 @@ export async function assertAndSpendCredits(input: {
           reason: input.reason,
           meta: {
             ...(input.meta ?? {}),
-            unlimited: Boolean(row.is_unlimited),
+            unlimited: Boolean(row.is_unlimited) || localUnlimited,
             guest: Boolean(input.skipBalance),
           },
         });
@@ -236,7 +250,7 @@ export async function assertAndSpendCredits(input: {
           reason: input.reason,
           meta: {
             ...(input.meta ?? {}),
-            unlimited: Boolean(row.is_unlimited),
+            unlimited: Boolean(row.is_unlimited) || localUnlimited,
             guest: Boolean(input.skipBalance),
           },
         });
@@ -244,7 +258,10 @@ export async function assertAndSpendCredits(input: {
       await client.query("commit");
       return {
         ...mapRow(row),
-        isUnlimited: Boolean(row.is_unlimited) || Boolean(input.skipBalance),
+        isUnlimited:
+          Boolean(row.is_unlimited) ||
+          Boolean(input.skipBalance) ||
+          localUnlimited,
       };
     }
 
@@ -432,16 +449,9 @@ export async function assertGenerateRateLimit(
      from credit_ledger
      where user_id = $1
        and pool = 'text'
-       and reason in (
-         'generate_deck',
-         'generate_quiz',
-         'generate_ingest',
-         'generate_mindmap',
-         'generate_notes',
-         'generate_exam'
-       )
+       and reason = any($3::text[])
        and created_at > now() - ($2::text || ' milliseconds')::interval`,
-    [userId, String(GENERATE_RATE_LIMIT_WINDOW_MS)],
+    [userId, String(GENERATE_RATE_LIMIT_WINDOW_MS), [...RATE_LIMIT_GENERATE_REASONS]],
   );
   const hourCount = Number(hourResult.rows[0]?.count ?? 0);
   if (hourCount >= hourlyMax) {
@@ -456,16 +466,9 @@ export async function assertGenerateRateLimit(
        from credit_ledger
        where user_id = $1
          and pool = 'text'
-         and reason in (
-         'generate_deck',
-         'generate_quiz',
-         'generate_ingest',
-         'generate_mindmap',
-         'generate_notes',
-         'generate_exam'
-       )
+         and reason = any($2::text[])
          and created_at > now() - interval '1 day'`,
-      [userId],
+      [userId, [...RATE_LIMIT_GENERATE_REASONS]],
     );
     const dayCount = Number(dayResult.rows[0]?.count ?? 0);
     if (dayCount >= FREE_GENERATE_LIMIT_DAY) {

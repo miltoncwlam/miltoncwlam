@@ -6,12 +6,17 @@ import {
   getLLMConfig,
   resolveOpenRouterModel,
 } from "@/lib/llm/config";
-import { env } from "@/lib/env";
-import { promptLanguageName, studioIntentRules, studioLanguageRules } from "@/lib/i18n/locales";
-import type { StudioDepth, StudioPurpose } from "@/lib/i18n/locales";
-import { mergeGeneratedDecks } from "@/lib/llm/merge-decks";
+import { examProfileRules, type ExamSubjectBrain, type ExamSystem } from "@/lib/llm/exam-profiles";
 import {
-  extractJsonObject,
+  promptLanguageName,
+  studioIntentRules,
+  studioLanguageRules,
+  type StudioDepth,
+  type StudioPurpose,
+} from "@/lib/i18n/locales";
+import { mergeGeneratedDecks } from "@/lib/llm/merge-decks";
+import { ollamaGenerateJson, ollamaModelId } from "@/lib/llm/ollama";
+import {
   flashcardSchemaForCount,
   mcqStyleRules,
   needsChipRewrite,
@@ -50,6 +55,8 @@ export type GenerationOptions = {
   includeImagePrompts?: boolean;
   depth?: StudioDepth;
   purpose?: StudioPurpose;
+  examSystem?: ExamSystem;
+  examSubject?: ExamSubjectBrain;
 };
 
 function getModel(modelOverride?: string) {
@@ -126,6 +133,11 @@ function generationInstructions(options: GenerationOptions) {
   return `Create exactly ${cardCount} high-quality study flashcards (not fewer, not more).
 Difficulty: ${options.difficulty ?? (options.purpose === "exam" ? "advanced" : "beginner")}.
 ${options.depth || options.purpose ? studioIntentRules(options.depth ?? "basic", options.purpose ?? "starter", "cards") : ""}
+${examProfileRules({
+  system: options.examSystem ?? "dse",
+  subject: options.examSubject,
+  kind: "cards",
+})}
 Language: write every card front and back in ${language}.
 ${studioLanguageRules(options.language ?? "en")}
 Return a short deck title in ${language}.
@@ -152,6 +164,11 @@ function topicGenerationInstructions(options: GenerationOptions) {
   return `Create exactly ${cardCount} high-quality educational flashcards from the topic alone (no study material provided).
 Difficulty: ${options.difficulty ?? (options.purpose === "exam" ? "advanced" : "beginner")}.
 ${options.depth || options.purpose ? studioIntentRules(options.depth ?? "basic", options.purpose ?? "starter", "cards") : ""}
+${examProfileRules({
+  system: options.examSystem ?? "dse",
+  subject: options.examSubject,
+  kind: "cards",
+})}
 Language: write every card front and back in ${language}.
 ${studioLanguageRules(options.language ?? "en")}
 Return a short deck title in ${language}.
@@ -200,25 +217,7 @@ Return JSON only: {"cards":[{"front":"...","back":"...","hint":"...","type":"...
 }
 
 async function ollamaChat(userContent: string): Promise<unknown> {
-  const base = env.OLLAMA_BASE_URL?.replace(/\/$/, "");
-  if (!base) throw new Error("Ollama is not configured");
-  const model = env.OLLAMA_MODEL?.trim() || "gemma3:4b";
-  const response = await fetch(`${base}/api/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model,
-      stream: false,
-      format: "json",
-      messages: [{ role: "user", content: `${userContent}\nReply with JSON only.` }],
-    }),
-    signal: AbortSignal.timeout(120_000),
-  });
-  if (!response.ok) {
-    throw new Error(`Ollama ${response.status}`);
-  }
-  const payload = (await response.json()) as { message?: { content?: string } };
-  return extractJsonObject(payload.message?.content ?? "");
+  return ollamaGenerateJson(userContent);
 }
 
 async function refillWithOllama(
@@ -279,7 +278,6 @@ async function generateWithOllama(
   prompt: { kind: "text"; content: string } | { kind: "topic"; topic: string },
   options: GenerationOptions,
 ): Promise<GeneratedDeck | null> {
-  if (!env.OLLAMA_BASE_URL) return null;
   const cardCount = requestedCount(options);
   const instructions =
     prompt.kind === "topic"
@@ -359,16 +357,14 @@ async function generateWithPreferred(
     | { kind: "images"; images: ImageInput[] },
   options: GenerationOptions,
 ): Promise<GeneratedDeck> {
-  if (prompt.kind !== "images" && env.OLLAMA_BASE_URL) {
-    try {
-      const local = await generateWithOllama(prompt, options);
-      if (local?.cards.length) return local;
-    } catch (error) {
-      if (error instanceof UnrelatedSourceError) throw error;
-      // Fall through to OpenRouter.
+  if (prompt.kind !== "images" && options.provider === "ollama") {
+    const local = await generateWithOllama(prompt, options);
+    if (!local?.cards.length) {
+      throw new Error(`Ollama (${ollamaModelId(options.model)}) returned no cards.`);
     }
+    return local;
   }
-  assertLLMReady(options.provider);
+  assertLLMReady(options.provider === "ollama" ? "ollama" : "openrouter");
   return generateWithCloud(prompt, options);
 }
 

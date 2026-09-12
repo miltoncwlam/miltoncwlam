@@ -38,8 +38,10 @@ import {
   getLLMConfig,
   resolveOpenRouterModel,
 } from "@/lib/llm/config";
+import { inferExamLane } from "@/lib/llm/exam-profiles";
 import { TOPIC_SOURCE_MIME } from "@/lib/llm/generate-flashcards";
 import { DEFAULT_OCR_MODEL } from "@/lib/llm/models";
+import { ollamaModelId } from "@/lib/llm/ollama";
 import { listOpenRouterFreeModels } from "@/lib/llm/openrouter-models";
 import {
   cleanupDiscardedGenerations,
@@ -56,7 +58,7 @@ const optionsSchema = z.object({
       typeof value === "string"
         ? (normalizeLLMProvider(value) ?? value)
         : value,
-    z.enum(["openrouter"]),
+    z.enum(["openrouter", "ollama"]),
   ),
   model: z.string().trim().min(1).max(200).optional(),
   language: z.enum(LOCALE_CODES).default("en"),
@@ -95,7 +97,11 @@ const requestSchema = z.discriminatedUnion("sourceType", [
   uploadRequestSchema,
 ]);
 
-async function resolveRequestModel(requested?: string): Promise<string> {
+async function resolveRequestModel(
+  provider: LLMProvider,
+  requested?: string,
+): Promise<string> {
+  if (provider === "ollama") return ollamaModelId(requested);
   const model = resolveOpenRouterModel(requested);
   if (isPaidOpenRouterModel(model)) return model;
   const free = await listOpenRouterFreeModels();
@@ -202,7 +208,7 @@ export async function POST(request: Request) {
     const provider = assertLLMReady(
       (normalizeLLMProvider(input.provider) ?? "openrouter") as LLMProvider,
     );
-    const modelId = await resolveRequestModel(input.model);
+    const modelId = await resolveRequestModel(provider, input.model);
     model = modelId;
     if (!model) throw new Error("Missing model");
     const credits = await getOrRefreshCredits(userId);
@@ -210,7 +216,7 @@ export async function POST(request: Request) {
     await assertGenerateRateLimit(userId, {
       provider,
       model,
-      isUnlimited: credits.isUnlimited,
+      isUnlimited: credits.isUnlimited || provider === "ollama",
     });
 
     const sourceMode =
@@ -222,6 +228,11 @@ export async function POST(request: Request) {
             ? "file"
             : "text";
     const extracted = await readNotebookSource(input, userId);
+    if (provider === "ollama" && extracted.ocr) {
+      throw new Error(
+        "Scanned PDFs need OpenRouter OCR. Paste the text, use a selectable PDF, or pick an OpenRouter model.",
+      );
+    }
     storagePath = extracted.storagePath;
     const sourceContent = extracted.sourceContent;
     const sourceFilename = extracted.sourceFilename;
@@ -251,7 +262,7 @@ export async function POST(request: Request) {
       textAmount,
       imageAmount: 0,
       reason: "generate_ingest",
-      skipBalance: Boolean(session.user.isGuest),
+      skipBalance: Boolean(session.user.isGuest) || provider === "ollama",
       meta: {
         provider,
         model,
@@ -290,6 +301,12 @@ export async function POST(request: Request) {
         : input.sourceType === "file"
           ? input.file.name.replace(/\.[^.]+$/, "").slice(0, 100)
           : "Untitled deck");
+    const examLane = inferExamLane({
+      filename: sourceFilename,
+      title: fallbackTitle,
+      source: sourceContent,
+      language: input.language,
+    });
 
     deckId = await createPendingDeck({
       userId,
@@ -302,6 +319,7 @@ export async function POST(request: Request) {
       sourceSizeBytes,
       provider,
       model,
+      examSystem: examLane.system,
       sourceRetention:
         input.sourceRetention === "none" ? "keep" : input.sourceRetention,
       ingestProgress: {
@@ -312,6 +330,7 @@ export async function POST(request: Request) {
         ocrBusy: false,
         spentTextAmount,
         preferredTitle: input.title,
+        isGuest: Boolean(session.user.isGuest),
       },
     });
 

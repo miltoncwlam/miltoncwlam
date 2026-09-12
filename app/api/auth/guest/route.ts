@@ -1,6 +1,11 @@
 import { clerkClient } from "@clerk/nextjs/server";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
+import {
+  LOCAL_AUTH_COOKIE,
+  createLocalAuthCookie,
+  isLocalAppHost,
+} from "@/lib/auth-local";
 import { isGuestEmail } from "@/lib/credits/config";
 
 const GUEST_COOKIE = "hk_guest_uid";
@@ -20,8 +25,34 @@ function guestPassword() {
   return `Guest-${crypto.randomUUID()}Aa1!`;
 }
 
+export async function DELETE() {
+  const jar = await cookies();
+  jar.delete(LOCAL_AUTH_COOKIE);
+  return Response.json({ ok: true });
+}
+
 export async function POST() {
   try {
+    const host = (await headers()).get("host");
+    if (isLocalAppHost(host)) {
+      const secret = process.env.CLERK_SECRET_KEY;
+      if (!secret) {
+        return Response.json(
+          { error: "Local auth is not configured" },
+          { status: 500 },
+        );
+      }
+      const jar = await cookies();
+      jar.set(LOCAL_AUTH_COOKIE, await createLocalAuthCookie(secret), {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false,
+        path: "/",
+        maxAge: GUEST_COOKIE_MAX_AGE,
+      });
+      return Response.json({ local: true, redirect: "/decks/new" });
+    }
+
     const client = await clerkClient();
     const jar = await cookies();
     const existingId = jar.get(GUEST_COOKIE)?.value;

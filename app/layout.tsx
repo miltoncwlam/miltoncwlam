@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter, Montserrat } from "next/font/google";
+import { headers } from "next/headers";
 import Script from "next/script";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
@@ -10,6 +11,7 @@ import { GenerationJobsProvider } from "@/components/generation-jobs";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToastProvider } from "@/components/toast-provider";
+import { isLocalAppHost } from "@/lib/auth-local";
 import { getSession } from "@/lib/auth-server";
 import { env } from "@/lib/env";
 import "./globals.css";
@@ -43,6 +45,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const session = await getSession();
   const locale = await getLocale();
   const messages = await getMessages();
+  const localDev = isLocalAppHost((await headers()).get("host"));
 
   return (
     <html
@@ -56,11 +59,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           {`(function(){try{localStorage.setItem("study-a-theme","light");}catch(e){}document.documentElement.dataset.theme="light";})();`}
         </Script>
         <ThemeProvider>
-          <AuthProviders appUrl={env.NEXT_PUBLIC_APP_URL}>
+          <AuthProviders appUrl={env.NEXT_PUBLIC_APP_URL} skipClerk={localDev}>
             <NextIntlClientProvider locale={locale} messages={messages}>
               <ToastProvider>
                 <GenerationJobsProvider>
-                <AppHeader session={session} />
+                <AppHeader localDev={localDev} session={session} />
                 <div className="flex min-h-0 flex-1 flex-col">{children}</div>
                 <SiteFooter />
                 </GenerationJobsProvider>

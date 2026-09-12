@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 3.9.3** — one number only (`package.json`).
+**Version 4.0.0** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,32 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 4.0.0 — 2026-09-12
+
+**Major.** Drop a source. Stay in the notebook. Chat or tap — it makes things you can sit, in HKDSE, IGCSE, or A-level shape.
+
+### Added
+- Create opens the notebook (`/decks/[id]`), not the library.
+- Auto study notes after ingest finishes. Guest trial is ingest plus this one notes run.
+- Notebook chat, pinned to DeepSeek V4 Flash 0731. Replies persist. DSE + Chinese uses 書面語. You can say “make cards”.
+- Exam lane chips: HKDSE (default), IGCSE, A-level. They shape notes, maps, papers, and cards.
+- Long sources generate notes and maps in sections, then merge.
+
+### Changed
+- Create is drop-first. Model, language, and retention sit under Advanced.
+- Studio tiles can run in parallel.
+- Class links stay on `/decks/[id]/class`, not the notebook aside.
+- Landing copy is stay-in-the-notebook, with an exam-paper hero.
+
+### Fixed
+- Failed notes no longer crash the notebook page.
+- Notes that skip headings still become a study sheet from leftover sentences.
+
+### Removed
+- Leftover `/api/decks/generate` routes and regenerate-deck actions that wiped source.
 
 ---
 

@@ -90,3 +90,12 @@ export type ExamAttempt = {
   maxScore: number;
   createdAt: Date;
 };
+
+export type NotebookChatMessage = {
+  id: string;
+  deckId: string;
+  userId: string;
+  role: "user" | "assistant";
+  content: string;
+  createdAt: Date;
+};

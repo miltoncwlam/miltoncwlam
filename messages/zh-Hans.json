@@ -28,14 +28,14 @@
     "agree": "继续即表示你同意我们的 <terms>服务条款</terms> 与 <privacy>隐私权政策</privacy>。",
     "authNote": "Try a short guest trial with no energy meter, or sign in with email.",
     "tryGuest": "Try as guest",
-    "featuresTitle": "Built to beat a generic notebook in class",
-    "featuresIntro": "Leave the loading screen. Come back to a notebook, a sit-down exam, due-today cards, and a teacher scoreboard.",
-    "feature1Title": "Walk away",
-    "feature1Copy": "Upload a scan or URL and go back to Library. We keep reading pages in the background.",
-    "feature2Title": "Exam homework",
-    "feature2Copy": "Timed papers with 正確/錯誤, AI marking, print, and scores on the class board.",
+    "featuresTitle": "A notebook you can actually revise in",
+    "featuresIntro": "Drop a source. Stay on the page. Notes appear, then you sit a paper or drill cards.",
+    "feature1Title": "Stay in the notebook",
+    "feature1Copy": "Create opens the notebook, not the library. Reading continues in the background.",
+    "feature2Title": "Sit the paper",
+    "feature2Copy": "Timed papers with 正確/錯誤, AI marking, and print. Pick HKDSE, IGCSE, or A-level.",
     "feature3Title": "Drill, don’t only summarise",
-    "feature3Copy": "SM-2 due-today cards and two classroom games, plus HK community packs."
+    "feature3Copy": "SM-2 due-today cards, mind maps, and a cheap chat that stays on this source."
   },
   "auth": {
     "signInEyebrow": "歡迎回來",
@@ -81,6 +81,10 @@
     "beginner": "初級",
     "intermediate": "中級",
     "advanced": "進階",
+    "advancedHint": "模型、语言，以及来源保留多久。",
+    "dropHint": "把 PDF、TXT 或 Markdown 拖到这里，或在下方粘贴笔记。",
+    "ollama": "Ollama（本机）",
+    "ollamaFree": "本机 Ollama — 不扣能量。",
     "language": "卡片語言",
     "generate": "生成閃卡",
     "noProviders": "請先設定 OPENROUTER_API_KEY。檔案上傳另需 SUPABASE_SECRET_KEY。仍可用「建立範例牌組」試用。",
@@ -601,6 +605,19 @@
       "cloze_free": "填空（自填）"
     },
     "guestCreateAccount": "Create a free account"
+  },
+  "chat": {
+    "eyebrow": "Ask this notebook",
+    "title": "Chat",
+    "placeholder": "Ask a question or say make cards…",
+    "send": "Send",
+    "sending": "Thinking…",
+    "empty": "Ask about this source. Short answers. You can say “make cards” or “make an exam”.",
+    "makeCards": "Generate flashcards",
+    "makeExam": "Generate exam paper",
+    "makeNotes": "Generate study notes",
+    "makeMindmap": "Generate mind map",
+    "unavailable": "Chat unlocks when the source is ready."
   },
   "exam": {
     "eyebrow": "试卷",

@@ -41,11 +41,15 @@ function clerkAppearance(theme: "light" | "dark"): ClerkAppearance {
 
 export function AuthProviders({
   appUrl,
+  skipClerk = false,
   children,
 }: {
   appUrl: string;
+  skipClerk?: boolean;
   children: ReactNode;
 }) {
+  if (skipClerk) return children;
+
   const afterAuth = `${appUrl.replace(/\/$/, "")}/decks`;
   const proxyUrl = clerkFrontendProxyUrl(appUrl);
   return (

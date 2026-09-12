@@ -101,8 +101,66 @@ Never use English titles such as Unit 1, Prehistory, Knowledge, Skills, Values, 
 export type StudioDepth = "basic" | "detailed";
 export type StudioPurpose = "starter" | "exam";
 
+export const STUDIO_SECTION_CAP = 3;
+
+export function studioChunkChars(depth: StudioDepth = "basic") {
+  return depth === "detailed" ? 18_000 : 12_000;
+}
+
 export function studioSourceSlice(source: string, depth: StudioDepth = "basic") {
-  return source.slice(0, depth === "detailed" ? 18_000 : 12_000);
+  return source.slice(0, studioChunkChars(depth));
+}
+
+function splitSourceBlocks(text: string): string[] {
+  const heading = text.split(/(?=\n#{1,3}\s)|(?=\n(?:Page|頁)\s*\d+)/i);
+  if (heading.length >= 3) return heading.map((block) => block.trim()).filter(Boolean);
+  const numbered = text.split(/(?=\n\d+\.\s)/);
+  if (numbered.length >= 3) return numbered.map((block) => block.trim()).filter(Boolean);
+  return text.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);
+}
+
+/** Long sources become up to 3 section slices so notes/map are not one 150s 18k call. */
+export function studioSourceSections(
+  source: string,
+  depth: StudioDepth = "basic",
+): string[] {
+  const chunk = studioChunkChars(depth);
+  const text = source.trim();
+  if (!text) return [""];
+  if (text.length <= chunk) return [text];
+
+  const sections: string[] = [];
+  const push = (value: string) => {
+    const next = value.trim().slice(0, chunk);
+    if (next) sections.push(next);
+  };
+
+  let current = "";
+  for (const block of splitSourceBlocks(text)) {
+    if (sections.length >= STUDIO_SECTION_CAP) break;
+    if (block.length > chunk) {
+      if (current) {
+        push(current);
+        current = "";
+      }
+      for (let i = 0; i < block.length && sections.length < STUDIO_SECTION_CAP; i += chunk) {
+        push(block.slice(i, i + chunk));
+      }
+      continue;
+    }
+    if (!current) {
+      current = block;
+      continue;
+    }
+    if (current.length + 2 + block.length <= chunk) {
+      current = `${current}\n\n${block}`;
+      continue;
+    }
+    push(current);
+    current = block;
+  }
+  if (current && sections.length < STUDIO_SECTION_CAP) push(current);
+  return sections.length ? sections : [text.slice(0, chunk)];
 }
 
 export function studioCardCount(depth: StudioDepth = "basic") {

@@ -10,7 +10,13 @@ import { APP_VERSION } from "@/lib/legal";
 import type { AppSession } from "@/lib/auth-server";
 import { isAdminUser } from "@/lib/auth-server";
 
-export async function AppHeader({ session }: { session: AppSession | null }) {
+export async function AppHeader({
+  localDev = false,
+  session,
+}: {
+  localDev?: boolean;
+  session: AppSession | null;
+}) {
   const t = await getTranslations("nav");
   const signedIn = Boolean(session);
   const isAdmin = session ? isAdminUser(session.user) : false;
@@ -56,7 +62,7 @@ export async function AppHeader({ session }: { session: AppSession | null }) {
               <Button asChild>
                 <Link href="/decks/new">{t("createDeck")}</Link>
               </Button>
-              <SignOutButton />
+              <SignOutButton localDev={localDev} />
             </>
           ) : (
             <>

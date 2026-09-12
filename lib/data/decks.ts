@@ -21,6 +21,7 @@ import type {
   SourceRetention,
   SourceType,
 } from "@/lib/types/flashcard";
+import { parseExamSystem, type ExamSystem } from "@/lib/llm/exam-profiles";
 import { DEFAULT_OPENROUTER_MODEL } from "@/lib/llm/models";
 import { normalizeLLMProvider } from "@/lib/types/flashcard";
 
@@ -39,6 +40,7 @@ type DeckRow = {
   generation_model: string | null;
   generation_error: string | null;
   ingest_progress: unknown;
+  exam_system?: string | null;
   class_link_id: string | null;
   is_shared: boolean;
   visibility: DeckVisibility;
@@ -98,6 +100,7 @@ export function mapDeck(row: DeckRow): Deck {
         : row.generation_model,
     generationError: row.generation_error,
     ingestProgress: parseIngestProgress(row.ingest_progress),
+    examSystem: parseExamSystem(row.exam_system),
     classLinkId: row.class_link_id ?? null,
     isShared: row.is_shared,
     visibility: row.visibility ?? "private",
@@ -243,6 +246,20 @@ export async function renameDeck(
   return (result.rowCount ?? 0) > 0;
 }
 
+export async function updateExamSystem(
+  deckId: string,
+  userId: string,
+  examSystem: ExamSystem,
+): Promise<boolean> {
+  const result = await pool.query(
+    `update decks
+     set exam_system = $3, updated_at = now()
+     where id = $1 and user_id = $2`,
+    [deckId, userId, parseExamSystem(examSystem)],
+  );
+  return (result.rowCount ?? 0) > 0;
+}
+
 export async function setDeckArchived(
   deckId: string,
   userId: string,
@@ -296,11 +313,11 @@ export async function duplicateDeck(
          generation_status, generation_provider, generation_model,
          generation_error, share_token, is_shared, visibility,
          subject_tag, moderation_status, moderation_reasons, listed_at,
-         is_seed, folder_tag, archived_at
+         is_seed, folder_tag, archived_at, exam_system
        ) values (
          $1, $2, $3, $4, null, $5, $6, $7,
          $8, $9, $10, null, null, false, 'private',
-         $11, 'none', null, null, false, $12, null
+         $11, 'none', null, null, false, $12, null, $13
        )
        returning id`,
       [
@@ -316,6 +333,7 @@ export async function duplicateDeck(
         deck.generation_model,
         deck.subject_tag,
         deck.folder_tag,
+        parseExamSystem(deck.exam_system),
       ],
     );
     const newId = created.rows[0].id;
@@ -362,6 +380,7 @@ export async function createPendingDeck(input: {
   model: string;
   sourceRetention?: SourceRetention;
   ingestProgress?: IngestProgress | null;
+  examSystem?: ExamSystem;
 }): Promise<string> {
   const retention = input.sourceRetention ?? "24h";
   const expiresAt =
@@ -374,10 +393,10 @@ export async function createPendingDeck(input: {
       source_filename, source_mime_type, source_size_bytes,
       generation_status, generation_provider, generation_model,
       share_token, is_shared, visibility, source_retention, source_expires_at,
-      ingest_progress
+      ingest_progress, exam_system
     ) values (
       $1, $2, $3, $4, $5, $6, $7, $8, 'processing', $9, $10,
-      null, false, 'private', $11, $12, $13::jsonb
+      null, false, 'private', $11, $12, $13::jsonb, $14
     )
     returning id`,
     [
@@ -394,6 +413,7 @@ export async function createPendingDeck(input: {
       retention,
       expiresAt,
       input.ingestProgress ? JSON.stringify(input.ingestProgress) : null,
+      parseExamSystem(input.examSystem),
     ],
   );
 

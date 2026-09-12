@@ -9,9 +9,10 @@ import {
 } from "@/lib/credits/config";
 import { creditsFromImageUsd, creditsFromTokens } from "@/lib/credits/token-cost";
 import { resolveBillingRates } from "@/lib/llm/models";
+import type { LLMProvider } from "@/lib/types/flashcard";
 
 export type EstimateGenerationInput = {
-  provider: "openrouter";
+  provider: LLMProvider;
   modelId: string;
   sourceMode: SourceMode;
   sourceSize?: SourceSizeHints;
@@ -109,13 +110,23 @@ export function estimateArtifactInputTokens(
 }
 
 export function estimateArtifactCredits(input: {
-  provider: "openrouter";
+  provider: LLMProvider;
   modelId: string;
   sourceMode: SourceMode;
   sourceSize?: SourceSizeHints;
   kind: ArtifactEstimateKind;
   questionCount?: number;
 }): GenerationEstimate {
+  if (input.provider === "ollama") {
+    return {
+      credits: 0,
+      textCredits: 0,
+      imageCredits: 0,
+      inputTokens: 0,
+      outputTokens: 0,
+      breakdown: "~0 energy",
+    };
+  }
   const inputTokens = estimateArtifactInputTokens(
     input.kind,
     input.sourceMode,
@@ -141,7 +152,7 @@ export function estimateArtifactCredits(input: {
 }
 
 export function estimateOcrCredits(input: {
-  provider: "openrouter";
+  provider: LLMProvider;
   modelId: string;
   pageCount: number;
 }): GenerationEstimate {
@@ -166,6 +177,16 @@ export function estimateOcrCredits(input: {
 export function estimateGenerationCredits(
   input: EstimateGenerationInput,
 ): GenerationEstimate {
+  if (input.provider === "ollama") {
+    return {
+      credits: 0,
+      textCredits: 0,
+      imageCredits: 0,
+      inputTokens: 0,
+      outputTokens: 0,
+      breakdown: "~0 energy",
+    };
+  }
   const cardCount = Math.min(30, Math.max(3, input.cardCount));
   const inputTokens = estimateInputTokens(
     input.sourceMode,

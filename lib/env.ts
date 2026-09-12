@@ -19,13 +19,13 @@ const envSchema = z.object({
   SUPABASE_STORAGE_BUCKET: z.string().min(1).default("flashcard-media"),
   LLM_DEFAULT_PROVIDER: z.preprocess((value) => {
     const raw = String(value ?? "openrouter");
-    if (raw === "openai" || raw === "anthropic" || raw === "google" || raw === "ollama") {
+    if (raw === "openai" || raw === "anthropic" || raw === "google") {
       return "openrouter";
     }
     return raw;
-  }, z.literal("openrouter").default("openrouter")),
+  }, z.enum(["openrouter", "ollama"]).default("openrouter")),
   OPENROUTER_API_KEY: optionalSecret,
-  OPENROUTER_MODEL: z.string().min(1).default("deepseek/deepseek-v4-flash-0731"),
+  OPENROUTER_MODEL: z.string().min(1).default("openrouter/auto"),
   OPENROUTER_FREE_MODEL_BLOCKLIST: z.string().optional(),
   OLLAMA_BASE_URL: optionalSecret,
   OLLAMA_MODEL: z.string().min(1).optional(),

@@ -70,6 +70,15 @@ describe("source ingestion", () => {
     expect(diskText).toMatch(/photolysis/i);
   });
 
+  it("enqueues auto-notes after ingest completes", async () => {
+    const job = await readFile("lib/ingest/notebook-job.ts", "utf8");
+    expect(job).toMatch(/api\/decks\/\$\{deckId\}\/artifacts/);
+    expect(job).toMatch(/kind: "notes"/);
+    const proxy = await readFile("proxy.ts", "utf8");
+    expect(proxy).toMatch(/isIngestJobApiRequest/);
+    expect(proxy).toMatch(/artifacts/);
+  });
+
   it("treats the S1 Chinese History L1.1 scan as a photo PDF", async () => {
     const historyPdf = join(
       process.cwd(),

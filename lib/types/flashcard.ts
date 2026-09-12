@@ -7,7 +7,7 @@ export type SourceRetention = "none" | "24h" | "keep";
 
 export type CardRating = "easy" | "ok" | "hard";
 
-export type LLMProvider = "openrouter";
+export type LLMProvider = "openrouter" | "ollama";
 
 export const LEGACY_CLOUD_PROVIDERS = [
   "openai",
@@ -18,12 +18,21 @@ export const LEGACY_CLOUD_PROVIDERS = [
 export function normalizeLLMProvider(
   value: string | null | undefined,
 ): LLMProvider | null {
-  if (value === "openrouter" || value === "ollama") return "openrouter";
+  if (value === "openrouter" || value === "ollama") return value;
   if (value && LEGACY_CLOUD_PROVIDERS.includes(value as (typeof LEGACY_CLOUD_PROVIDERS)[number])) {
     return "openrouter";
   }
   return null;
 }
+
+export function isOllamaAvailable(input: {
+  baseUrl?: string;
+  vercel?: string;
+}) {
+  return Boolean(input.baseUrl?.trim()) && input.vercel !== "1";
+}
+
+import type { ExamSystem } from "@/lib/llm/exam-profiles";
 
 export type GenerationStatus = "pending" | "processing" | "complete" | "failed";
 
@@ -50,6 +59,7 @@ export type Deck = {
   generationModel: string | null;
   generationError: string | null;
   ingestProgress: IngestProgress | null;
+  examSystem: ExamSystem;
   classLinkId: string | null;
   isShared: boolean;
   visibility: DeckVisibility;

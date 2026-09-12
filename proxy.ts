@@ -2,6 +2,11 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
 import { rewriteClerkProxySetCookie } from "@/lib/app-url";
+import {
+  LOCAL_AUTH_COOKIE,
+  isLocalAppHost,
+  verifyLocalAuthCookie,
+} from "@/lib/auth-local";
 
 const isProtectedRoute = createRouteMatcher([
   "/decks(.*)",
@@ -13,6 +18,15 @@ const isProtectedRoute = createRouteMatcher([
   "/api/notebooks(.*)",
   "/api/uploads(.*)",
 ]);
+
+function isIngestJobApiRequest(request: NextRequest) {
+  if (!request.headers.get("x-ingest-job")) return false;
+  const path = request.nextUrl.pathname;
+  return (
+    /\/api\/notebooks\/[^/]+\/process$/.test(path) ||
+    /\/api\/decks\/[^/]+\/artifacts$/.test(path)
+  );
+}
 
 const CLERK_FAPI = "https://frontend-api.clerk.dev";
 
@@ -107,7 +121,27 @@ export default clerkMiddleware(
       return proxyClerkFrontendApi(request);
     }
 
+    const localSecret = process.env.CLERK_SECRET_KEY ?? "";
+    if (isLocalAppHost(request.headers.get("host"))) {
+      const localOk =
+        Boolean(localSecret) &&
+        (await verifyLocalAuthCookie(
+          request.cookies.get(LOCAL_AUTH_COOKIE)?.value,
+          localSecret,
+        ));
+      if (localOk || isIngestJobApiRequest(request)) return;
+      if (!isProtectedRoute(request)) return;
+      if (request.nextUrl.pathname.startsWith("/api/")) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      return NextResponse.redirect(new URL("/sign-in", request.url));
+    }
+
     if (!isProtectedRoute(request)) {
+      return;
+    }
+
+    if (isIngestJobApiRequest(request)) {
       return;
     }
 

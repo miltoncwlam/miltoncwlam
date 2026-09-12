@@ -6,7 +6,10 @@ export type StudyNoteBlock =
   | { type: "ol"; items: string[] };
 
 function normalizeHeading(value: string) {
-  return value.trim().replace(/\s+/g, " ").toLowerCase();
+  return String(value ?? "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
 }
 
 /** Models sometimes emit IDN punycode instead of Chinese labels. */
@@ -20,6 +23,78 @@ function cjkCount(text: string) {
 
 function looksPrimarilyCjk(text: string) {
   return cjkCount(text) >= 12;
+}
+
+const PROMPT_LEAK =
+  /注意[：:]|根据指令|根據指令|输出语言|輸出語言|unless the output language|Do not start markdown|Write ALL output|指令说|指令說|我们将使用|我們將使用|原文为英文|原文為英文|因为输出语言|因為輸出語言|没问题。现在写|沒問題。現在寫/i;
+
+export function notesContainPromptLeak(text: string) {
+  return PROMPT_LEAK.test(text);
+}
+
+export function notesAreStudyReady(markdown: string) {
+  if (notesContainPromptLeak(markdown)) return false;
+  const bullets = (markdown.match(/^\s*[-*]\s+\S/gm) || []).length;
+  const headings = (markdown.match(/^##\s+\S/gm) || []).length;
+  return bullets >= 4 && headings >= 2;
+}
+
+/** If the model skipped headings/bullets, rebuild a study sheet from leftover lines. */
+export function forceStudyNotesShape(
+  markdown: string,
+  headings: { terms: string; facts: string; remember: string },
+): string {
+  const cleaned = sanitizeStudyMarkdown(markdown);
+  if (notesAreStudyReady(cleaned)) return cleaned;
+
+  const skip = new Set(
+    [headings.terms, headings.facts, headings.remember].map((value) =>
+      value.toLowerCase(),
+    ),
+  );
+  function collectItems(text: string) {
+    return String(text ?? "")
+      .split(/\n+|(?<=[.!?。！？])\s+/)
+      .map((line) =>
+        line
+          .replace(/^#{1,6}\s+/, "")
+          .replace(/^[-*]\s+/, "")
+          .replace(/^\d+[.)]\s+/, "")
+          .trim(),
+      )
+      .filter((line) => {
+        if (line.length < 8 || notesContainPromptLeak(line)) return false;
+        return !skip.has(line.toLowerCase());
+      });
+  }
+
+  const seen = new Set<string>();
+  const items = [...collectItems(markdown), ...collectItems(cleaned)].filter(
+    (item) => {
+      const key = item.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    },
+  ).slice(0, 18);
+  if (items.length < 4) return cleaned;
+
+  const termsCount = Math.max(1, Math.ceil(items.length / 3));
+  const factsCount = Math.max(1, Math.ceil((items.length - termsCount) / 2));
+  const terms = items.slice(0, termsCount);
+  const facts = items.slice(termsCount, termsCount + factsCount);
+  const remember = items.slice(termsCount + factsCount);
+  const factItems = facts.length ? facts : terms.slice(0, 1);
+  const rememberItems = remember.length ? remember : terms.slice(-1);
+
+  return [
+    `## ${headings.terms}`,
+    ...terms.map((item) => `- ${item}`),
+    `## ${headings.facts}`,
+    ...factItems.map((item) => `- ${item}`),
+    `## ${headings.remember}`,
+    ...rememberItems.map((item) => `- ${item}`),
+  ].join("\n");
 }
 
 function localizedNoteHeadings(text: string) {
@@ -77,6 +152,10 @@ export function splitNoteTerm(item: string): { term: string; meaning: string } |
 export function sanitizeStudyMarkdown(markdown: string): string {
   let text = String(markdown ?? "");
   text = text.replace(/\r\n/g, "\n").replace(/\\n/g, "\n").replace(/\\t/g, "  ");
+  text = text
+    .split("\n")
+    .filter((line) => !notesContainPromptLeak(line))
+    .join("\n");
   text = stripPunycodeTokens(text);
   text = text.replace(/\[([^\]]+)\]:(?=\s)/g, "$1:");
   text = text.replace(/\s+(#{1,3}\s+)/g, "\n$1");
@@ -117,10 +196,10 @@ export function sanitizeStudyMarkdown(markdown: string): string {
 }
 
 export function parseStudyNotes(markdown: string, title: string): StudyNoteBlock[] {
-  const lines = sanitizeStudyMarkdown(markdown).split("\n");
+  const lines = sanitizeStudyMarkdown(markdown ?? "").split("\n");
   const blocks: StudyNoteBlock[] = [];
   let list: { type: "ul" | "ol"; items: string[] } | null = null;
-  const titleKey = normalizeHeading(title);
+  const titleKey = normalizeHeading(title ?? "");
 
   function flushList() {
     if (list?.items.length) blocks.push(list);

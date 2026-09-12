@@ -71,6 +71,7 @@ async function finishTitle(deckId: string): Promise<ProcessTickResult> {
     source,
     language: progress?.language ?? "en",
     model: deck.generationModel ?? undefined,
+    provider: deck.generationProvider ?? "openrouter",
     fallback: progress?.preferredTitle || deck.title,
   });
   await completeNotebookIngest(
@@ -81,7 +82,7 @@ async function finishTitle(deckId: string): Promise<ProcessTickResult> {
   );
 
   const rates = resolveBillingRates({
-    provider: "openrouter",
+    provider: deck.generationProvider === "ollama" ? "ollama" : "openrouter",
     modelId: progress?.needsOcr ? DEFAULT_OCR_MODEL : deck.generationModel || "",
   });
   const combined = {
@@ -111,6 +112,19 @@ async function finishTitle(deckId: string): Promise<ProcessTickResult> {
     entityType: "deck",
     entityId: deckId,
     meta: { ocr: Boolean(progress?.needsOcr) },
+  });
+
+  after(() => {
+    void fetch(`${env.NEXT_PUBLIC_APP_URL}/api/decks/${deckId}/artifacts`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-ingest-job": ingestJobToken(deckId),
+      },
+      body: JSON.stringify({ kind: "notes" }),
+    }).catch(() => {
+      // Jobs poll / Retry will show a notes tile if this fire-and-forget misses.
+    });
   });
 
   return { done: true, continue: false, deckId, status: "complete" };

@@ -1,14 +1,17 @@
+import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { LandingAuthCta } from "@/components/landing-auth-cta";
+import { isLocalAppHost } from "@/lib/auth-local";
 import { getSession } from "@/lib/auth-server";
 
 export default async function Home() {
   const session = await getSession();
   if (session) redirect("/decks");
   const t = await getTranslations("landing");
+  const localDev = isLocalAppHost((await headers()).get("host"));
 
   return (
     <main className="landing-shell">
@@ -27,17 +30,19 @@ export default async function Home() {
               {t("subtitle")}
             </p>
             <div className="motion-fade-up motion-delay-3">
-              <LandingAuthCta />
+              <LandingAuthCta localDev={localDev} />
             </div>
           </div>
           <div className="landing-hero-card" aria-hidden="true">
-            <span className="card-rarity">HK STUDY A</span>
+            <span className="card-rarity">HKDSE</span>
             <span className="font-label text-[0.6875rem] font-medium uppercase tracking-[0.22em] text-[var(--muted)]">
-              Biology
+              Biology · Paper 1
             </span>
-            <strong className="landing-hero-card-q">What powers the cell?</strong>
+            <strong className="landing-hero-card-q">
+              Explain how chlorophyll captures light.
+            </strong>
             <span className="rounded-2xl bg-[var(--secondary)] p-4 font-medium text-[var(--muted)]">
-              Flip to reveal the answer
+              30 min · sit this paper in the notebook
             </span>
           </div>
         </div>

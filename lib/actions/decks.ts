@@ -5,33 +5,18 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { requireSession } from "@/lib/auth-server";
-import { writeAuditLog } from "@/lib/data/audit";
 import {
-  completeDeckGeneration,
   deleteDeck,
   duplicateDeck,
-  failDeckGeneration,
-  getDeckWithCards,
   renameDeck,
   setDeckArchived,
   setDeckFolderTag,
   updateCard,
+  updateExamSystem,
 } from "@/lib/data/decks";
 import { createSampleDeck } from "@/lib/data/sample-deck";
-import { extractStudyText } from "@/lib/ingest/extract-text";
-import { validateFileSignature } from "@/lib/ingest/validate-upload";
-import {
-  generateFlashcardsFromContent,
-  generateFlashcardsFromTopic,
-  TOPIC_SOURCE_MIME,
-} from "@/lib/llm/generate-flashcards";
-import { DEFAULT_OPENROUTER_MODEL } from "@/lib/llm/models";
-import { normalizeLLMProvider } from "@/lib/types/flashcard";
-import {
-  cleanupDiscardedGenerations,
-  deleteSourceMedia,
-  downloadSourceMedia,
-} from "@/lib/supabase/storage";
+import { parseExamSystem } from "@/lib/llm/exam-profiles";
+import { deleteSourceMedia } from "@/lib/supabase/storage";
 
 const idSchema = z.string().uuid();
 const cardSchema = z.object({
@@ -78,6 +63,15 @@ export async function renameDeckAction(formData: FormData) {
   revalidatePath(`/decks/${deckId}`);
 }
 
+export async function updateExamSystemAction(formData: FormData) {
+  const session = await requireSession();
+  const deckId = idSchema.parse(formData.get("deckId"));
+  const examSystem = parseExamSystem(formData.get("examSystem"));
+  const ok = await updateExamSystem(deckId, session.user.id, examSystem);
+  if (!ok) throw new Error("Deck not found");
+  revalidatePath(`/decks/${deckId}`);
+}
+
 export async function archiveDeckAction(formData: FormData) {
   const session = await requireSession();
   const deckId = idSchema.parse(formData.get("deckId"));
@@ -112,84 +106,3 @@ export async function setDeckFolderAction(formData: FormData) {
   revalidatePath(`/decks/${deckId}`);
 }
 
-export async function regenerateDeckAction(formData: FormData) {
-  const session = await requireSession();
-  const deckId = idSchema.parse(formData.get("deckId"));
-  const deck = await getDeckWithCards(deckId, session.user.id);
-  if (!deck || !deck.generationProvider) throw new Error("Deck not found");
-
-  const provider =
-    normalizeLLMProvider(deck.generationProvider) ?? "openrouter";
-  const model = deck.generationModel || DEFAULT_OPENROUTER_MODEL;
-
-  try {
-    let generated;
-    if (
-      deck.sourceType === "text" &&
-      deck.sourceContent &&
-      deck.sourceMimeType === TOPIC_SOURCE_MIME
-    ) {
-      generated = await generateFlashcardsFromTopic(deck.sourceContent, {
-        provider,
-        model,
-        cardCount: Math.max(3, deck.cards.length),
-      });
-    } else if (deck.sourceType === "text" && deck.sourceContent) {
-      generated = await generateFlashcardsFromContent(deck.sourceContent, {
-        provider,
-        model,
-        cardCount: Math.max(3, deck.cards.length),
-      });
-    } else if (deck.storagePath && deck.sourceMimeType) {
-      if (deck.sourceType === "photo") {
-        throw new Error(
-          "Photo uploads are no longer supported. Create a new deck from text or PDF.",
-        );
-      }
-      const data = await downloadSourceMedia(deck.storagePath);
-      validateFileSignature(data, deck.sourceMimeType);
-      generated = await generateFlashcardsFromContent(
-        await extractStudyText(data, deck.sourceMimeType, { ocr: true, model }),
-        {
-          provider,
-          model,
-          cardCount: Math.max(3, deck.cards.length),
-        },
-      );
-    } else {
-      throw new Error(
-        "The original source was removed for privacy. Create a new deck to regenerate.",
-      );
-    }
-
-    await completeDeckGeneration(
-      deckId,
-      session.user.id,
-      deck.title,
-      generated.cards,
-    );
-    await writeAuditLog({
-      userId: session.user.id,
-      action: "regenerate_complete",
-      entityType: "deck",
-      entityId: deckId,
-    });
-
-    const { clearDeckSource } = await import("@/lib/data/decks");
-    const leftoverPath = await clearDeckSource(deckId, session.user.id);
-    if (leftoverPath) {
-      try {
-        await deleteSourceMedia(leftoverPath);
-      } catch {
-        // best-effort
-      }
-    }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Regeneration failed";
-    const discarded = await failDeckGeneration(deckId, session.user.id, message);
-    if (discarded) await cleanupDiscardedGenerations([discarded]);
-    throw error;
-  }
-
-  revalidatePath(`/decks/${deckId}`);
-}

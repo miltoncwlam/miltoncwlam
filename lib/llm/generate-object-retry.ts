@@ -8,7 +8,7 @@ export function isRetryableGenerateError(error: unknown): boolean {
   if (/timeout|aborted|timed out|TimeoutError|AbortError/i.test(`${name} ${message}`)) {
     return false;
   }
-  return /JSONParseError|Invalid JSON response|invalid json|NoObjectGenerated|TypeValidationError|did not match schema|invalid_type|too_small|invalid option|NoContentGenerated|could not parse/i.test(
+  return /JSONParseError|Invalid JSON response|invalid json|NoObjectGenerated|TypeValidationError|did not match schema|invalid_type|too_small|invalid option|NoContentGenerated|could not parse|leaked instructions|not study-ready/i.test(
     `${name} ${message}`,
   );
 }

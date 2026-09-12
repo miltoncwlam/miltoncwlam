@@ -23,7 +23,16 @@ export function GuestSignInButton({
     setError(null);
     try {
       const response = await fetch("/api/auth/guest", { method: "POST" });
-      const payload = (await response.json()) as { ticket?: string; error?: string };
+      const payload = (await response.json()) as {
+        ticket?: string;
+        local?: boolean;
+        redirect?: string;
+        error?: string;
+      };
+      if (response.ok && payload.local) {
+        window.location.assign(payload.redirect || redirectTo);
+        return;
+      }
       if (!response.ok || !payload.ticket) {
         throw new Error(payload.error || "Could not start a guest session");
       }

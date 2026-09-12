@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 
@@ -32,10 +32,11 @@ export function NotebookStudio({
   const t = useTranslations("studio");
   const locale = useLocale() as AppLocale;
   const { jobs } = useGenerationJobs();
-  const [pendingKind, setPendingKind] = useState<StudioKind | null>(null);
+  const [pendingKinds, setPendingKinds] = useState<Set<StudioKind>>(
+    () => new Set(),
+  );
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
   const [types, setTypes] = useState<string[]>([...EXAM_QUESTION_TYPES]);
   const [durationMinutes, setDurationMinutes] = useState(30);
   const [depth, setDepth] = useState<StudioDepth>("basic");
@@ -44,60 +45,69 @@ export function NotebookStudio({
   const tiles = useMemo(
     () =>
       [
-        { kind: "mindmap" as const, title: t("mindmap"), ready: Boolean(mindmap) },
-        { kind: "notes" as const, title: t("notes"), ready: Boolean(notes) },
-        { kind: "exam" as const, title: t("exam"), ready: Boolean(exam) },
+        { kind: "mindmap" as const, title: t("mindmap"), ready: Boolean(mindmap?.nodes?.length) },
+        { kind: "notes" as const, title: t("notes"), ready: Boolean(notes?.markdown) },
+        { kind: "exam" as const, title: t("exam"), ready: Boolean(exam?.questions?.length) },
         { kind: "cards" as const, title: t("cards"), ready: cardCount > 0 },
       ] as const,
     [cardCount, exam, mindmap, notes, t],
   );
 
-  function generate(kind: StudioKind) {
-    if (!hasSource) return;
-    setError(null);
-    setErrorCode(null);
-    setPendingKind(kind);
-    startTransition(async () => {
-      try {
-        const response = await fetch(`/api/decks/${deckId}/artifacts`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            kind,
-            language: locale,
-            depth,
-            purpose,
-            durationMinutes,
-            types: kind === "exam" ? types : undefined,
-          }),
-        });
-        const result = await response.json();
-        if (!response.ok) {
-          if (result.code) setErrorCode(result.code);
-          throw new Error(
-            friendlyGenerateError(result.error || "Generation failed", result.code),
-          );
-        }
-      } catch (caught) {
-        setError(
-          caught instanceof Error
-            ? friendlyGenerateError(caught.message)
-            : "Generation failed",
-        );
-      } finally {
-        setPendingKind(null);
-      }
+  function setKindPending(kind: StudioKind, on: boolean) {
+    setPendingKinds((current) => {
+      const next = new Set(current);
+      if (on) next.add(kind);
+      else next.delete(kind);
+      return next;
     });
   }
 
-  const busyKind =
-    pendingKind ||
-    jobs.find(
-      (job) =>
-        job.deckId === deckId &&
-        job.kind !== "ingest" &&
-        job.status === "processing",
-    )?.kind;
+  async function generate(kind: StudioKind) {
+    if (!hasSource) return;
+    setError(null);
+    setErrorCode(null);
+    setKindPending(kind, true);
+    try {
+      const response = await fetch(`/api/decks/${deckId}/artifacts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind,
+          language: locale,
+          depth,
+          purpose,
+          durationMinutes,
+          types: kind === "exam" ? types : undefined,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        if (result.code) setErrorCode(result.code);
+        throw new Error(
+          friendlyGenerateError(result.error || "Generation failed", result.code),
+        );
+      }
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? friendlyGenerateError(caught.message)
+          : "Generation failed",
+      );
+    } finally {
+      setKindPending(kind, false);
+    }
+  }
+
+  const busyKinds = useMemo(() => {
+    const next = new Set(pendingKinds);
+    for (const job of jobs) {
+      if (job.deckId !== deckId || job.kind === "ingest") continue;
+      if (job.status === "processing" || job.status === "pending") {
+        next.add(job.kind);
+      }
+    }
+    return next;
+  }, [deckId, jobs, pendingKinds]);
 
   return (
     <section className="studio-panel space-y-6">
@@ -125,14 +135,14 @@ export function NotebookStudio({
         {tiles.map((tile) => (
           <button
             className="studio-tile"
-            disabled={!hasSource || isPending || Boolean(busyKind)}
+            disabled={!hasSource || busyKinds.has(tile.kind)}
             key={tile.kind}
-            onClick={() => generate(tile.kind)}
+            onClick={() => void generate(tile.kind)}
             type="button"
           >
             <p className="font-black">{tile.title}</p>
             <p className="mt-2 text-sm text-slate-600">
-              {busyKind === tile.kind
+              {busyKinds.has(tile.kind)
                 ? t("generating")
                 : tile.ready
                   ? t("regenerate")
@@ -208,15 +218,17 @@ export function NotebookStudio({
         </div>
       </div>
 
-      {mindmap ? (
+      {mindmap?.nodes?.length ? (
         <MindmapTree
           key={mindmap.nodes.map((node) => node.id).join("-")}
           nodes={mindmap.nodes}
           title={mindmap.title}
         />
       ) : null}
-      {notes ? <StudyNotesView markdown={notes.markdown} title={notes.title} /> : null}
-      {exam ? (
+      {notes?.markdown ? (
+        <StudyNotesView markdown={notes.markdown} title={notes.title ?? ""} />
+      ) : null}
+      {exam?.questions?.length ? (
         <section className="no-print rounded-2xl border border-slate-200 bg-white p-5">
           <h2 className="text-xl font-black">{exam.title}</h2>
           <p className="mt-2 text-sm text-slate-600">

@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("landing and protected route redirect to sign-in", async ({ page }) => {
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: /notes become a deck/i }),
+    page.getByRole("heading", { name: /stay in the notebook/i }),
   ).toBeVisible();
 
   await page.goto("/decks");

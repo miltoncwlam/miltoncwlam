@@ -3,7 +3,12 @@ import "server-only";
 import { createOpenAI } from "@ai-sdk/openai";
 
 import { env } from "@/lib/env";
-import { DEFAULT_OPENROUTER_MODEL, isPaidOpenRouterModel } from "@/lib/llm/models";
+import { isOllamaConfigured } from "@/lib/llm/ollama";
+import {
+  DEFAULT_OPENROUTER_MODEL,
+  isPaidOpenRouterModel,
+  withOpenRouterAutoFetchInit,
+} from "@/lib/llm/models";
 import type { LLMProvider } from "@/lib/types/flashcard";
 
 export type LLMConfig = {
@@ -12,8 +17,14 @@ export type LLMConfig = {
 };
 
 export function getLLMConfig(): LLMConfig {
+  const ollama = isOllamaConfigured();
+  const defaultProvider: LLMProvider =
+    (env.LLM_DEFAULT_PROVIDER === "ollama" && ollama) ||
+    (!env.OPENROUTER_API_KEY && ollama)
+      ? "ollama"
+      : "openrouter";
   return {
-    defaultProvider: "openrouter",
+    defaultProvider,
     openrouter: {
       apiKey: env.OPENROUTER_API_KEY,
       model: env.OPENROUTER_MODEL || DEFAULT_OPENROUTER_MODEL,
@@ -26,7 +37,10 @@ export function isOpenRouterConfigured(): boolean {
 }
 
 export function getConfiguredProviders(): LLMProvider[] {
-  return isOpenRouterConfigured() ? ["openrouter"] : [];
+  const providers: LLMProvider[] = [];
+  if (isOpenRouterConfigured()) providers.push("openrouter");
+  if (isOllamaConfigured()) providers.push("ollama");
+  return providers;
 }
 
 export function openRouterHeaders(): Record<string, string> {
@@ -46,6 +60,7 @@ export function getOpenRouterClient() {
     apiKey: config.openrouter.apiKey,
     name: "openrouter",
     headers: openRouterHeaders(),
+    fetch: (url, init) => globalThis.fetch(url, withOpenRouterAutoFetchInit(init)),
   });
 }
 
@@ -55,10 +70,16 @@ export function resolveOpenRouterModel(requested?: string | null): string {
 }
 
 export function assertLLMReady(provider: LLMProvider = "openrouter"): LLMProvider {
+  if (provider === "ollama") {
+    if (!isOllamaConfigured()) {
+      throw new Error("Ollama is not configured. Set OLLAMA_BASE_URL in .env.local.");
+    }
+    return "ollama";
+  }
   if (!getLLMConfig().openrouter.apiKey) {
     throw new Error("Missing API key for OpenRouter. Add OPENROUTER_API_KEY to .env.local.");
   }
-  return provider;
+  return "openrouter";
 }
 
 export function isKnownPaidModel(modelId: string): boolean {

@@ -1,9 +1,18 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+
+import {
+  createLocalAuthCookie,
+  isLocalAppHost,
+  isLocalDevUnlimitedUser,
+  verifyLocalAuthCookie,
+} from "@/lib/auth-local";
+import { isOllamaAvailable, normalizeLLMProvider } from "@/lib/types/flashcard";
 
 import {
   clerkFrontendProxyUrl,
   clerkHostedAuthUrl,
   clerkJsScriptUrl,
+  notebookHref,
   resolvePublicAppUrl,
   rewriteClerkProxySetCookie,
   safeAppPath,
@@ -66,6 +75,44 @@ describe("public app urls", () => {
     expect(safeAppPath("//evil.example")).toBe("/decks");
   });
 
+  it("opens the notebook after create instead of the library", async () => {
+    expect(notebookHref("abc-123")).toBe("/decks/abc-123");
+    expect(notebookHref("../phish")).toBe("/decks");
+    const { readFile } = await import("node:fs/promises");
+    const form = await readFile("components/create-deck-form.tsx", "utf8");
+    expect(form).toMatch(/router\.push\(notebookHref\(result\.deckId\)\)/);
+    expect(form).not.toMatch(/router\.push\("\/decks"\)/);
+  });
+
+  it("lays out source beside studio and keeps class links off the notebook", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const notebook = await readFile("app/decks/[deckId]/page.tsx", "utf8");
+    const studio = await readFile("components/notebook-studio.tsx", "utf8");
+    const classPage = await readFile("app/decks/[deckId]/class/page.tsx", "utf8");
+    expect(notebook).toMatch(/notebook-workspace/);
+    expect(notebook).not.toMatch(/ClassLinkControls/);
+    expect(notebook).not.toMatch(/Class scores/);
+    expect(classPage).toMatch(/ClassLinkControls/);
+    expect(studio).not.toMatch(/Boolean\(busyKind\)/);
+    expect(studio).toMatch(/busyKinds\.has\(tile\.kind\)/);
+    expect(notebook).toMatch(/ExamLaneChips/);
+    expect(notebook).toMatch(/NotebookChat/);
+    expect(notebook).not.toMatch(/Study unavailable — no cards yet/);
+    const notes = await readFile("lib/llm/generate-notes.ts", "utf8");
+    expect(notes).not.toMatch(/unless the output language is English/);
+    expect(notes).toMatch(/Do not discuss these instructions/);
+  });
+
+  it("drops class-link assign from the landing hero", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const landing = await readFile("messages/en.json", "utf8");
+    expect(landing).toMatch(/Stay in the notebook/);
+    expect(landing).not.toMatch(/assign them with a class link/);
+    const page = await readFile("app/page.tsx", "utf8");
+    expect(page).toMatch(/sit this paper in the notebook/);
+    expect(page).not.toMatch(/Flip to reveal the answer/);
+  });
+
   it("sends sign-in to Clerk Account Portal with an absolute return url", () => {
     const key =
       "pk_test_" +
@@ -123,5 +170,55 @@ describe("public app urls", () => {
         { https: true },
       ),
     ).toBeNull();
+  });
+});
+
+describe("localhost auth cookie", () => {
+  const originalVercel = process.env.VERCEL;
+
+  afterEach(() => {
+    if (originalVercel === undefined) delete process.env.VERCEL;
+    else process.env.VERCEL = originalVercel;
+  });
+
+  it("allows localhost and loopback only when not on Vercel", async () => {
+    delete process.env.VERCEL;
+    expect(isLocalAppHost("localhost:3000")).toBe(true);
+    expect(isLocalAppHost("127.0.0.1:3000")).toBe(true);
+    expect(isLocalAppHost("hkstudya.vercel.app")).toBe(false);
+    process.env.VERCEL = "1";
+    expect(isLocalAppHost("localhost:3000")).toBe(false);
+  });
+
+  it("signs a cookie that verifies for local_dev only", async () => {
+    const value = await createLocalAuthCookie("test-secret");
+    expect(await verifyLocalAuthCookie(value, "test-secret")).toBe(true);
+    expect(await verifyLocalAuthCookie(value, "other-secret")).toBe(false);
+    expect(await verifyLocalAuthCookie(value.replace("local_dev", "user_1"), "test-secret")).toBe(
+      false,
+    );
+  });
+
+  it("gives local_dev unlimited energy off Vercel only", () => {
+    delete process.env.VERCEL;
+    expect(isLocalDevUnlimitedUser("local_dev")).toBe(true);
+    expect(isLocalDevUnlimitedUser("user_1")).toBe(false);
+    process.env.VERCEL = "1";
+    expect(isLocalDevUnlimitedUser("local_dev")).toBe(false);
+  });
+});
+
+describe("localhost ollama", () => {
+  it("stays ollama instead of being rewritten to OpenRouter", () => {
+    expect(normalizeLLMProvider("ollama")).toBe("ollama");
+    expect(normalizeLLMProvider("openrouter")).toBe("openrouter");
+  });
+
+  it("is available only off Vercel when a base URL is set", () => {
+    expect(isOllamaAvailable({ baseUrl: "http://127.0.0.1:11434" })).toBe(true);
+    expect(isOllamaAvailable({ baseUrl: "http://127.0.0.1:11434", vercel: "1" })).toBe(
+      false,
+    );
+    expect(isOllamaAvailable({})).toBe(false);
   });
 });

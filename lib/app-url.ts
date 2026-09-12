@@ -40,6 +40,15 @@ export function publicAppUrl() {
   );
 }
 
+/** After ingest, stay in the notebook — not the library. */
+export function notebookHref(deckId: string) {
+  const id = deckId.trim();
+  if (!id || id.includes("/") || id.includes("\\") || id.includes("..")) {
+    return "/decks";
+  }
+  return `/decks/${id}`;
+}
+
 /** Same-origin path only — blocks open redirects after sign-in. */
 export function safeAppPath(value: unknown, fallback = "/decks") {
   if (typeof value !== "string") return fallback;

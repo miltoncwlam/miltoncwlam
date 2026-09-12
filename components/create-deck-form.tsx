@@ -38,6 +38,7 @@ import {
   parseAppLocale,
   type AppLocale,
 } from "@/lib/i18n/locales";
+import { notebookHref } from "@/lib/app-url";
 import { createClient } from "@/lib/supabase/client";
 import {
   DEFAULT_OCR_MODEL,
@@ -68,6 +69,7 @@ export function CreateDeckForm({
   energyUnlimited = false,
   isGuest = false,
   freeModels = [],
+  ollamaModel = "gemma3:4b",
 }: {
   providers: LLMProvider[];
   canUpload: boolean;
@@ -75,6 +77,7 @@ export function CreateDeckForm({
   energyUnlimited?: boolean;
   isGuest?: boolean;
   freeModels?: FreeModel[];
+  ollamaModel?: string;
 }) {
   const router = useRouter();
   const t = useTranslations("create");
@@ -83,12 +86,17 @@ export function CreateDeckForm({
   const locale = useLocale() as AppLocale;
   const [language, setLanguage] = useState<AppLocale>(locale);
   const formRef = useRef<HTMLFormElement>(null);
-  const [mode, setMode] = useState<SourceMode>("topic");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [mode, setMode] = useState<SourceMode>(canUpload ? "file" : "text");
+  const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [phase, setPhase] = useState<GenerationPhase>("prepare");
   const [label, setLabel] = useState(tg("preparing"));
+  const [provider, setProvider] = useState<LLMProvider>(
+    providers.includes("ollama") ? "ollama" : "openrouter",
+  );
   const [openrouterModel, setOpenrouterModel] = useState(DEFAULT_OPENROUTER_MODEL);
   const [topicChars, setTopicChars] = useState(0);
   const [textChars, setTextChars] = useState(0);
@@ -98,12 +106,12 @@ export function CreateDeckForm({
   const activeMode =
     mode === "text" || mode === "url" || mode === "topic" || canUpload
       ? mode
-      : "topic";
-  const provider: LLMProvider = "openrouter";
+      : "text";
+  const selectedModel = provider === "ollama" ? ollamaModel : openrouterModel;
   const estimate = useMemo(() => {
     const base = estimateArtifactCredits({
-      provider: "openrouter",
-      modelId: openrouterModel,
+      provider,
+      modelId: selectedModel,
       sourceMode: activeMode,
       sourceSize:
         activeMode === "topic"
@@ -124,7 +132,7 @@ export function CreateDeckForm({
       (fileMeta.bytes ?? 0) >= LIKELY_SCAN_BYTES;
     if (!likelyScan) return base;
     const ocr = estimateOcrCredits({
-      provider: "openrouter",
+      provider,
       modelId: DEFAULT_OCR_MODEL,
       pageCount: MAX_OCR_PAGES,
     });
@@ -136,9 +144,25 @@ export function CreateDeckForm({
       outputTokens: base.outputTokens + ocr.outputTokens,
       breakdown: `~${base.textCredits + ocr.textCredits} energy`,
     };
-  }, [openrouterModel, activeMode, topicChars, textChars, fileMeta]);
+  }, [provider, selectedModel, activeMode, topicChars, textChars, fileMeta]);
   const overBalance =
-    !isGuest && !energyUnlimited && estimate.textCredits > energyBalance;
+    provider !== "ollama" &&
+    !isGuest &&
+    !energyUnlimited &&
+    estimate.textCredits > energyBalance;
+
+  function acceptDroppedFile(file: File) {
+    if (!canUpload || pending) return;
+    const allowed =
+      /\.(pdf|txt|md)$/i.test(file.name) ||
+      ["application/pdf", "text/plain", "text/markdown"].includes(file.type);
+    if (!allowed) return;
+    setMode("file");
+    setFileMeta({ bytes: file.size, mimeType: file.type || "application/octet-stream" });
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    if (fileInputRef.current) fileInputRef.current.files = transfer.files;
+  }
 
   async function uploadFile(file: File) {
     const signedResponse = await fetch("/api/uploads/sign", {
@@ -173,10 +197,13 @@ export function CreateDeckForm({
       const payload: Record<string, unknown> = {
         sourceType: activeMode,
         title: String(formData.get("title") || "") || undefined,
-        provider: "openrouter",
+        provider,
         language: language,
         sourceRetention: String(formData.get("sourceRetention") || "keep"),
-        model: (formData.get("openrouterModel") as string) || openrouterModel,
+        model:
+          provider === "ollama"
+            ? ollamaModel
+            : (formData.get("openrouterModel") as string) || openrouterModel,
       };
 
       if (activeMode === "topic") {
@@ -236,7 +263,7 @@ export function CreateDeckForm({
       setPending(false);
       if (!result.deckId) throw new Error("Could not read source");
       watchDeck(result.deckId, String(payload.title || "") || undefined);
-      router.push("/decks");
+      router.push(notebookHref(result.deckId));
       router.refresh();
     } catch (caught) {
       setPending(false);
@@ -262,10 +289,10 @@ export function CreateDeckForm({
 
   const modes = (
     [
-      { value: "topic", label: t("topic"), enabled: true },
+      { value: "file", label: t("file"), enabled: canUpload },
       { value: "text", label: t("text"), enabled: true },
       { value: "url", label: t("url"), enabled: true },
-      { value: "file", label: t("file"), enabled: canUpload },
+      { value: "topic", label: t("topic"), enabled: true },
     ] as const
   );
 
@@ -306,7 +333,29 @@ export function CreateDeckForm({
         />
       ) : null}
 
-      <form className="space-y-6" onSubmit={handleSubmit} ref={formRef}>
+      <form
+        className={`space-y-6 rounded-3xl ${dragging ? "ring-2 ring-indigo-400" : ""}`}
+        onDragEnter={(event) => {
+          event.preventDefault();
+          if (canUpload) setDragging(true);
+        }}
+        onDragLeave={(event) => {
+          if (event.currentTarget.contains(event.relatedTarget as Node)) return;
+          setDragging(false);
+        }}
+        onDragOver={(event) => {
+          event.preventDefault();
+        }}
+        onDrop={(event) => {
+          event.preventDefault();
+          setDragging(false);
+          const file = event.dataTransfer.files[0];
+          if (file) acceptDroppedFile(file);
+        }}
+        onSubmit={handleSubmit}
+        ref={formRef}
+      >
+        <p className="text-sm text-slate-600">{t("dropHint")}</p>
         <div className="grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-2 sm:grid-cols-4">
           {modes.map(({ value, label: modeLabel, enabled }) => (
             <button
@@ -337,6 +386,10 @@ export function CreateDeckForm({
           <p className="rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-700">
             {t("guestTrial")}
           </p>
+        ) : provider === "ollama" ? (
+          <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-900">
+            {t("ollamaFree")}
+          </p>
         ) : (
           <>
             <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
@@ -357,19 +410,6 @@ export function CreateDeckForm({
             ) : null}
           </>
         )}
-
-        <div className="space-y-2">
-          <Label>{t("sourceRetention")}</Label>
-          <select
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-            defaultValue="keep"
-            disabled={pending}
-            name="sourceRetention"
-          >
-            <option value="24h">{t("retention24h")}</option>
-            <option value="keep">{t("retentionKeep")}</option>
-          </select>
-        </div>
 
         <div className="space-y-2">
           <Label htmlFor="title">{t("titleLabel")}</Label>
@@ -440,6 +480,7 @@ export function CreateDeckForm({
                   file ? { bytes: file.size, mimeType: file.type } : null,
                 );
               }}
+              ref={fileInputRef}
               required
               type="file"
             />
@@ -447,74 +488,111 @@ export function CreateDeckForm({
           </div>
         )}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label>{t("model")}</Label>
-            <Select
-              disabled={pending}
-              onValueChange={setOpenrouterModel}
-              value={openrouterModel}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {freeModels.length ? (
-                  <SelectGroup>
-                    <SelectLabel>{t("modelFree")}</SelectLabel>
-                    {freeModels.map((entry) => (
-                      <SelectItem key={entry.id} value={entry.id}>
-                        {catalogLabel(entry.name)}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
+        <details className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <summary className="cursor-pointer text-sm font-semibold text-slate-800">
+            {t("advanced")}
+          </summary>
+          <p className="mt-2 text-xs text-slate-600">{t("advancedHint")}</p>
+          <div className="mt-4 space-y-4">
+            <div className="space-y-2">
+              <Label>{t("sourceRetention")}</Label>
+              <select
+                className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                defaultValue="keep"
+                disabled={pending}
+                name="sourceRetention"
+              >
+                <option value="24h">{t("retention24h")}</option>
+                <option value="keep">{t("retentionKeep")}</option>
+              </select>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>{t("model")}</Label>
+                {providers.includes("ollama") && providers.includes("openrouter") ? (
+                  <select
+                    className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-2 text-sm shadow-sm"
+                    disabled={pending}
+                    onChange={(event) =>
+                      setProvider(event.target.value === "ollama" ? "ollama" : "openrouter")
+                    }
+                    value={provider}
+                  >
+                    <option value="ollama">{t("ollama")}</option>
+                    <option value="openrouter">OpenRouter</option>
+                  </select>
                 ) : null}
-                <SelectGroup>
-                  <SelectLabel>{t("modelBudget")}</SelectLabel>
-                  {budgetModels.map((entry) => (
-                    <SelectItem key={entry.id} value={entry.id}>
-                      {entry.label}
-                    </SelectItem>
+                {provider === "ollama" ? (
+                  <p className="text-sm text-slate-700">{ollamaModel}</p>
+                ) : (
+                  <Select
+                    disabled={pending}
+                    onValueChange={setOpenrouterModel}
+                    value={openrouterModel}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {freeModels.length ? (
+                        <SelectGroup>
+                          <SelectLabel>{t("modelFree")}</SelectLabel>
+                          {freeModels.map((entry) => (
+                            <SelectItem key={entry.id} value={entry.id}>
+                              {catalogLabel(entry.name)}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      ) : null}
+                      <SelectGroup>
+                        <SelectLabel>{t("modelBudget")}</SelectLabel>
+                        {budgetModels.map((entry) => (
+                          <SelectItem key={entry.id} value={entry.id}>
+                            {entry.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel>{t("modelStandard")}</SelectLabel>
+                        {standardModels.map((entry) => (
+                          <SelectItem key={entry.id} value={entry.id}>
+                            {entry.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+                <input name="openrouterModel" type="hidden" value={openrouterModel} />
+                <input name="provider" type="hidden" value={provider} />
+              </div>
+              <div className="space-y-2">
+                <Label>{t("language")}</Label>
+                <select
+                  className="flex h-9 w-full rounded-md border border-input bg-white px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={pending}
+                  name="language"
+                  onChange={(event) => {
+                    const next = parseAppLocale(event.target.value);
+                    setLanguage(next);
+                    void fetch("/api/locale", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ locale: next }),
+                    });
+                  }}
+                  value={language}
+                >
+                  {LOCALE_CODES.map((code) => (
+                    <option key={code} value={code}>
+                      {LOCALE_LABELS[code]}
+                    </option>
                   ))}
-                </SelectGroup>
-                <SelectGroup>
-                  <SelectLabel>{t("modelStandard")}</SelectLabel>
-                  {standardModels.map((entry) => (
-                    <SelectItem key={entry.id} value={entry.id}>
-                      {entry.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <input name="openrouterModel" type="hidden" value={openrouterModel} />
-            <input name="provider" type="hidden" value={provider} />
+                </select>
+              </div>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label>{t("language")}</Label>
-            <select
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={pending}
-              name="language"
-              onChange={(event) => {
-                const next = parseAppLocale(event.target.value);
-                setLanguage(next);
-                void fetch("/api/locale", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ locale: next }),
-                });
-              }}
-              value={language}
-            >
-              {LOCALE_CODES.map((code) => (
-                <option key={code} value={code}>
-                  {LOCALE_LABELS[code]}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+        </details>
 
         <Button className="w-full" disabled={pending || overBalance} type="submit">
           {pending ? tg("readingSource") : t("readSource")}

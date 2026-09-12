@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { ClassLinkControls } from "@/components/class-link-controls";
 import { CommunityVisibilityControls } from "@/components/community-visibility-controls";
+import { ExamLaneChips } from "@/components/exam-lane-chips";
 import { DeckLibraryControls } from "@/components/deck-library-controls";
 import { RetryIngestButton } from "@/components/generation-jobs";
+import { NotebookChat } from "@/components/notebook-chat";
 import { NotebookStudio } from "@/components/notebook-studio";
 import { ShareControls } from "@/components/share-controls";
 import {
@@ -12,12 +13,19 @@ import {
   updateCardAction,
 } from "@/lib/actions/decks";
 import { requireSession } from "@/lib/auth-server";
-import { listClassLinksForDeck } from "@/lib/data/class-links";
 import { listDeckArtifacts } from "@/lib/data/artifacts";
+import { listNotebookChatMessages } from "@/lib/data/notebook-chat";
 import { getDeckWithCards } from "@/lib/data/decks";
 import { env } from "@/lib/env";
 import { TOPIC_SOURCE_MIME } from "@/lib/llm/generate-flashcards";
 import type { ExamPayload, MindmapPayload, NotesPayload } from "@/lib/types/notebook";
+
+function previewSource(text: string | null | undefined) {
+  const value = (text ?? "").trim();
+  if (!value) return "";
+  if (value.length <= 4000) return value;
+  return `${value.slice(0, 4000)}…`;
+}
 
 export default async function DeckDetailPage({
   params,
@@ -32,9 +40,16 @@ export default async function DeckDetailPage({
   const canStudy =
     deck.generationStatus === "complete" && deck.cards.length > 0;
   const artifacts = await listDeckArtifacts(deck.id);
-  const notes = artifacts.find((item) => item.kind === "notes");
-  const mindmap = artifacts.find((item) => item.kind === "mindmap");
-  const exam = artifacts.find((item) => item.kind === "exam");
+  const chatMessages = await listNotebookChatMessages(deck.id, session.user.id);
+  const notes = artifacts.find(
+    (item) => item.kind === "notes" && item.generationStatus === "complete",
+  );
+  const mindmap = artifacts.find(
+    (item) => item.kind === "mindmap" && item.generationStatus === "complete",
+  );
+  const exam = artifacts.find(
+    (item) => item.kind === "exam" && item.generationStatus === "complete",
+  );
   const hasSource =
     deck.generationStatus === "complete" && Boolean(deck.sourceContent);
   const isProcessing =
@@ -42,12 +57,11 @@ export default async function DeckDetailPage({
     deck.generationStatus === "processing";
   const isFailed = deck.generationStatus === "failed";
   const isEmpty = deck.cards.length === 0;
-  const canAssign =
-    deck.generationStatus === "complete" &&
-    (canStudy || exam?.generationStatus === "complete");
-  const classLinks = canAssign
-    ? await listClassLinksForDeck(deck.id, session.user.id)
-    : [];
+  const canShare = hasSource;
+  const sourcePreview = previewSource(deck.sourceContent);
+  const sourceHeading =
+    deck.sourceFilename?.trim() ||
+    (deck.sourceType === "url" ? "Linked page" : "Pasted notes");
 
   return (
     <main className="page-shell">
@@ -64,6 +78,7 @@ export default async function DeckDetailPage({
             {" · "}
             {deck.generationProvider ?? "sample"} · {deck.generationStatus}
           </p>
+          <ExamLaneChips deckId={deck.id} examSystem={deck.examSystem} />
         </div>
         <div className="no-print flex flex-wrap gap-3">
           {canStudy ? (
@@ -92,36 +107,22 @@ export default async function DeckDetailPage({
               <Link className="secondary-button" href={`/decks/${deck.id}/play`}>
                 Play activities
               </Link>
-              <Link className="secondary-button" href={`/decks/${deck.id}/class`}>
-                Class scores
-              </Link>
             </>
-          ) : canAssign ? (
-            <Link className="secondary-button" href={`/decks/${deck.id}/class`}>
-              Class scores
-            </Link>
-          ) : (
+          ) : isFailed ? (
             <p className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-500">
-              {isFailed
-                ? "Study unavailable — generation failed"
-                : isProcessing
-                  ? "Reading your source in the background"
-                  : isEmpty
-                    ? "Study unavailable — no cards yet"
-                    : "Study unavailable until generation finishes"}
+              Study unavailable — generation failed
             </p>
-          )}
+          ) : isProcessing ? (
+            <p className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-500">
+              Reading your source in the background
+            </p>
+          ) : hasSource && isEmpty ? (
+            <p className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-500">
+              Generate flashcards in the studio to study
+            </p>
+          ) : null}
         </div>
       </div>
-
-      {isProcessing ? (
-        <section className="mt-6 rounded-2xl border border-indigo-200 bg-indigo-50 p-5 text-indigo-950">
-          <p className="font-black">Reading your source</p>
-          <p className="mt-2 text-sm">
-            You can leave this page. We will keep going in the background.
-          </p>
-        </section>
-      ) : null}
 
       {isFailed ? (
         <section className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-rose-900">
@@ -133,10 +134,26 @@ export default async function DeckDetailPage({
             <RetryIngestButton deckId={deck.id} />
           </div>
         </section>
-      ) : null}
-
-      {!isFailed ? (
-        <div className="mt-10">
+      ) : (
+        <div className="notebook-workspace mt-10 grid gap-8 lg:grid-cols-2">
+          <section className="notebook-source">
+            <p className="eyebrow">Source</p>
+            <h2 className="mt-2 text-2xl font-black">{sourceHeading}</h2>
+            {isProcessing ? (
+              <p className="mt-3 rounded-xl bg-indigo-50 px-3 py-2 text-sm text-indigo-950">
+                Reading your source. You can leave this page.
+              </p>
+            ) : null}
+            {sourcePreview ? (
+              <pre className="notebook-source-body">{sourcePreview}</pre>
+            ) : (
+              <p className="mt-3 text-sm text-slate-600">
+                {isProcessing
+                  ? "The text will appear here as soon as we finish reading."
+                  : "This notebook has no source text yet."}
+              </p>
+            )}
+          </section>
           <NotebookStudio
             cardCount={deck.cards.length}
             deckId={deck.id}
@@ -146,9 +163,20 @@ export default async function DeckDetailPage({
             notes={notes ? (notes.payload as NotesPayload) : null}
           />
         </div>
+      )}
+      {!isFailed ? (
+        <NotebookChat
+          deckId={deck.id}
+          hasSource={hasSource}
+          initialMessages={chatMessages.map((entry) => ({
+            id: entry.id,
+            role: entry.role,
+            content: entry.content,
+          }))}
+        />
       ) : null}
 
-      {!isFailed && isEmpty && !hasSource ? (
+      {!isFailed && isEmpty && !hasSource && !isProcessing ? (
         <p className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
           This notebook has no source yet. Create a new notebook from a topic, notes, URL, or file.
         </p>
@@ -229,19 +257,13 @@ export default async function DeckDetailPage({
             folderTag={deck.folderTag}
             title={deck.title}
           />
-          {canAssign ? (
+          {canShare ? (
             <>
               <ShareControls
                 appUrl={env.NEXT_PUBLIC_APP_URL}
                 deckId={deck.id}
                 isShared={deck.isShared}
               />
-              <ClassLinkControls deckId={deck.id} links={classLinks} />
-              <p className="text-sm">
-                <Link className="text-button" href={`/decks/${deck.id}/class`}>
-                  Open class scores →
-                </Link>
-              </p>
               <CommunityVisibilityControls
                 deckId={deck.id}
                 moderationReasons={deck.moderationReasons}
@@ -251,7 +273,7 @@ export default async function DeckDetailPage({
             </>
           ) : (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-              Sharing unlocks when this deck is complete and has cards.
+              Sharing unlocks when this notebook has a source.
             </div>
           )}
           <div className="rounded-2xl border border-slate-200 bg-white p-4">

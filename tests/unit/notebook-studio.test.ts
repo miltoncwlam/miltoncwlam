@@ -7,6 +7,7 @@ import {
   studioIntentRules,
   studioLanguageRules,
   studioSourceSlice,
+  studioSourceSections,
   notesSectionHeadings,
   mindmapLabelRules,
 } from "@/lib/i18n/locales";
@@ -20,7 +21,8 @@ import {
   parseNotesPayload,
   planExamQuestions,
 } from "@/lib/llm/parse-studio";
-import { parseStudyNotes, sanitizeStudyMarkdown, splitNoteTerm } from "@/lib/study/notes-markdown";
+import { parseStudyNotes, sanitizeStudyMarkdown, splitNoteTerm, notesAreStudyReady, notesContainPromptLeak, forceStudyNotesShape } from "@/lib/study/notes-markdown";
+import { mergeMindmapPayloads, mergeNotesPayloads } from "@/lib/llm/merge-studio";
 import type { ExamQuestion } from "@/lib/types/notebook";
 
 describe("studio parsers", () => {
@@ -346,6 +348,44 @@ describe("study notes and mind map layout", () => {
     expect(splitNoteTerm("舊石器時代: 距今約170萬年")?.term).toBe("舊石器時代");
   });
 
+  it("drops instruction chatter from notes markdown", () => {
+    const leaked = `## Key terms 注意：原文为英文，输出语言为英文。根据指令，输出全部使用英文
+- **Chlorophyll** absorbs sunlight
+## Facts
+- The Calvin cycle fixes carbon dioxide into glucose.
+- Oxygen is released as a byproduct.
+- Plants need water, carbon dioxide, and light.
+## How to remember
+- Inputs are water, carbon dioxide, and light.`;
+    const cleaned = sanitizeStudyMarkdown(leaked);
+    expect(cleaned).not.toMatch(/根据指令/);
+    expect(cleaned).not.toMatch(/unless the output language/i);
+    expect(notesContainPromptLeak(leaked)).toBe(true);
+    expect(notesAreStudyReady(cleaned)).toBe(true);
+  });
+
+  it("does not crash when stored notes have no title", () => {
+    expect(() => parseStudyNotes("", undefined as unknown as string)).not.toThrow();
+  });
+
+  it("rebuilds headings and bullets from a short paragraph dump", () => {
+    const shaped = forceStudyNotesShape(
+      "Photosynthesis converts light energy into chemical energy in plants. Chlorophyll in chloroplasts absorbs sunlight.\nThe Calvin cycle fixes carbon dioxide into glucose.\nOxygen is released as a byproduct.\nPlants need water, carbon dioxide, and light to photosynthesize.",
+      { terms: "Key terms", facts: "Facts", remember: "How to remember" },
+    );
+    expect(notesAreStudyReady(shaped)).toBe(true);
+    expect(shaped).toMatch(/## Key terms/);
+  });
+
+  it("rebuilds notes from a single leaked paragraph using leftover sentences", () => {
+    const shaped = forceStudyNotesShape(
+      "注意：输出语言为英文. Photosynthesis converts light energy into chemical energy in plants. Chlorophyll in chloroplasts absorbs sunlight. The Calvin cycle fixes carbon dioxide into glucose. Oxygen is released as a byproduct. Plants need water, carbon dioxide, and light.",
+      { terms: "Key terms", facts: "Facts", remember: "How to remember" },
+    );
+    expect(notesContainPromptLeak(shaped)).toBe(false);
+    expect(notesAreStudyReady(shaped)).toBe(true);
+  });
+
   it("joins a term card when the meaning sits on the next line with a colon and dash", () => {
     const markdown = `## 重點詞彙
 - **舊石器時代**
@@ -420,6 +460,8 @@ describe("generate retry", () => {
     expect(isRetryableGenerateError(new Error("This operation was aborted"))).toBe(
       false,
     );
+    expect(isRetryableGenerateError(new Error("Notes leaked instructions"))).toBe(true);
+    expect(isRetryableGenerateError(new Error("Notes were not study-ready"))).toBe(true);
     expect(isRetryableGenerateError(new Error("Unauthorized"))).toBe(false);
   });
 });
@@ -431,6 +473,63 @@ describe("studio depth and purpose", () => {
     expect(studioSourceSlice(long, "detailed")).toHaveLength(18_000);
     expect(studioIntentRules("basic", "starter", "mindmap")).toMatch(/8–14 nodes/);
     expect(studioIntentRules("detailed", "exam", "notes")).toMatch(/exam revision/);
+  });
+
+  it("sections a long source into at most three chunks", () => {
+    const long = Array.from({ length: 12 }, (_, index) => `## Part ${index + 1}\n${"fact ".repeat(2_000)}`).join("\n");
+    const sections = studioSourceSections(long, "basic");
+    expect(sections.length).toBeGreaterThan(1);
+    expect(sections.length).toBeLessThanOrEqual(3);
+    expect(sections.every((section) => section.length <= 12_000)).toBe(true);
+    expect(sections.join("")).toMatch(/Part 1/);
+  });
+});
+
+describe("studio merge", () => {
+  it("merges notes bullets under the three headings", () => {
+    const merged = mergeNotesPayloads(
+      [
+        {
+          title: "Photosynthesis",
+          markdown: "## Key terms\n- **Chlorophyll** pigment\n## Facts\n- Light becomes chemical energy\n## How to remember\n- Light in, sugar out",
+        },
+        {
+          title: "More",
+          markdown: "## Key terms\n- **Calvin cycle** carbon fixation\n## Facts\n- Oxygen is released\n## How to remember\n- Water is split",
+        },
+      ],
+      "en",
+    );
+    expect(merged.title).toBe("Photosynthesis");
+    expect(merged.markdown).toMatch(/Chlorophyll/);
+    expect(merged.markdown).toMatch(/Calvin cycle/);
+    expect(merged.markdown).toMatch(/## Key terms/);
+  });
+
+  it("merges mind maps onto one root", () => {
+    const merged = mergeMindmapPayloads([
+      {
+        title: "Photosynthesis",
+        nodes: [
+          { id: "n1", parentId: null, label: "Photosynthesis" },
+          { id: "n2", parentId: "n1", label: "Light" },
+          { id: "n3", parentId: "n1", label: "Water" },
+          { id: "n4", parentId: "n2", label: "Chlorophyll" },
+        ],
+      },
+      {
+        title: "Calvin",
+        nodes: [
+          { id: "n1", parentId: null, label: "Calvin" },
+          { id: "n2", parentId: "n1", label: "CO2" },
+          { id: "n3", parentId: "n1", label: "Glucose" },
+          { id: "n4", parentId: "n1", label: "RuBP" },
+        ],
+      },
+    ]);
+    expect(merged.nodes.filter((node) => node.parentId === null)).toHaveLength(1);
+    expect(merged.nodes.some((node) => node.label === "CO2")).toBe(true);
+    expect(merged.nodes.length).toBeGreaterThan(4);
   });
 });
 
@@ -484,11 +583,17 @@ describe("community notebook copy and publish", () => {
 
 describe("studio cards keep notebook source", () => {
   it("does not call regenerateDeckAction or clearDeckSource from the studio path", async () => {
+    const { existsSync } = await import("node:fs");
     const { readFile } = await import("node:fs/promises");
     const route = await readFile("app/api/decks/[deckId]/artifacts/route.ts", "utf8");
     const page = await readFile("app/decks/[deckId]/page.tsx", "utf8");
-    expect(route).toMatch(/completeDeckGeneration/);
+    const actions = await readFile("lib/actions/decks.ts", "utf8");
+    expect(route).toMatch(/beginStudioArtifact/);
     expect(route).not.toMatch(/clearDeckSource/);
     expect(page).not.toMatch(/regenerateDeckAction/);
+    expect(actions).not.toMatch(/regenerateDeckAction/);
+    expect(actions).not.toMatch(/clearDeckSource/);
+    expect(existsSync("app/api/decks/generate/route.ts")).toBe(false);
+    expect(existsSync("app/api/decks/generate/progress/route.ts")).toBe(false);
   });
 });

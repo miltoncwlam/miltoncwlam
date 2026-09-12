@@ -10,6 +10,7 @@ export type IngestProgress = {
   outputTokens?: number;
   spentTextAmount?: number;
   preferredTitle?: string;
+  isGuest?: boolean;
   cardsStatus?: "processing" | "failed";
   cardsError?: string;
 };
@@ -33,6 +34,7 @@ export function parseIngestProgress(value: unknown): IngestProgress | null {
     spentTextAmount: Number(row.spentTextAmount) || 0,
     preferredTitle:
       typeof row.preferredTitle === "string" ? row.preferredTitle : undefined,
+    isGuest: Boolean(row.isGuest),
     cardsStatus,
     cardsError: typeof row.cardsError === "string" ? row.cardsError : undefined,
   };

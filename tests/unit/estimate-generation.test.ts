@@ -43,6 +43,17 @@ describe("token estimates", () => {
     expect(ingest.textCredits).toBeLessThan(50);
   });
 
+  it("does not bill localhost Ollama", () => {
+    const ingest = estimateArtifactCredits({
+      provider: "ollama",
+      modelId: "gemma3:4b",
+      sourceMode: "text",
+      sourceSize: { charCount: 400 },
+      kind: "ingest",
+    });
+    expect(ingest.textCredits).toBe(0);
+  });
+
   it("prices OCR by page and stays under a weekly grant", () => {
     const ocr = estimateOcrCredits({
       provider: "openrouter",

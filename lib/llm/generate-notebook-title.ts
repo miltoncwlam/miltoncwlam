@@ -31,18 +31,29 @@ export async function generateNotebookTitle(input: {
   language?: string;
   model?: string;
   fallback?: string;
+  provider?: "openrouter" | "ollama";
 }) {
   const fallback = input.fallback?.trim() || "Study notebook";
+  const prompt = `Write a short study-notebook title (max 8 words).
+${studioLanguageRules(input.language ?? "en")}
+Optional one-sentence summary of what the source is about.
+Source:
+${input.source.slice(0, INGEST_TITLE_CHARS)}`;
   try {
+    if (input.provider === "ollama") {
+      const { ollamaGenerateJson } = await import("@/lib/llm/ollama");
+      const object = notebookTitleSchema.parse(await ollamaGenerateJson(prompt));
+      return {
+        title: object.title.trim() || fallback,
+        summary: object.summary?.trim() || "",
+        usage: { inputTokens: 0, outputTokens: 0 },
+      };
+    }
     const result = await generateObject({
       model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
       schema: notebookTitleSchema,
       abortSignal: AbortSignal.timeout(20_000),
-      prompt: `Write a short study-notebook title (max 8 words).
-${studioLanguageRules(input.language ?? "en")}
-Optional one-sentence summary of what the source is about.
-Source:
-${input.source.slice(0, INGEST_TITLE_CHARS)}`,
+      prompt,
     });
     return {
       title: result.object.title.trim() || fallback,

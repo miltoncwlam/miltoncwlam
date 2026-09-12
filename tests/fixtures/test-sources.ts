@@ -16,6 +16,7 @@ export const TEST_FIXTURE_FILES = {
   detailedPdf: "hk-dse-photosynthesis.pdf",
   scanPdf: "hk-dse-photosynthesis-scan.pdf",
   sampleText: "sample-notes.txt",
+  igcseText: "igcse-photosynthesis.txt",
 } as const;
 
 export function fixturePath(name: string) {

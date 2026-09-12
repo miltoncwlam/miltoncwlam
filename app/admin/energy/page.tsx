@@ -12,6 +12,8 @@ const REASON_LABELS: Record<string, string> = {
   generate_mindmap: "Generate mind map",
   generate_notes: "Generate notes",
   generate_exam: "Generate exam",
+  generate_cards: "Generate cards",
+  generate_chat: "Notebook chat",
   generate_refund: "Generate refund",
   gift_code: "Gift code",
   period_refill: "Weekly refill",

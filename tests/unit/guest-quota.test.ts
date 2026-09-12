@@ -12,6 +12,7 @@ import { GuestQuotaError } from "@/lib/credits/config";
 import {
   assertGuestGenerateQuota,
   countGuestGeneratesUsed,
+  GUEST_GENERATE_REASONS,
 } from "@/lib/data/credits";
 
 describe("guest generate quota", () => {
@@ -21,6 +22,11 @@ describe("guest generate quota", () => {
     query.mockResolvedValueOnce({ rows: [{ used: "0" }] });
     await expect(countGuestGeneratesUsed("guest-1")).resolves.toBe(0);
     expect(query.mock.calls[0]?.[0]).toMatch(/generate_refund/);
+    expect(query.mock.calls[0]?.[1]?.[1]).toEqual([...GUEST_GENERATE_REASONS]);
+    expect(GUEST_GENERATE_REASONS).toContain("generate_notes");
+    expect(GUEST_GENERATE_REASONS).toContain("generate_cards");
+    expect(GUEST_GENERATE_REASONS).toContain("generate_ingest");
+    expect(GUEST_GENERATE_REASONS).not.toContain("generate_chat");
   });
 
   it("blocks guests only after net generates hit the limit", async () => {

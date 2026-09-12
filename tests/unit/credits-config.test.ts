@@ -18,22 +18,42 @@ import { creditsFromImageUsd, creditsFromTokens } from "@/lib/credits/token-cost
 import {
   DEFAULT_OCR_MODEL,
   DEFAULT_OPENROUTER_MODEL,
+  CHAT_OPENROUTER_MODEL,
+  HK_SAFE_AUTO_MODELS,
   PAID_OPENROUTER_MODELS,
   isPaidOpenRouterModel,
   resolveBillingRates,
+  withOpenRouterAutoRouting,
 } from "@/lib/llm/models";
 
 describe("unified token credits", () => {
-  it("defaults generate to DeepSeek 0731 and OCR to Qwen 3.8", () => {
-    expect(DEFAULT_OPENROUTER_MODEL).toBe("deepseek/deepseek-v4-flash-0731");
+  it("defaults generate to OpenRouter Auto and OCR to Qwen 3.8", () => {
+    expect(DEFAULT_OPENROUTER_MODEL).toBe("openrouter/auto");
+    expect(CHAT_OPENROUTER_MODEL).toBe("deepseek/deepseek-v4-flash-0731");
+    expect(CHAT_OPENROUTER_MODEL).not.toMatch(/qwen|v4\.1|auto/i);
     expect(DEFAULT_OCR_MODEL).toBe("qwen/qwen3.8-flash");
     expect(PAID_OPENROUTER_MODELS.map((model) => model.id)).toEqual([
+      "openrouter/auto",
       "deepseek/deepseek-v4-flash-0731",
       "qwen/qwen3.8-flash",
       "deepseek/deepseek-v4.1-flash",
     ]);
+    expect(isPaidOpenRouterModel("openrouter/auto")).toBe(true);
     expect(isPaidOpenRouterModel("deepseek/deepseek-v4-flash")).toBe(true);
     expect(isPaidOpenRouterModel("qwen/qwen3.7-flash")).toBe(true);
+    expect(withOpenRouterAutoRouting({ model: "openrouter/auto" })).toMatchObject({
+      model: "openrouter/auto",
+      plugins: [
+        {
+          id: "auto-router",
+          cost_tier: "low",
+          allowed_models: HK_SAFE_AUTO_MODELS,
+        },
+      ],
+    });
+    expect(withOpenRouterAutoRouting({ model: "qwen/qwen3.8-flash" })).toEqual({
+      model: "qwen/qwen3.8-flash",
+    });
   });
 
   it("bills Qwen 3.8 above DeepSeek 0731 and keeps the old Flash pin at the free reference", () => {
@@ -56,6 +76,17 @@ describe("unified token credits", () => {
     expect(qwen).toBeGreaterThan(deepseek);
     expect(legacyFlash).toBe(catalog);
     expect(deepseek).toBeGreaterThanOrEqual(MIN_GENERATION_CREDITS);
+    expect(
+      resolveBillingRates({
+        provider: "openrouter",
+        modelId: "openrouter/auto",
+      }),
+    ).toEqual(
+      resolveBillingRates({
+        provider: "openrouter",
+        modelId: "deepseek/deepseek-v4-flash-0731",
+      }),
+    );
   });
 
   it("charges topic less than text less than file", () => {

@@ -57,6 +57,8 @@ export function GenerationJobsProvider({ children }: { children: ReactNode }) {
       if (!response.ok) return;
       const payload = (await response.json()) as { jobs?: GenerationJob[] };
       const next = payload.jobs ?? [];
+      const toasts: string[] = [];
+      let shouldRefresh = false;
       setJobs((current) => {
         for (const job of current) {
           const still = next.find(
@@ -68,10 +70,10 @@ export function GenerationJobsProvider({ children }: { children: ReactNode }) {
             !seenComplete.current.has(jobKey(job))
           ) {
             seenComplete.current.add(jobKey(job));
-            pushToast(
+            toasts.push(
               job.kind === "ingest" ? t("doneTitle") : t("studioReady", { kind: job.kind }),
             );
-            router.refresh();
+            shouldRefresh = true;
           }
         }
         for (const job of next) {
@@ -79,11 +81,15 @@ export function GenerationJobsProvider({ children }: { children: ReactNode }) {
             const key = `${jobKey(job)}:failed`;
             if (!seenComplete.current.has(key)) {
               seenComplete.current.add(key);
-              pushToast(friendlyGenerateError(job.error));
+              toasts.push(friendlyGenerateError(job.error));
             }
           }
         }
         return next;
+      });
+      queueMicrotask(() => {
+        for (const message of toasts) pushToast(message);
+        if (shouldRefresh) router.refresh();
       });
     } catch {
       // ignore

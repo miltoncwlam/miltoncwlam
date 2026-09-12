@@ -54,6 +54,7 @@ export default async function NewDeckPage() {
           isGuest={Boolean(session.user.isGuest)}
           freeModels={freeModels}
           providers={providers}
+          ollamaModel={env.OLLAMA_MODEL || "gemma3:4b"}
         />
       </section>
     </main>
