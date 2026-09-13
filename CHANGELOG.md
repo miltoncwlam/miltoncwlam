@@ -9,7 +9,7 @@ Git has 39 commits (29 on `milton`). Chat turns are not versions.
 | Remote | GitHub | Role |
 | --- | --- | --- |
 | `origin` | [aailckw/interns-ai-flashcard](https://github.com/aailckw/interns-ai-flashcard) | `milton` is study-only `19d7f9c`. Do not force-push. |
-| `miltoncwlam` | [miltoncwlam/miltoncwlam](https://github.com/miltoncwlam/miltoncwlam) | **`ai-flashcard`** → [hkstudya.vercel.app](https://hkstudya.vercel.app) |
+| `miltoncwlam` | [miltoncwlam/miltoncwlam](https://github.com/miltoncwlam/miltoncwlam) | **`milton`** → [hkstudya.vercel.app](https://hkstudya.vercel.app). Same commit is still on `ai-flashcard` until Vercel production is switched. |
 
 ```bash
 git checkout v1.0    # Version 1.0.0
