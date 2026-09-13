@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { enterBeta, hideBetaPrompt } from "@/components/beta-session";
@@ -8,6 +9,7 @@ import { BETA_SESSION_KEY } from "@/lib/beta";
 
 export function V4BetaPopup() {
   const t = useTranslations("landing");
+  const router = useRouter();
   const [pending, setPending] = useState(false);
   const [quiet, setQuiet] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -27,7 +29,7 @@ export function V4BetaPopup() {
     setPending(true);
     await hideBetaPrompt(quiet);
     dialogRef.current?.close();
-    if (quiet) window.location.assign("/");
+    if (quiet) router.refresh();
     setPending(false);
   }
 
@@ -35,8 +37,8 @@ export function V4BetaPopup() {
     setPending(true);
     await enterBeta(quiet);
     dialogRef.current?.close();
-    if (quiet) window.location.assign("/");
-    else setPending(false);
+    if (quiet) router.refresh();
+    setPending(false);
   }
 
   return (

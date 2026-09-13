@@ -1,6 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Cookie } from "@playwright/test";
 
-function betaCookie(cookies: { name: string }[]) {
+function betaCookie(cookies: Cookie[]) {
   return cookies.find((cookie) => cookie.name === "hkstudya-beta");
 }
 

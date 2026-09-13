@@ -1,13 +1,17 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 import { enterBetaSession } from "@/components/beta-session";
 
 export default function BetaPage() {
+  const router = useRouter();
+
   useEffect(() => {
     enterBetaSession();
-    window.location.replace("/");
-  }, []);
+    router.replace("/");
+  }, [router]);
+
   return null;
 }
