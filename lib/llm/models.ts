@@ -18,6 +18,8 @@ export type PaidOpenRouterModel = {
 };
 
 export const DEFAULT_OPENROUTER_MODEL = "openrouter/auto";
+/** Rotating catalog. Never show this slug or “router” in the picker. */
+export const OPENROUTER_CATALOG_ROUTER = "openrouter/free";
 /** Notebook chat is always this slug. Never Auto, Qwen (OCR), or V4.1. */
 export const CHAT_OPENROUTER_MODEL = "deepseek/deepseek-v4-flash-0731";
 /** Vision model used to transcribe scanned PDF pages. */
@@ -141,11 +143,16 @@ export function getPaidOpenRouterModel(
 export function isOpenRouterFreeCatalogModel(modelId: string) {
   if (isPaidOpenRouterModel(modelId)) return false;
   const id = modelId.trim().toLowerCase();
-  return id === "openrouter/free" || id.endsWith(":free");
+  return id === OPENROUTER_CATALOG_ROUTER || id.endsWith(":free");
+}
+
+export function isOpenRouterCatalogRouter(modelId: string) {
+  return modelId.trim().toLowerCase() === OPENROUTER_CATALOG_ROUTER;
 }
 
 /** Picker label: never the word "free", never a raw `:free` slug. */
 export function displayOpenRouterModelName(name: string, id: string): string {
+  if (isOpenRouterCatalogRouter(id)) return "Listed models";
   const cleaned = name
     .replace(/\s*\(free\)/gi, "")
     .replace(/:free\b/gi, "")
@@ -155,10 +162,6 @@ export function displayOpenRouterModelName(name: string, id: string): string {
     .trim();
   if (cleaned) return cleaned;
   return id.replace(/:free$/i, "").replace(/^.*\//, "");
-}
-
-export function isOpenRouterCatalogRouter(modelId: string) {
-  return modelId.trim().toLowerCase() === "openrouter/free";
 }
 
 export function resolveBillingRates(input: {

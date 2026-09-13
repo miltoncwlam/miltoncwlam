@@ -7,8 +7,14 @@ import {
   estimateOcrCredits,
 } from "@/lib/credits/estimate-generation";
 import { usdFromTokens } from "@/lib/credits/token-cost";
-import { resolveBillingRates } from "@/lib/llm/models";
-import { isPaidOpenRouterModel } from "@/lib/llm/models";
+import { isFreeModelCampaignActive } from "@/lib/campaign";
+import {
+  DEFAULT_OCR_MODEL,
+  isOpenRouterFreeCatalogModel,
+  isPaidOpenRouterModel,
+  OPENROUTER_CATALOG_ROUTER,
+  resolveBillingRates,
+} from "@/lib/llm/models";
 import { LOCALE_CODES } from "@/lib/i18n/locales";
 import { captureException } from "@/lib/sentry";
 import {
@@ -40,9 +46,8 @@ import {
 } from "@/lib/llm/config";
 import { inferExamLane } from "@/lib/llm/exam-profiles";
 import { TOPIC_SOURCE_MIME } from "@/lib/llm/generate-flashcards";
-import { DEFAULT_OCR_MODEL } from "@/lib/llm/models";
 import { ollamaModelId } from "@/lib/llm/ollama";
-import { listOpenRouterFreeModels } from "@/lib/llm/openrouter-models";
+import { resolveOpenRouterFreeModel } from "@/lib/llm/openrouter-models";
 import {
   cleanupDiscardedGenerations,
   deleteSourceMedia,
@@ -104,8 +109,9 @@ async function resolveRequestModel(
   if (provider === "ollama") return ollamaModelId(requested);
   const model = resolveOpenRouterModel(requested);
   if (isPaidOpenRouterModel(model)) return model;
-  const free = await listOpenRouterFreeModels();
-  if (free.some((entry) => entry.id === model)) return model;
+  if (isOpenRouterFreeCatalogModel(model) && isFreeModelCampaignActive()) {
+    return (await resolveOpenRouterFreeModel()) ?? OPENROUTER_CATALOG_ROUTER;
+  }
   return getLLMConfig().openrouter.model;
 }
 

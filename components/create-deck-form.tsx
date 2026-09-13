@@ -44,9 +44,8 @@ import {
 import {
   DEFAULT_OCR_MODEL,
   DEFAULT_OPENROUTER_MODEL,
+  OPENROUTER_CATALOG_ROUTER,
   PAID_OPENROUTER_MODELS,
-  displayOpenRouterModelName,
-  isOpenRouterCatalogRouter,
   isPaidOpenRouterModel,
 } from "@/lib/llm/models";
 import { createClient } from "@/lib/supabase/client";
@@ -54,19 +53,12 @@ import type { LLMProvider } from "@/lib/types/flashcard";
 
 type SourceMode = "topic" | "text" | "url" | "file";
 
-type FreeModel = { id: string; name: string };
-
-function visibleCatalogModels(models: FreeModel[]) {
-  return models.filter((entry) => !isOpenRouterCatalogRouter(entry.id));
-}
-
 export function CreateDeckForm({
   providers,
   canUpload,
   energyBalance = 0,
   energyUnlimited = false,
   isGuest = false,
-  freeModels = [],
   ollamaModel = "gemma3:4b",
 }: {
   providers: LLMProvider[];
@@ -74,7 +66,6 @@ export function CreateDeckForm({
   energyBalance?: number;
   energyUnlimited?: boolean;
   isGuest?: boolean;
-  freeModels?: FreeModel[];
   ollamaModel?: string;
 }) {
   const router = useRouter();
@@ -95,17 +86,11 @@ export function CreateDeckForm({
   const [provider, setProvider] = useState<LLMProvider>(
     providers.includes("ollama") ? "ollama" : "openrouter",
   );
-  const catalogModels = useMemo(
-    () => visibleCatalogModels(freeModels),
-    [freeModels],
+  const campaignRouter =
+    isFreeModelCampaignActive() && providers.includes("openrouter");
+  const [openrouterModel, setOpenrouterModel] = useState(() =>
+    campaignRouter ? OPENROUTER_CATALOG_ROUTER : DEFAULT_OPENROUTER_MODEL,
   );
-  const [openrouterModel, setOpenrouterModel] = useState(() => {
-    const catalog = visibleCatalogModels(freeModels);
-    if (isFreeModelCampaignActive() && catalog.length) {
-      return catalog[0].id;
-    }
-    return DEFAULT_OPENROUTER_MODEL;
-  });
   const [topicChars, setTopicChars] = useState(0);
   const [textChars, setTextChars] = useState(0);
   const [fileMeta, setFileMeta] = useState<{ bytes: number; mimeType: string } | null>(
@@ -543,21 +528,15 @@ export function CreateDeckForm({
                     value={openrouterModel}
                   >
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder={t("model")} />
                     </SelectTrigger>
                     <SelectContent>
-                      {catalogModels.length ? (
+                      {campaignRouter ? (
                         <SelectGroup>
-                          <SelectLabel>
-                            {isFreeModelCampaignActive()
-                              ? t("modelFreeCampaign")
-                              : t("modelFree")}
-                          </SelectLabel>
-                          {catalogModels.map((entry) => (
-                            <SelectItem key={entry.id} value={entry.id}>
-                              {displayOpenRouterModelName(entry.name, entry.id)}
-                            </SelectItem>
-                          ))}
+                          <SelectLabel>{t("modelFreeCampaign")}</SelectLabel>
+                          <SelectItem value={OPENROUTER_CATALOG_ROUTER}>
+                            {t("modelCampaignPick")}
+                          </SelectItem>
                         </SelectGroup>
                       ) : null}
                       <SelectGroup>

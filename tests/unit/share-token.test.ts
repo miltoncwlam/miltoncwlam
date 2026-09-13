@@ -82,6 +82,17 @@ describe("public app urls", () => {
     const form = await readFile("components/create-deck-form.tsx", "utf8");
     expect(form).toMatch(/router\.push\(notebookHref\(result\.deckId\)\)/);
     expect(form).not.toMatch(/router\.push\("\/decks"\)/);
+    expect(form).toMatch(/modelCampaignPick/);
+    expect(form).toMatch(/OPENROUTER_CATALOG_ROUTER/);
+    expect(form).not.toMatch(/freeModels/);
+    expect(form).not.toMatch(/catalogModels/);
+    expect(form).not.toMatch(/listOpenRouterFreeModels/);
+    expect(form).not.toMatch(/:free/);
+    const newDeck = await readFile("app/decks/new/page.tsx", "utf8");
+    expect(newDeck).not.toMatch(/listOpenRouterFreeModels/);
+    expect(newDeck).not.toMatch(/freeModels/);
+    const modelsApi = await readFile("app/api/llm/models/route.ts", "utf8");
+    expect(modelsApi).not.toMatch(/listOpenRouterFreeModels/);
   });
 
   it("lays out source beside studio and keeps class links off the notebook", async () => {
@@ -114,6 +125,7 @@ describe("public app urls", () => {
     expect(landing).not.toMatch(/free models/i);
     expect(landing).not.toMatch(/OpenRouter free/i);
     expect(landing).toMatch(/"modelFree": "More models"/);
+    expect(landing).toMatch(/"modelCampaignPick": "60% energy"/);
     expect(landing).not.toMatch(/Lower energy/);
     expect(landing).not.toMatch(/assign them with a class link/);
     const page = await readFile("app/page.tsx", "utf8");

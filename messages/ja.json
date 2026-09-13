@@ -113,6 +113,7 @@
     "model": "モデル",
     "modelFree": "More models",
     "modelFreeCampaign": "60% energy until 22 Sep 23:59 UTC",
+    "modelCampaignPick": "60% energy",
     "modelBudget": "節約",
     "modelStandard": "標準",
     "energyShort": "エネルギー不足。必要 {need}、所持 {have}。",

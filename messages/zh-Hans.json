@@ -113,6 +113,7 @@
     "model": "模型",
     "modelFree": "更多模型",
     "modelFreeCampaign": "直至 9 月 22 日 23:59 UTC 只需 60% 能量",
+    "modelCampaignPick": "60% 能量",
     "modelBudget": "经济",
     "modelStandard": "标准",
     "energyShort": "能量不足。需要 {need}，当前 {have}。",

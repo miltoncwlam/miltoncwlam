@@ -100,6 +100,7 @@
     "model": "Model",
     "modelFree": "More models",
     "modelFreeCampaign": "60% energy until 22 Sep 23:59 UTC",
+    "modelCampaignPick": "60% energy",
     "modelBudget": "Budget",
     "modelStandard": "Standard",
     "provider": "AI provider",

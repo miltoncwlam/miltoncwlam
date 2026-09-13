@@ -7,6 +7,7 @@ import { env } from "@/lib/env";
 import { getOpenRouterClient } from "@/lib/llm/config";
 import {
   DEFAULT_OPENROUTER_MODEL,
+  OPENROUTER_CATALOG_ROUTER,
   displayOpenRouterModelName,
   isPaidOpenRouterModel,
 } from "@/lib/llm/models";
@@ -38,7 +39,7 @@ export const DEFAULT_OPENROUTER_FREE_BLOCKLIST = [
 
 /** Last live probe of $0 models that returned structured JSON (no OpenAI). */
 export const SEED_VERIFIED_FREE_MODELS = [
-  "openrouter/free",
+  OPENROUTER_CATALOG_ROUTER,
   "nex-agi/nex-n2.5-mini:free",
   "nex-agi/nex-n2.5-pro:free",
   "dots-studio/dots-3-note-preview:free",
@@ -82,7 +83,7 @@ let verifying = false;
 
 function isListedFreeModel(id: string) {
   const slug = id.trim().toLowerCase();
-  return slug === "openrouter/free" || slug.endsWith(":free");
+  return slug === OPENROUTER_CATALOG_ROUTER || slug.endsWith(":free");
 }
 
 function blocklist(): Set<string> {
@@ -223,10 +224,7 @@ export async function resolveOpenRouterModerationModel(): Promise<string> {
   return DEFAULT_OPENROUTER_MODEL;
 }
 
-/** Prefer the OpenRouter catalog router; never fall back to a paid model. */
+/** Let OpenRouter rotate listed models. Never pin a :free slug. */
 export async function resolveOpenRouterFreeModel(): Promise<string | null> {
-  const catalog = await listOpenRouterFreeModels();
-  const preferred =
-    catalog.find((model) => model.id === "openrouter/free") ?? catalog[0];
-  return preferred?.id ?? (env.OPENROUTER_API_KEY ? "openrouter/free" : null);
+  return env.OPENROUTER_API_KEY ? OPENROUTER_CATALOG_ROUTER : null;
 }

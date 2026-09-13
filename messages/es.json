@@ -113,6 +113,7 @@
     "model": "Modelo",
     "modelFree": "More models",
     "modelFreeCampaign": "60% energy until 22 Sep 23:59 UTC",
+    "modelCampaignPick": "60% energy",
     "modelBudget": "Económico",
     "modelStandard": "Estándar",
     "energyShort": "Energía insuficiente. Necesitas {need}, tienes {have}.",

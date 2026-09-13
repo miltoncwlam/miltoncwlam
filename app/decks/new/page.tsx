@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { createSampleDeckAction } from "@/lib/actions/decks";
 import { requireSession } from "@/lib/auth-server";
 import { getOrRefreshCredits } from "@/lib/data/credits";
-import { env } from "@/lib/env";
 import { getConfiguredProviders } from "@/lib/llm/config";
-import { listOpenRouterFreeModels } from "@/lib/llm/openrouter-models";
+import { env } from "@/lib/env";
 
 export default async function NewDeckPage() {
   const session = await requireSession();
@@ -28,9 +27,6 @@ export default async function NewDeckPage() {
       </main>
     );
   }
-  const freeModels = providers.includes("openrouter")
-    ? await listOpenRouterFreeModels()
-    : [];
   const t = await getTranslations("create");
   const td = await getTranslations("decks");
 
@@ -52,7 +48,6 @@ export default async function NewDeckPage() {
           energyBalance={credits.balance}
           energyUnlimited={credits.isUnlimited}
           isGuest={Boolean(session.user.isGuest)}
-          freeModels={freeModels}
           providers={providers}
           ollamaModel={env.OLLAMA_MODEL || "gemma3:4b"}
         />

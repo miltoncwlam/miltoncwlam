@@ -154,7 +154,7 @@ describe("unified token credits", () => {
     ).toBe("Nex-N2.5 Mini");
     expect(
       displayOpenRouterModelName("Free Models Router", "openrouter/free"),
-    ).not.toMatch(/free/i);
+    ).not.toMatch(/free|router/i);
   });
 
   it("charges topic less than text less than file", () => {
