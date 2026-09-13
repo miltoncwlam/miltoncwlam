@@ -31,7 +31,7 @@ git checkout archive/milton-2026-09-06
 - Notebook chat, pinned to DeepSeek V4 Flash 0731. Replies persist. DSE + Chinese uses 書面語. You can say “make cards”.
 - Exam lane chips: HKDSE (default), IGCSE, A-level. They shape notes, maps, papers, and cards.
 - Long sources generate notes and maps in sections, then merge.
-- Home offers **Version 4.0.0 beta**. Production home shows Version 3.9.3 until you enter. **Not now**, Escape, or a click outside closes the popup — you do not have to enter.
+- Home offers **Version 4.0.0 beta**. Production home shows Version 3.9.3 until you enter. **Not now**, Escape, or a click outside closes the popup — you do not have to enter. That stay is this visit only. Tick **Do not show again** to remember enter or hide in a cookie.
 - In beta, a **Beta feedback** panel for comments and bug reports. Crashes and uncaught errors in 4.0.0 beta are recorded automatically.
 
 ### Changed
@@ -39,6 +39,7 @@ git checkout archive/milton-2026-09-06
 - Studio tiles can run in parallel.
 - Class links stay on `/decks/[id]/class`, not the notebook aside.
 - Landing copy is stay-in-the-notebook, with an exam-paper hero.
+- The beta cookie is only set if you tick **Do not show again**. Enter without it stays in this browser tab.
 
 ### Fixed
 - Failed notes no longer crash the notebook page.

@@ -7,20 +7,35 @@ import {
   displayAppVersion,
   hasV4BetaAccess,
   isVercelPreviewEnv,
+  persistBetaChoice,
 } from "@/lib/beta";
 
 describe("v4 beta gate", () => {
-  it("shows 3.9.3 until the beta cookie or a Vercel preview", () => {
+  it("shows 3.9.3 until persist-enter, a session header, or a Vercel preview", () => {
     expect(STABLE_VERSION).toBe("3.9.3");
     expect(BETA_VERSION).toBe("4.0.0 beta");
     expect(BETA_COOKIE).toBe("hkstudya-beta");
     expect(displayAppVersion(false)).toBe("3.9.3");
     expect(displayAppVersion(true)).toBe("4.0.0 beta");
+    expect(persistBetaChoice(undefined)).toBe(null);
+    expect(persistBetaChoice("1")).toBe("enter");
+    expect(persistBetaChoice("enter")).toBe("enter");
+    expect(persistBetaChoice("hide")).toBe("hide");
     expect(hasV4BetaAccess(undefined, "production")).toBe(false);
+    expect(hasV4BetaAccess("hide", "production")).toBe(false);
     expect(hasV4BetaAccess("1", "production")).toBe(true);
+    expect(hasV4BetaAccess("enter", "production")).toBe(true);
+    expect(hasV4BetaAccess(undefined, "production", "1")).toBe(true);
     expect(hasV4BetaAccess(undefined, "preview")).toBe(true);
     expect(isVercelPreviewEnv("preview")).toBe(true);
     expect(isVercelPreviewEnv("production")).toBe(false);
+  });
+
+  it("does not set a cookie from /beta", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const page = await readFile("app/beta/page.tsx", "utf8");
+    expect(page).toMatch(/enterBetaSession/);
+    expect(page).not.toMatch(/cookies\.set/);
   });
 
   it("keeps one Version 4.0.0 beta heading in the changelog", async () => {

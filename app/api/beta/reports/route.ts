@@ -17,7 +17,12 @@ function clientIp(headerList: Headers) {
 }
 
 export async function POST(request: Request) {
-  const beta = hasV4BetaAccess((await cookies()).get(BETA_COOKIE)?.value);
+  const headerList = await headers();
+  const beta = hasV4BetaAccess(
+    (await cookies()).get(BETA_COOKIE)?.value,
+    process.env.VERCEL_ENV,
+    headerList.get("x-hkstudya-beta"),
+  );
   if (!beta) {
     return Response.json({ error: "Beta only" }, { status: 403 });
   }
@@ -52,7 +57,6 @@ export async function POST(request: Request) {
       ? (payload.details as Record<string, unknown>)
       : {};
 
-  const headerList = await headers();
   const session = await getSession();
   const result = await insertBetaReport({
     kind,

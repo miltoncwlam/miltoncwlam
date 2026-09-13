@@ -34,6 +34,7 @@
     "betaEnter": "Enter Version 4.0.0 beta",
     "betaEntering": "Opening…",
     "betaStay": "Not now",
+    "betaQuiet": "次回から表示しない",
     "betaFeedback": "Beta feedback",
     "betaComment": "Comment",
     "betaBug": "Report a bug",

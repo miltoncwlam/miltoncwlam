@@ -231,7 +231,8 @@ export function cookieRows(v: LegalValues): CookieRow[] {
     },
     {
       name: "hkstudya-beta",
-      purpose: "Remember that you entered the Version 4.0 beta from the home screen.",
+      purpose:
+        "Remember your Version 4.0.0 beta choice only if you ticked Do not show again (stay in beta, or hide the popup).",
       duration: "About 1 year.",
     },
   ];
@@ -240,14 +241,14 @@ export function cookieRows(v: LegalValues): CookieRow[] {
 export function cookiesBlocks(v: LegalValues): LegalBlock[] {
   return [
     block("1. How we use cookies", [
-      "{product} uses essential cookies and similar storage so the app can sign you in and remember language. We do not set advertising or cross-site tracking cookies, and we do not sell browsing data for ads.",
+      "{product} uses essential cookies and similar storage so the app can sign you in and remember language. We set a hkstudya-beta cookie only if you tick Do not show again on the Version 4.0.0 beta popup. We do not set advertising or cross-site tracking cookies, and we do not sell browsing data for ads.",
       "Because these cookies are required to run the service you asked for (sign-in and language), we do not show a separate marketing-cookie banner.",
     ], undefined, v),
     block("2. Cookies we set", [
       "The table on this page lists the main cookies. Names can vary slightly by browser or library version.",
     ], undefined, v),
     block("3. Local storage", [
-      "The browser may store study-a-muted so Speak stays quiet if you turned sound off. That stays on your device and is not sent to us as a profile.",
+      "The browser may store study-a-muted so Speak stays quiet if you turned sound off. This-visit Version 4.0.0 beta is stored in session storage unless you asked us not to show the popup again. That stays on your device and is not sent to us as a profile.",
     ], undefined, v),
     block("4. Third parties", [
       "{hosting} may set technical cookies on preview or production hosts to run the deployment. Supabase Storage is called from our server with secret keys; it does not set an ad cookie on your browser for {product}.",

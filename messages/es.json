@@ -34,6 +34,7 @@
     "betaEnter": "Enter Version 4.0.0 beta",
     "betaEntering": "Opening…",
     "betaStay": "Not now",
+    "betaQuiet": "No volver a mostrar",
     "betaFeedback": "Beta feedback",
     "betaComment": "Comment",
     "betaBug": "Report a bug",

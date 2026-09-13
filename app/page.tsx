@@ -7,12 +7,17 @@ import { LandingAuthCta } from "@/components/landing-auth-cta";
 import { V4BetaPopup } from "@/components/v4-beta-popup";
 import { isLocalAppHost } from "@/lib/auth-local";
 import { getSession } from "@/lib/auth-server";
-import { BETA_COOKIE, hasV4BetaAccess } from "@/lib/beta";
+import {
+  BETA_COOKIE,
+  isVercelPreviewEnv,
+  persistBetaChoice,
+} from "@/lib/beta";
 
 export default async function Home() {
   const session = await getSession();
   if (session) redirect("/decks");
-  const beta = hasV4BetaAccess((await cookies()).get(BETA_COOKIE)?.value);
+  const persist = persistBetaChoice((await cookies()).get(BETA_COOKIE)?.value);
+  const beta = isVercelPreviewEnv() || persist === "enter";
   const t = await getTranslations("landing");
   const localDev = isLocalAppHost((await headers()).get("host"));
 
@@ -100,7 +105,7 @@ export default async function Home() {
           </Link>
         </div>
       </section>
-      {beta ? null : <V4BetaPopup />}
+      {beta || persist === "hide" ? null : <V4BetaPopup />}
     </main>
   );
 }

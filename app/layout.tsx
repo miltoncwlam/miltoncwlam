@@ -9,13 +9,18 @@ import { AppHeader } from "@/components/app-header";
 import { AuthProviders } from "@/components/auth-providers";
 import { BetaErrorRecorder } from "@/components/beta-error-recorder";
 import { BetaFeedback } from "@/components/beta-feedback";
+import { BetaOnly, BetaSessionProvider } from "@/components/beta-session";
 import { GenerationJobsProvider } from "@/components/generation-jobs";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToastProvider } from "@/components/toast-provider";
 import { isLocalAppHost } from "@/lib/auth-local";
 import { getSession } from "@/lib/auth-server";
-import { BETA_COOKIE, hasV4BetaAccess } from "@/lib/beta";
+import {
+  BETA_COOKIE,
+  isVercelPreviewEnv,
+  persistBetaChoice,
+} from "@/lib/beta";
 import { env } from "@/lib/env";
 import "./globals.css";
 
@@ -49,7 +54,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
   const messages = await getMessages();
   const localDev = isLocalAppHost((await headers()).get("host"));
-  const beta = hasV4BetaAccess((await cookies()).get(BETA_COOKIE)?.value);
+  const persistBeta =
+    persistBetaChoice((await cookies()).get(BETA_COOKIE)?.value) === "enter";
+  const preview = isVercelPreviewEnv();
 
   return (
     <html
@@ -67,11 +74,20 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <NextIntlClientProvider locale={locale} messages={messages}>
               <ToastProvider>
                 <GenerationJobsProvider>
-                <AppHeader localDev={localDev} session={session} />
+                <BetaSessionProvider persistBeta={persistBeta} preview={preview}>
+                <AppHeader
+                  localDev={localDev}
+                  persistBeta={persistBeta}
+                  preview={preview}
+                  session={session}
+                />
                 <div className="flex min-h-0 flex-1 flex-col">{children}</div>
-                {beta ? <BetaErrorRecorder /> : null}
-                {beta ? <BetaFeedback /> : null}
-                <SiteFooter />
+                <BetaOnly>
+                  <BetaErrorRecorder />
+                  <BetaFeedback />
+                </BetaOnly>
+                <SiteFooter persistBeta={persistBeta} preview={preview} />
+                </BetaSessionProvider>
                 </GenerationJobsProvider>
               </ToastProvider>
             </NextIntlClientProvider>

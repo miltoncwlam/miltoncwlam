@@ -3639,6 +3639,21 @@ html:has(dialog.v4-beta-popup-card[open]) .app-header {
   color: var(--muted);
 }
 
+.beta-quiet {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin-top: 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.beta-quiet input {
+  margin-top: 0.2rem;
+}
+
 .beta-feedback {
   position: fixed;
   z-index: 70;

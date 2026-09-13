@@ -34,6 +34,7 @@
     "betaEnter": "进入 Version 4.0.0 测试版",
     "betaEntering": "Opening…",
     "betaStay": "Not now",
+    "betaQuiet": "不要再显示",
     "betaFeedback": "Beta feedback",
     "betaComment": "Comment",
     "betaBug": "Report a bug",
