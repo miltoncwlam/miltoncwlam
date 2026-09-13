@@ -3639,6 +3639,24 @@ html:has(dialog.v4-beta-popup-card[open]) .app-header {
   color: var(--muted);
 }
 
+.campaign-banner {
+  margin: 0;
+  padding: 0.7rem 1.25rem;
+  border-bottom: 1px solid var(--border, #d7e0da);
+  background: #ecf8ef;
+  color: var(--ink);
+  text-align: center;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.campaign-note {
+  margin-top: 0.85rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
 .beta-quiet {
   display: flex;
   align-items: flex-start;

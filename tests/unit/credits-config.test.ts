@@ -21,6 +21,7 @@ import {
   CHAT_OPENROUTER_MODEL,
   HK_SAFE_AUTO_MODELS,
   PAID_OPENROUTER_MODELS,
+  isOpenRouterFreeCatalogModel,
   isPaidOpenRouterModel,
   resolveBillingRates,
   withOpenRouterAutoRouting,
@@ -87,6 +88,60 @@ describe("unified token credits", () => {
         modelId: "deepseek/deepseek-v4-flash-0731",
       }),
     );
+  });
+
+  it("cuts unpaid OpenRouter models to 60% energy until 22 Sep 23:59 UTC", () => {
+    const usage = { inputTokens: 2000, outputTokens: 1640 };
+    const during = Date.UTC(2026, 8, 13);
+    const after = Date.UTC(2026, 8, 23, 0, 0, 0);
+    const full = creditsFromTokens(usage, FREE_MODEL_BILLING_RATES);
+    const sale = creditsFromTokens(
+      usage,
+      resolveBillingRates({
+        provider: "openrouter",
+        modelId: "openrouter/free",
+        now: during,
+      }),
+    );
+    expect(sale).toBe(
+      creditsFromTokens(usage, {
+        inputPerM: FREE_MODEL_BILLING_RATES.inputPerM * 0.6,
+        outputPerM: FREE_MODEL_BILLING_RATES.outputPerM * 0.6,
+      }),
+    );
+    expect(sale).toBeLessThan(full);
+    expect(
+      creditsFromTokens(
+        usage,
+        resolveBillingRates({
+          provider: "openrouter",
+          modelId: "deepseek/deepseek-v4-flash-0731",
+          now: during,
+        }),
+      ),
+    ).toBe(
+      creditsFromTokens(
+        usage,
+        resolveBillingRates({
+          provider: "openrouter",
+          modelId: "deepseek/deepseek-v4-flash-0731",
+          now: after,
+        }),
+      ),
+    );
+    expect(
+      creditsFromTokens(
+        usage,
+        resolveBillingRates({
+          provider: "openrouter",
+          modelId: "nvidia/nemotron-3-ultra-550b-a55b:free",
+          now: after,
+        }),
+      ),
+    ).toBe(full);
+    expect(isOpenRouterFreeCatalogModel("openrouter/free")).toBe(true);
+    expect(isOpenRouterFreeCatalogModel("nex-agi/nex-n2.5-mini:free")).toBe(true);
+    expect(isOpenRouterFreeCatalogModel("openrouter/auto")).toBe(false);
   });
 
   it("charges topic less than text less than file", () => {

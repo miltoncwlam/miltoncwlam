@@ -32,6 +32,7 @@ git checkout archive/milton-2026-09-06
 - Exam lane chips: HKDSE (default), IGCSE, A-level. They shape notes, maps, papers, and cards.
 - Long sources generate notes and maps in sections, then merge.
 - Home offers **Version 4.0.0 beta**. Production home shows Version 3.9.3 until you enter. **Not now**, Escape, or a click outside closes the popup — you do not have to enter. That stay is this visit only. Tick **Do not show again** to remember enter or hide in a cookie.
+- Until **22 Sep 2026 23:59 UTC**, OpenRouter free models take **60% energy**. The live `:free` list rotates. After that minute, Version 4.0.0 leaves beta.
 - In beta, a **Beta feedback** panel for comments and bug reports. Crashes and uncaught errors in 4.0.0 beta are recorded automatically.
 
 ### Changed
@@ -40,6 +41,7 @@ git checkout archive/milton-2026-09-06
 - Class links stay on `/decks/[id]/class`, not the notebook aside.
 - Landing copy is stay-in-the-notebook, with an exam-paper hero.
 - The beta cookie is only set if you tick **Do not show again**. Enter without it stays in this browser tab.
+- After 22 Sep 2026 23:59 UTC the home popup goes away and the header shows **Version 4.0.0**.
 
 ### Fixed
 - Failed notes no longer crash the notebook page.

@@ -11,6 +11,7 @@ test("landing and protected route redirect to sign-in", async ({ page }) => {
     page.getByRole("heading", { name: /version 4\.0\.0 is now on beta/i }),
   ).toBeVisible();
   await expect(page.getByLabel(/do not show again/i)).toBeVisible();
+  await expect(page.getByText(/60% energy until 22 Sep 23:59 UTC/i).first()).toBeVisible();
   await page.getByRole("button", { name: /not now/i }).click();
   await expect(
     page.getByRole("heading", { name: "Stay in the notebook", exact: true }),

@@ -35,7 +35,9 @@ export const DEFAULT_OPENROUTER_FREE_BLOCKLIST = [
 /** Last live probe of $0 models that returned structured JSON (no OpenAI). */
 export const SEED_VERIFIED_FREE_MODELS = [
   "openrouter/free",
-  "nvidia/nemotron-nano-9b-v2:free",
+  "nex-agi/nex-n2.5-mini:free",
+  "nex-agi/nex-n2.5-pro:free",
+  "dots-studio/dots-3-note-preview:free",
   "nvidia/nemotron-3-super-120b-a12b:free",
 ] as const;
 
@@ -50,10 +52,6 @@ const probeSchema = z.object({
     )
     .length(1),
 });
-
-export function supportsStructuredOutputs(params: string[] | undefined): boolean {
-  return (params ?? []).includes("structured_outputs");
-}
 
 /** OpenAI and Anthropic on OpenRouter are region-blocked in HK. */
 export function isHkBlockedProvider(modelId: string): boolean {
@@ -91,10 +89,9 @@ const failedIds = new Set<string>(DEFAULT_OPENROUTER_FREE_BLOCKLIST);
 const probedAt = new Map<string, number>();
 let verifying = false;
 
-function isZeroPrice(value: string | number | undefined): boolean {
-  if (value === undefined) return false;
-  const n = typeof value === "number" ? value : Number(value);
-  return Number.isFinite(n) && n === 0;
+function isListedFreeModel(id: string) {
+  const slug = id.trim().toLowerCase();
+  return slug === "openrouter/free" || slug.endsWith(":free");
 }
 
 function blocklist(): Set<string> {
@@ -130,7 +127,11 @@ function applyVerifiedFilter(
   models: OpenRouterCatalogModel[],
 ): OpenRouterCatalogModel[] {
   const allowed = verifiedIds ?? seedVerified();
-  return models.filter((model) => allowed.has(model.id)).slice(0, 12);
+  return [...models].sort((left, right) => {
+    const leftGood = allowed.has(left.id) ? 0 : 1;
+    const rightGood = allowed.has(right.id) ? 0 : 1;
+    return leftGood - rightGood;
+  });
 }
 
 function verifyCatalogInBackground(models: OpenRouterCatalogModel[]): void {
@@ -199,11 +200,7 @@ export async function listOpenRouterFreeModels(): Promise<
         const id = entry.id?.trim();
         if (!id || blocked.has(id) || isPaidOpenRouterModel(id)) return false;
         if (isHkBlockedProvider(id)) return false;
-        if (!supportsStructuredOutputs(entry.supported_parameters)) return false;
-        return (
-          isZeroPrice(entry.pricing?.prompt) &&
-          isZeroPrice(entry.pricing?.completion)
-        );
+        return isListedFreeModel(id);
       })
       .map((entry) => {
         const id = entry.id!.trim();
@@ -212,8 +209,7 @@ export async function listOpenRouterFreeModels(): Promise<
           name: displayOpenRouterModelName(entry.name ?? id, id),
           group: "catalog" as const,
         };
-      })
-      .slice(0, 40);
+      });
 
     verifyCatalogInBackground(models);
     const visible = applyVerifiedFilter(models);

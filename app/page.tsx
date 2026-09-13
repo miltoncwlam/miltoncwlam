@@ -12,12 +12,14 @@ import {
   isVercelPreviewEnv,
   persistBetaChoice,
 } from "@/lib/beta";
+import { isV4GenerallyAvailable } from "@/lib/campaign";
 
 export default async function Home() {
   const session = await getSession();
   if (session) redirect("/decks");
   const persist = persistBetaChoice((await cookies()).get(BETA_COOKIE)?.value);
-  const beta = isVercelPreviewEnv() || persist === "enter";
+  const ga = isV4GenerallyAvailable();
+  const beta = ga || isVercelPreviewEnv() || persist === "enter";
   const t = await getTranslations("landing");
   const localDev = isLocalAppHost((await headers()).get("host"));
 
@@ -105,7 +107,7 @@ export default async function Home() {
           </Link>
         </div>
       </section>
-      {beta || persist === "hide" ? null : <V4BetaPopup />}
+      {ga || beta || persist === "hide" ? null : <V4BetaPopup />}
     </main>
   );
 }

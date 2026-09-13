@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { enterBeta, hideBetaPrompt } from "@/components/beta-session";
 import { BETA_SESSION_KEY } from "@/lib/beta";
+import { isFreeModelCampaignActive } from "@/lib/campaign";
 
 export function V4BetaPopup() {
   const t = useTranslations("landing");
@@ -59,6 +60,9 @@ export function V4BetaPopup() {
         {t("betaTitle")}
       </h2>
       <p className="page-subtitle mt-3">{t("betaBody")}</p>
+      {isFreeModelCampaignActive() ? (
+        <p className="campaign-note">{t("campaignBody")}</p>
+      ) : null}
       <label className="beta-quiet">
         <input
           checked={quiet}

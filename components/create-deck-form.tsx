@@ -24,6 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { notebookHref } from "@/lib/app-url";
+import { isFreeModelCampaignActive } from "@/lib/campaign";
 import {
   LIKELY_SCAN_BYTES,
   MAX_OCR_PAGES,
@@ -32,22 +34,21 @@ import {
   estimateArtifactCredits,
   estimateOcrCredits,
 } from "@/lib/credits/estimate-generation";
+import { friendlyGenerateError } from "@/lib/friendly-generate-error";
 import {
   LOCALE_CODES,
   LOCALE_LABELS,
   parseAppLocale,
   type AppLocale,
 } from "@/lib/i18n/locales";
-import { notebookHref } from "@/lib/app-url";
-import { createClient } from "@/lib/supabase/client";
 import {
   DEFAULT_OCR_MODEL,
   DEFAULT_OPENROUTER_MODEL,
   PAID_OPENROUTER_MODELS,
+  isPaidOpenRouterModel,
 } from "@/lib/llm/models";
+import { createClient } from "@/lib/supabase/client";
 import type { LLMProvider } from "@/lib/types/flashcard";
-
-import { friendlyGenerateError } from "@/lib/friendly-generate-error";
 
 type SourceMode = "topic" | "text" | "url" | "file";
 
@@ -97,7 +98,15 @@ export function CreateDeckForm({
   const [provider, setProvider] = useState<LLMProvider>(
     providers.includes("ollama") ? "ollama" : "openrouter",
   );
-  const [openrouterModel, setOpenrouterModel] = useState(DEFAULT_OPENROUTER_MODEL);
+  const [openrouterModel, setOpenrouterModel] = useState(() => {
+    if (isFreeModelCampaignActive() && freeModels.length) {
+      return (
+        freeModels.find((entry) => entry.id === "openrouter/free")?.id ??
+        freeModels[0].id
+      );
+    }
+    return DEFAULT_OPENROUTER_MODEL;
+  });
   const [topicChars, setTopicChars] = useState(0);
   const [textChars, setTextChars] = useState(0);
   const [fileMeta, setFileMeta] = useState<{ bytes: number; mimeType: string } | null>(
@@ -393,7 +402,11 @@ export function CreateDeckForm({
         ) : (
           <>
             <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
-              {t("energyCost", { cost: estimate.textCredits })}
+              {isFreeModelCampaignActive() &&
+              provider === "openrouter" &&
+              !isPaidOpenRouterModel(selectedModel)
+                ? t("energyCampaign", { cost: estimate.textCredits })
+                : t("energyCost", { cost: estimate.textCredits })}
             </p>
             {overBalance ? (
               <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-900">
@@ -536,7 +549,11 @@ export function CreateDeckForm({
                     <SelectContent>
                       {freeModels.length ? (
                         <SelectGroup>
-                          <SelectLabel>{t("modelFree")}</SelectLabel>
+                          <SelectLabel>
+                            {isFreeModelCampaignActive()
+                              ? t("modelFreeCampaign")
+                              : t("modelFree")}
+                          </SelectLabel>
                           {freeModels.map((entry) => (
                             <SelectItem key={entry.id} value={entry.id}>
                               {catalogLabel(entry.name)}

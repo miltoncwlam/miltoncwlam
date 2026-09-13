@@ -1,4 +1,8 @@
 import {
+  FREE_MODEL_CAMPAIGN_RATE,
+  isFreeModelCampaignActive,
+} from "@/lib/campaign";
+import {
   FREE_MODEL_BILLING_RATES,
   type BillingRates,
 } from "@/lib/credits/config";
@@ -134,9 +138,16 @@ export function getPaidOpenRouterModel(
   return PAID_BY_ID.get(modelId);
 }
 
+export function isOpenRouterFreeCatalogModel(modelId: string) {
+  if (isPaidOpenRouterModel(modelId)) return false;
+  const id = modelId.trim().toLowerCase();
+  return id === "openrouter/free" || id.endsWith(":free");
+}
+
 export function resolveBillingRates(input: {
   provider: "openrouter" | "ollama";
   modelId: string;
+  now?: number;
 }): BillingRates {
   if (input.provider === "ollama") {
     return { inputPerM: 0, outputPerM: 0 };
@@ -144,6 +155,13 @@ export function resolveBillingRates(input: {
   const paid = getPaidOpenRouterModel(input.modelId);
   if (paid) {
     return { inputPerM: paid.inputPerM, outputPerM: paid.outputPerM };
+  }
+
+  if (isFreeModelCampaignActive(input.now)) {
+    return {
+      inputPerM: FREE_MODEL_BILLING_RATES.inputPerM * FREE_MODEL_CAMPAIGN_RATE,
+      outputPerM: FREE_MODEL_BILLING_RATES.outputPerM * FREE_MODEL_CAMPAIGN_RATE,
+    };
   }
 
   return { ...FREE_MODEL_BILLING_RATES };

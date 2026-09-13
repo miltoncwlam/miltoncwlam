@@ -10,6 +10,7 @@ import { AuthProviders } from "@/components/auth-providers";
 import { BetaErrorRecorder } from "@/components/beta-error-recorder";
 import { BetaFeedback } from "@/components/beta-feedback";
 import { BetaOnly, BetaSessionProvider } from "@/components/beta-session";
+import { CampaignBanner } from "@/components/campaign-banner";
 import { GenerationJobsProvider } from "@/components/generation-jobs";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -21,6 +22,7 @@ import {
   isVercelPreviewEnv,
   persistBetaChoice,
 } from "@/lib/beta";
+import { isV4GenerallyAvailable } from "@/lib/campaign";
 import { env } from "@/lib/env";
 import "./globals.css";
 
@@ -55,6 +57,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const messages = await getMessages();
   const localDev = isLocalAppHost((await headers()).get("host"));
   const persistBeta =
+    isV4GenerallyAvailable() ||
     persistBetaChoice((await cookies()).get(BETA_COOKIE)?.value) === "enter";
   const preview = isVercelPreviewEnv();
 
@@ -81,6 +84,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
                   preview={preview}
                   session={session}
                 />
+                <CampaignBanner />
                 <div className="flex min-h-0 flex-1 flex-col">{children}</div>
                 <BetaOnly>
                   <BetaErrorRecorder />

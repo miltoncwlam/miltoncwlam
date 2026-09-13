@@ -13,6 +13,7 @@ import {
   BETA_SESSION_KEY,
   displayAppVersion,
 } from "@/lib/beta";
+import { isV4GenerallyAvailable } from "@/lib/campaign";
 
 function subscribe(onStoreChange: () => void) {
   window.addEventListener(BETA_EVENT, onStoreChange);
@@ -46,7 +47,7 @@ export function enterBetaSession() {
 
 export function useInBeta(persistBeta: boolean, preview: boolean) {
   const session = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  return preview || persistBeta || session;
+  return isV4GenerallyAvailable() || preview || persistBeta || session;
 }
 
 export function AppVersion({
@@ -81,7 +82,7 @@ export function useBetaSession() {
 
 export function BetaOnly({ children }: { children: ReactNode }) {
   const { inBeta } = useBetaSession();
-  if (!inBeta) return null;
+  if (isV4GenerallyAvailable() || !inBeta) return null;
   return children;
 }
 
