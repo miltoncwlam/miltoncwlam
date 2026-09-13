@@ -16,7 +16,7 @@ export const LEGAL = {
   ),
   contactEmail: publicEnv("NEXT_PUBLIC_LEGAL_EMAIL", "privacy@example.com"),
   jurisdiction: publicEnv("NEXT_PUBLIC_LEGAL_JURISDICTION", "Hong Kong"),
-  lastUpdated: "13 August 2026",
+  lastUpdated: "13 September 2026",
   hosting: "Vercel",
 } as const;
 
@@ -72,22 +72,23 @@ function block(
 export function privacyBlocks(v: LegalValues): LegalBlock[] {
   return [
     block("1. Who we are", [
-      "{product} is an AI study tool that turns notes, files, links, and topics into flashcards, quizzes, and a community encyclopedia. It is operated by {operator}.",
+      "{product} is an AI study notebook. You drop notes, a file, a URL, or a topic, then stay in that notebook: study notes, mind maps, exam papers, flashcards, and chat. You can set an exam lane (HKDSE, IGCSE, or A-level). There is also a community library of study packs. It is operated by {operator}.",
       "For privacy questions, access, or deletion requests, email {email}. These pages describe how the live product works. They are not legal advice.",
     ], undefined, v),
     block("2. Information we collect", [
       "We collect only what we need to run accounts, generate study materials, and keep the service secure.",
     ], [
       "Account data: Clerk user ID, email address, and display name used to keep you signed in. Clerk stores sign-in credentials (including email/password if you use them) under its own terms. We may treat an allowlisted email as admin.",
-      "Study data: decks, cards (front, back, hints, quiz options), ratings, spaced-repetition state, quiz answers and scores, share/visibility settings, subject and grade tags, and weekly energy (study allowance) balances. Energy is an in-app limit, not money.",
-      "Beta feedback: if you enter Version 4.0.0 beta, comments and bug reports you send, plus automatic records of crashes and uncaught errors (page path, a short message, and a stack when the browser gives one). We use this to fix the beta. It is not used for ads.",
-      "Uploads and sources: text you paste, topics, fetched URL/YouTube study text, and files (PDF, images, Markdown, TXT) stored in private Supabase Storage when you upload. You can choose to drop source files immediately, keep them about 24 hours, or keep them with the deck.",
-      "Community data: public or unlisted decks you submit, copies you make of library packs, likes, and moderation reports. Seed encyclopedia packs are published by us, not by learners.",
+      "Guest trial: Try as guest creates a Clerk guest user with a placeholder email we generate (you cannot receive mail there). A hk_guest_uid cookie remembers that guest so you can resume the trial. The trial is two generates (typically reading a source, then writing notes). Guests do not see energy.",
+      "Notebook data: notebooks, ingest progress, exam lane, study notes, mind maps, exam papers, cards (front, back, hints, quiz options), notebook chat you send and replies we save, ratings, spaced-repetition state, quiz and play scores, share/visibility settings, subject and grade tags, weekly energy balances, and gift codes you redeem. Energy is an in-app limit, not money.",
+      "Beta feedback: if you enter Version 4.0.0 beta, comments and bug reports you send, plus automatic records of crashes and uncaught errors (page path, a short message, a stack when the browser gives one, user agent, and a hashed IP). We use this to fix the beta. It is not used for ads.",
+      "Uploads and sources: text you paste, topics, fetched URL/YouTube study text, and files (PDF, images, Markdown, TXT) stored in private Supabase Storage when you upload. You can choose to drop source files immediately, keep them about 24 hours, or keep them with the notebook.",
+      "Community data: public or unlisted notebooks you submit, copies you make of library packs, likes, and moderation reports. Seed encyclopedia packs are published by us, not by learners.",
       "Media: card images we store (licensed Wikimedia Commons or Openverse photos with attribution, or rarely AI-generated community art labelled as such). We keep author, licence, and source URL with the card.",
-      "Technical data: standard server and host logs (which may include IP address, user agent, and request path), error reports, and essential cookies described in the Cookie Notice.",
+      "Technical data: standard server and host logs (which may include IP address, user agent, and request path), error reports, and cookies described in the Cookie Notice.",
     ], v),
     block("3. How we use information", [
-      "We use this information to create and secure your account, generate and store flashcards and quizzes, attach licensed pictures when a photo is useful, save study and quiz progress, run the community library, enforce energy and rate limits, moderate public decks, send spoken audio when you tap Speak, and diagnose outages or abuse.",
+      "We use this information to create and secure your account, read sources, write notes, maps, papers, and cards, run notebook chat, attach licensed pictures when a photo is useful, save study and quiz progress, run the community library, enforce energy and guest-trial limits, moderate public notebooks, send spoken audio when you tap Speak, and diagnose outages or abuse.",
       "We do not sell your personal data. We do not use advertising cookies or sell browsing data for ads. We do not use learner prompts to train our own foundation models.",
     ], undefined, v),
     block("4. Hong Kong Personal Data (Privacy) Ordinance", [
@@ -95,45 +96,47 @@ export function privacyBlocks(v: LegalValues): LegalBlock[] {
       "You may request access to or correction of your personal data by emailing {email}. We may need to verify it is you. We will respond within the time the Ordinance requires.",
     ], undefined, v),
     block("5. AI processing", [
-      "When you generate a deck or quiz, the study text (and, for scanned PDFs or photos, page images) is sent to the model provider you pick.",
-      "Cloud generation uses OpenRouter, which routes the request to the selected model. OpenRouter and that model host process the prompt under their own privacy terms. Do not paste secrets, exam papers you are not allowed to share, or other people’s personal data.",
-      "Learners do not pay for or run image-generation models. Generating a deck may look up a confirmed-licence photo when a picture would help. AI illustrations are a last resort for community/admin library art only, and those cards are labelled “AI-generated”.",
+      "When you read a source, write notes, a mind map, an exam paper, or cards, or when you chat in the notebook, the relevant text (and, for scanned PDFs or photos, page images) is sent through OpenRouter to a model.",
+      "For studio work you can pick a listed model. Notebook chat uses a model we choose; you cannot switch chat to another model. OpenRouter and that model host process the prompt under their own privacy terms. Do not paste secrets, exam papers you are not allowed to share, or other people’s personal data.",
+      "Learners do not pay for or run image-generation models. Generating cards may look up a confirmed-licence photo when a picture would help. AI illustrations are a last resort for community/admin library art only, and those cards are labelled “AI-generated”.",
     ], undefined, v),
     block("6. Licensed images", [
       "We look up pictures in this order: Wikimedia Commons, then other confirmed-licence sources such as Openverse (CC0, public domain, CC BY, or CC BY-SA, commercial-ok). We download a copy into our storage instead of hotlinking. We store attribution (creator, licence, source URL) and show credit under the picture.",
-      "We skip unclear, non-commercial, fair-use, or brand/character images. Copying a community deck copies the image URL and the credit. Wikimedia, Openverse, and similar sites receive a search/download request; they do not receive your account email from us.",
+      "We skip unclear, non-commercial, fair-use, or brand/character images. Copying a community notebook copies the image URL and the credit. Wikimedia, Openverse, and similar sites receive a search/download request; they do not receive your account email from us.",
     ], undefined, v),
     block("7. Community, sharing, and embeds", [
-      "If you make a deck public, its title, cards, and pictures can be seen by signed-in users in the community library. Unlisted share links work for anyone who has the URL, including people who are not signed in. Embeds are read-only.",
-      "Do not publish other people’s personal data or content you do not have the right to share. We may hide or remove public decks that fail moderation or that we are told infringe rights.",
+      "If you make a notebook public, its title, cards, and pictures can be seen by signed-in users in the community library. Unlisted share links work for anyone who has the URL, including people who are not signed in. Embeds are read-only. Class-link URLs still exist if you open them; they are not listed in the notebook aside.",
+      "Do not publish other people’s personal data or content you do not have the right to share. We may hide or remove public notebooks that fail moderation or that we are told infringe rights.",
     ], undefined, v),
     block("8. Speech", [
       "If you tap Speak, the card text is sent to our speech endpoint (currently a text-to-speech library running on our server) to produce audio. That text is used only to speak the card.",
     ], undefined, v),
     block("9. Children and schools", [
       "{product} is a study aid. It is not directed at children under 13. If you are under 18, use the app with a parent, guardian, or teacher. Schools or admins who provision accounts are responsible for having a lawful basis to do so.",
-      "AI cards can be wrong. They are not a substitute for teaching, official syllabuses, or exam instructions.",
+      "AI notes, maps, papers, cards, and chat can be wrong. They are not a substitute for teaching, official syllabuses, or exam instructions.",
     ], undefined, v),
     block("10. Processors and transfers", [
       "We use other organisations to run the service. They only get what they need to do that job.",
     ], [
       "{hosting}: hosts the website and API (including preview deployments).",
       "Supabase: Postgres database and private file storage.",
-      "Clerk: email and hosted sign-in (session cookies on our domain).",
-      "OpenRouter and the model provider you select: generation prompts and outputs.",
+      "Clerk: email, hosted sign-in, and guest users (session cookies on our domain).",
+      "OpenRouter and the model in use: generation prompts, chat, and outputs.",
       "Wikimedia Commons / Openverse: image search and download of licensed files.",
     ], v),
     block("11. International hosting", [
       "Servers for {hosting}, Supabase, OpenRouter, or Clerk may be outside {jurisdiction}. If you use the cloud app, your data may be transferred to and stored in those places so we can provide the service. We choose reputable processors and HTTPS in transit.",
     ], undefined, v),
     block("12. Retention", [
-      "Account, deck, card, study, quiz, and energy records stay until you delete the deck or we delete the account after a valid request.",
-      "Source files follow the retention you picked at generate time (delete now, about 24 hours, or keep with the deck). After a successful generate we clear leftover source text when retention is not “keep”.",
+      "Account, notebook, card, chat, study, quiz, play, and energy records stay until you delete the notebook or we delete the account after a valid request.",
+      "Source files follow the retention you picked (delete now, about 24 hours, or keep with the notebook). After a successful read we clear leftover source text when retention is not “keep”.",
+      "Guest notebooks stay on the guest account. Create a real account if you want to keep studying after the trial. We may delete unused guest accounts.",
+      "Beta reports are kept to fix Version 4.0.0 beta and related outages. We may keep them after the beta ends if we still need them for security or debugging.",
       "Server logs are kept only as long as needed for security and debugging, then rotated by the host.",
       "If you ask us to delete your account, we will delete or irreversibly anonymise personal data we control, except records we must keep for security, abuse, or law (for example audit logs of admin actions).",
     ], undefined, v),
     block("13. Your choices", [
-      "You can sign out, edit or delete decks you own, turn off share links, change language, and email {email} to request access, correction, or deletion. Self-serve full account deletion may be added later; until then we handle deletion by email.",
+      "You can sign out, edit or delete notebooks you own, turn off share links, change language, and email {email} to request access, correction, or deletion. Self-serve full account deletion may be added later; until then we handle deletion by email.",
       "You can block cookies in your browser; essential cookies are required to stay signed in. See the Cookie Notice.",
     ], undefined, v),
     block("14. Security", [
@@ -151,34 +154,35 @@ export function privacyBlocks(v: LegalValues): LegalBlock[] {
 export function termsBlocks(v: LegalValues): LegalBlock[] {
   return [
     block("1. Agreement", [
-      "These Terms govern use of {product} by {operator}. By creating an account or using the service you agree to these Terms and the Privacy Policy. If you do not agree, do not use the app.",
+      "These Terms govern use of {product} by {operator}. By creating an account, using Try as guest, or using the service you agree to these Terms and the Privacy Policy. If you do not agree, do not use the app.",
     ], undefined, v),
     block("2. The service", [
-      "{product} helps you generate flashcards and quizzes from topics, text, URLs, and files; study with flip cards, ratings, and speech; take trainer-style quizzes; and browse or copy community encyclopedia packs.",
-      "Features, models, energy grants, and limits can change as we improve the product. Cloud generation on {hosting} needs a configured OpenRouter key.",
+      "{product} is a study notebook: you drop a source, then write notes, mind maps, exam papers, and cards, or chat. You can pick an exam lane (HKDSE, IGCSE, or A-level). Play, quiz, share, embed, and class-link URLs still exist if you use them. Community encyclopedia packs can be copied into your library.",
+      "Try as guest is a short trial (two generates), then we ask you to create an account. Features, listed models, energy grants, and limits can change as we improve the product. Cloud generation on {hosting} needs a configured OpenRouter key.",
+      "Until 22 Sep 2026 23:59 UTC some listed models take 60% energy. After that minute, Version 4.0.0 leaves beta. Energy stays an in-app allowance, not money.",
     ], undefined, v),
     block("3. Eligibility", [
       "You must be able to form a contract under the laws of {jurisdiction}. If you are under 18, a parent, guardian, or school must agree to these Terms for you. Do not use the service if you are under 13.",
     ], undefined, v),
     block("4. Accounts", [
-      "Keep your sign-in details secret. You are responsible for activity on your account. Admins may set weekly energy. Do not share an account in a way that breaks these Terms or school rules.",
-      "We may suspend or close accounts that look compromised, abusive, or created to bypass limits.",
+      "Keep your sign-in details secret. You are responsible for activity on your account, including a guest session on your device. Admins may set weekly energy. Do not share an account in a way that breaks these Terms or school rules.",
+      "We may suspend or close accounts that look compromised, abusive, unused guests, or created to bypass limits.",
     ], undefined, v),
     block("5. Energy and limits", [
-      "Weekly energy is an in-app allowance for text generation and classroom play. It is not money, not a stored-value facility, and not redeemable for cash. Image generation is not a learner product and is not billed as a separate learner balance.",
-      "Starting a play round spends 20 energy. Leave before the finish screen and that ante stays spent. Score 50%+ to get 20 back; 80%+ pays 30; a perfect run pays 40. Unused energy does not have to roll over. We may rate-limit generate, quiz, play, and speech requests to protect the service.",
+      "Weekly energy is an in-app allowance for reading sources, writing notes, maps, papers, and cards, notebook chat, and classroom play. It is not money, not a stored-value facility, and not redeemable for cash. Image generation is not a learner product and is not billed as a separate learner balance. Gift codes add energy to an account; they are not a purchase of a stored-value facility.",
+      "Starting a play round on a notebook you own spends 20 energy. Leave before the finish screen and that ante stays spent. Score 50%+ to get 20 back; 80%+ pays 30; a perfect run pays 40. Share and embed play does not spend the visitor’s energy. Unused energy does not have to roll over. We may rate-limit generate, chat, quiz, play, and speech requests to protect the service.",
     ], undefined, v),
     block("6. Acceptable use", [
       "You agree not to:",
     ], [
       "Upload material you do not have the right to use (including most commercial textbooks, leaked exam papers, or other people’s personal data).",
       "Upload illegal content, malware, or sexual content involving minors.",
-      "Try to break into the service, scrape it aggressively, bypass energy or rate limits, or reverse engineer other users’ data.",
-      "Use generation to harass, cheat in a way your school forbids, or produce spam.",
-      "Submit public community decks that are off-topic, harmful, or clearly copyright-infringing.",
+      "Try to break into the service, scrape it aggressively, bypass energy, guest-trial, or rate limits, or reverse engineer other users’ data.",
+      "Use generation or chat to harass, cheat in a way your school forbids, or produce spam.",
+      "Submit public community notebooks that are off-topic, harmful, or clearly copyright-infringing.",
     ], v),
     block("7. Your content", [
-      "You keep whatever rights you already have in text and files you upload. You grant {operator} a limited licence to store, process, display, and send that content to the AI and storage providers needed to run {product} for you — including generating cards, licensed-image lookup, speech, sharing you turn on, and community listing you request.",
+      "You keep whatever rights you already have in text and files you upload. You grant {operator} a limited licence to store, process, display, and send that content to the AI and storage providers needed to run {product} for you — including reading sources, writing notes, maps, papers, and cards, notebook chat, licensed-image lookup, speech, sharing you turn on, and community listing you request.",
       "You confirm you have the rights to upload that material and to grant this licence.",
     ], undefined, v),
     block("8. Community packs and pictures", [
@@ -186,21 +190,21 @@ export function termsBlocks(v: LegalValues): LegalBlock[] {
       "AI-generated community art is labelled “AI-generated”. It is not a photograph of a real person or a substitute for a rights-cleared textbook figure.",
     ], undefined, v),
     block("9. AI output", [
-      "Flashcards, quizzes, hints, and related text are produced by AI and may be incomplete, biased, outdated, or wrong. {product} is a study aid, not a teacher, examiner, or professional adviser. Always check important facts against your course materials before exams or any high-stakes use.",
-      "We do not warrant that a deck will match a particular syllabus (including HKDSE) or that quiz distractors will always be perfect, though we aim for plausible same-topic choices.",
+      "Notes, mind maps, exam papers, flashcards, quizzes, hints, chat replies, and related text are produced by AI and may be incomplete, biased, outdated, or wrong. {product} is a study aid, not a teacher, examiner, or professional adviser. Always check important facts against your course materials before exams or any high-stakes use.",
+      "Exam lanes shape how we write. We do not warrant that a notebook will match a particular syllabus (including HKDSE, IGCSE, or A-level) or that quiz distractors will always be perfect, though we aim for plausible same-topic choices.",
     ], undefined, v),
     block("10. Sharing and embeds", [
-      "If you create a share or embed link, you are responsible for who you give it to. Anyone with an unlisted or public link may study that deck. Signed-in users may save progress on shared decks.",
+      "If you create a share, embed, or class link, you are responsible for who you give it to. Anyone with an unlisted or public link may study that notebook. Signed-in users may save progress on shared notebooks.",
     ], undefined, v),
     block("11. Availability", [
-      "We may change, suspend, or stop features (including models, community packs, or energy grants). We are not liable for downtime of {hosting}, Supabase, OpenRouter, or other processors.",
+      "We may change, suspend, or stop features (including models, community packs, the beta, or energy grants). We are not liable for downtime of {hosting}, Supabase, OpenRouter, or other processors.",
     ], undefined, v),
     block("12. Disclaimers and liability", [
       "The service is provided “as is” and “as available” to the fullest extent permitted by the laws of {jurisdiction}. We disclaim implied warranties of merchantability, fitness for a particular purpose, and non-infringement where we are allowed to.",
-      "To the maximum extent permitted, {operator} is not liable for indirect or consequential loss, lost marks, failed exams, or decisions made on AI-generated cards. Our total liability for claims arising out of the service is limited to zero, because {product} is provided without a cash fee to learners, except where {jurisdiction} law says we cannot limit liability (including death or personal injury caused by negligence, or fraud).",
+      "To the maximum extent permitted, {operator} is not liable for indirect or consequential loss, lost marks, failed exams, or decisions made on AI-generated notes, maps, papers, cards, or chat. Our total liability for claims arising out of the service is limited to zero, because {product} is provided without a cash fee to learners, except where {jurisdiction} law says we cannot limit liability (including death or personal injury caused by negligence, or fraud).",
     ], undefined, v),
     block("13. Indemnity", [
-      "If your upload or public deck causes a claim against us (for example copyright or misuse of personal data), you will indemnify {operator} for reasonable losses and legal costs to the extent permitted by law.",
+      "If your upload or public notebook causes a claim against us (for example copyright or misuse of personal data), you will indemnify {operator} for reasonable losses and legal costs to the extent permitted by law.",
     ], undefined, v),
     block("14. Changes to these Terms", [
       "We may update these Terms. The “Last updated” date will change. If you keep using {product} after that, you accept the new Terms.",
@@ -221,8 +225,13 @@ export function cookieRows(v: LegalValues): CookieRow[] {
   return [
     {
       name: "Clerk cookies (__session, __client_uat, and similar)",
-      purpose: "Keep you signed in with Clerk (email or other methods you enabled in Clerk).",
+      purpose: "Keep you signed in with Clerk (email, sign-up, or Try as guest).",
       duration: "As described in Clerk’s cookie documentation.",
+    },
+    {
+      name: "hk_guest_uid",
+      purpose: "Remember the guest user created for Try as guest so the trial can resume on this browser.",
+      duration: "About 30 days.",
     },
     {
       name: v.localeCookie,
@@ -235,27 +244,33 @@ export function cookieRows(v: LegalValues): CookieRow[] {
         "Remember your Version 4.0.0 beta choice only if you ticked Do not show again (stay in beta, or hide the popup).",
       duration: "About 1 year.",
     },
+    {
+      name: "hk_local_auth",
+      purpose:
+        "Localhost development sign-in only. Not set on hkstudya.vercel.app.",
+      duration: "About 30 days, localhost only.",
+    },
   ];
 }
 
 export function cookiesBlocks(v: LegalValues): LegalBlock[] {
   return [
     block("1. How we use cookies", [
-      "{product} uses essential cookies and similar storage so the app can sign you in and remember language. We set a hkstudya-beta cookie only if you tick Do not show again on the Version 4.0.0 beta popup. We do not set advertising or cross-site tracking cookies, and we do not sell browsing data for ads.",
-      "Because these cookies are required to run the service you asked for (sign-in and language), we do not show a separate marketing-cookie banner.",
+      "{product} uses essential cookies and similar storage so the app can sign you in, resume a guest trial, and remember language. We set a hkstudya-beta cookie only if you tick Do not show again on the Version 4.0.0 beta popup. We do not set advertising or cross-site tracking cookies, and we do not sell browsing data for ads.",
+      "Because Clerk, guest-resume, and language cookies are needed to run the service you asked for, we do not show a separate marketing-cookie banner. The beta cookie is optional and is only set if you ask us to remember that choice.",
     ], undefined, v),
     block("2. Cookies we set", [
       "The table on this page lists the main cookies. Names can vary slightly by browser or library version.",
     ], undefined, v),
     block("3. Local storage", [
-      "The browser may store study-a-muted so Speak stays quiet if you turned sound off. This-visit Version 4.0.0 beta is stored in session storage unless you asked us not to show the popup again. That stays on your device and is not sent to us as a profile.",
+      "The browser may store study-a-muted so Speak stays quiet if you turned sound off, study-a-theme for the colour theme, and study-a-tutorial so the account walkthrough stays dismissed. This-visit Version 4.0.0 beta is stored as hkstudya-beta-session unless you asked us not to show the popup again. Play and exam screens may keep a short timer or round key in session storage. That stays on your device and is not sent to us as a profile.",
     ], undefined, v),
     block("4. Third parties", [
       "{hosting} may set technical cookies on preview or production hosts to run the deployment. Supabase Storage is called from our server with secret keys; it does not set an ad cookie on your browser for {product}.",
-      "If you generate cards, your study text goes to OpenRouter (cloud) as a server-side API call, not as a cookie. Wikimedia Commons and Openverse see a server-side image search, not your login cookie.",
+      "If you generate notes, maps, papers, cards, or chat, your study text goes to OpenRouter as a server-side API call, not as a cookie. Wikimedia Commons and Openverse see a server-side image search, not your login cookie.",
     ], undefined, v),
     block("5. Managing cookies", [
-      "You can delete cookies in your browser. Signing out clears your Clerk session. Blocking all cookies will usually stop sign-in from working. Language may reset to English if {localeCookie} is blocked.",
+      "You can delete cookies in your browser. Signing out clears your Clerk session. Blocking all cookies will usually stop sign-in from working. Language may reset to English if {localeCookie} is blocked. Clearing hk_guest_uid starts a new guest trial if you tap Try as guest again.",
     ], undefined, v),
     block("6. More information", [
       "See the Privacy Policy for how account and study data are used. Contact: {email}.",

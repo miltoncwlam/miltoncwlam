@@ -80,6 +80,52 @@ describe("v4 beta gate", () => {
   });
 });
 
+describe("legal pages", () => {
+  it("describes the notebook, guest trial, and cookies without calling models free", async () => {
+    const {
+      LEGAL,
+      cookieRows,
+      cookiesBlocks,
+      legalValues,
+      privacyBlocks,
+      termsBlocks,
+    } = await import("@/lib/legal");
+    const values = legalValues("NEXT_LOCALE");
+    const flatten = (
+      blocks: { paragraphs: string[]; bullets?: string[] }[],
+    ) =>
+      blocks
+        .flatMap((block) => [...block.paragraphs, ...(block.bullets ?? [])])
+        .join("\n");
+    const privacy = flatten(privacyBlocks(values));
+    const terms = flatten(termsBlocks(values));
+    const cookies = [
+      flatten(cookiesBlocks(values)),
+      ...cookieRows(values).map((row) => `${row.name} ${row.purpose}`),
+    ].join("\n");
+    const all = `${privacy}\n${terms}\n${cookies}`;
+
+    expect(LEGAL.lastUpdated).toBe("13 September 2026");
+    expect(privacy).toMatch(/study notebook/i);
+    expect(privacy).toMatch(/notebook chat/i);
+    expect(privacy).toMatch(/hk_guest_uid/);
+    expect(privacy).toMatch(/HKDSE/);
+    expect(privacy).toMatch(/hashed IP/i);
+    expect(terms).toMatch(/Try as guest/);
+    expect(terms).toMatch(/60% energy/);
+    expect(terms).toMatch(/notebook chat/i);
+    expect(cookies).toMatch(/hk_guest_uid/);
+    expect(cookies).toMatch(/hkstudya-beta/);
+    expect(cookies).toMatch(/hkstudya-beta-session/);
+    expect(cookieRows(values).map((row) => row.name)).toEqual(
+      expect.arrayContaining(["hk_guest_uid", "hkstudya-beta", "NEXT_LOCALE"]),
+    );
+    expect(all).not.toMatch(/free model/i);
+    expect(all).not.toMatch(/:free\b/);
+    expect(all).not.toMatch(/OpenRouter free/i);
+  });
+});
+
 describe("beta reports", () => {
   it("fingerprints and ignores noisy browser errors", async () => {
     const {

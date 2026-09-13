@@ -55,7 +55,7 @@ Community seeds stay under `system:study-a-community`.
 
 ### Legal pages & languages
 
-- Public routes: `/privacy`, `/terms`, `/cookies` (English is the official legal text; set contact/operator via `NEXT_PUBLIC_LEGAL_*` or `lib/legal.ts`)
+- Public routes: `/privacy`, `/terms`, `/cookies` (English in `lib/legal.ts` is the official legal text; set contact/operator via `NEXT_PUBLIC_LEGAL_*`). Last updated 13 September 2026.
 - UI languages: English, 繁體中文, 简体中文, 日本語, 한국어, Español, Français (header switcher; cookie `NEXT_LOCALE`)
 - Card generation language is a dropdown of the same list (not free text)
 

@@ -42,6 +42,7 @@ git checkout archive/milton-2026-09-06
 - Landing copy is stay-in-the-notebook, with an exam-paper hero.
 - The beta cookie is only set if you tick **Do not show again**. Enter without it stays in this browser tab.
 - After 22 Sep 2026 23:59 UTC the home popup goes away and the header shows **Version 4.0.0**.
+- Privacy, Terms, and the Cookie Notice describe the notebook, chat, guest trial, exam lanes, and the cookies we actually set (`hk_guest_uid`, `hkstudya-beta`, language). They do not call listed models free.
 
 ### Fixed
 - Failed notes no longer crash the notebook page.
