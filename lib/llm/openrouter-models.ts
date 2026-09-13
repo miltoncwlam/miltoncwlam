@@ -5,7 +5,11 @@ import { z } from "zod";
 
 import { env } from "@/lib/env";
 import { getOpenRouterClient } from "@/lib/llm/config";
-import { DEFAULT_OPENROUTER_MODEL, isPaidOpenRouterModel } from "@/lib/llm/models";
+import {
+  DEFAULT_OPENROUTER_MODEL,
+  displayOpenRouterModelName,
+  isPaidOpenRouterModel,
+} from "@/lib/llm/models";
 
 export type OpenRouterCatalogModel = {
   id: string;
@@ -61,19 +65,6 @@ export function isHkBlockedProvider(modelId: string): boolean {
     id.startsWith("anthropic/") ||
     id.includes("claude")
   );
-}
-
-/** User-facing label: never include the word "free". */
-export function displayOpenRouterModelName(name: string, id: string): string {
-  const cleaned = name
-    .replace(/\s*\(free\)/gi, "")
-    .replace(/:free\b/gi, "")
-    .replace(/\bfree\b/gi, "")
-    .replace(/\s{2,}/g, " ")
-    .replace(/[:|-]\s*$/g, "")
-    .trim();
-  if (cleaned) return cleaned;
-  return id.replace(/:free$/i, "").replace(/^.*\//, "");
 }
 
 type CacheEntry = {

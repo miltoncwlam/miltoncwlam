@@ -45,6 +45,8 @@ import {
   DEFAULT_OCR_MODEL,
   DEFAULT_OPENROUTER_MODEL,
   PAID_OPENROUTER_MODELS,
+  displayOpenRouterModelName,
+  isOpenRouterCatalogRouter,
   isPaidOpenRouterModel,
 } from "@/lib/llm/models";
 import { createClient } from "@/lib/supabase/client";
@@ -54,13 +56,8 @@ type SourceMode = "topic" | "text" | "url" | "file";
 
 type FreeModel = { id: string; name: string };
 
-function catalogLabel(name: string) {
-  return name
-    .replace(/\s*\(free\)/gi, "")
-    .replace(/:free\b/gi, "")
-    .replace(/\bfree\b/gi, "")
-    .replace(/\s{2,}/g, " ")
-    .trim();
+function visibleCatalogModels(models: FreeModel[]) {
+  return models.filter((entry) => !isOpenRouterCatalogRouter(entry.id));
 }
 
 export function CreateDeckForm({
@@ -98,12 +95,14 @@ export function CreateDeckForm({
   const [provider, setProvider] = useState<LLMProvider>(
     providers.includes("ollama") ? "ollama" : "openrouter",
   );
+  const catalogModels = useMemo(
+    () => visibleCatalogModels(freeModels),
+    [freeModels],
+  );
   const [openrouterModel, setOpenrouterModel] = useState(() => {
-    if (isFreeModelCampaignActive() && freeModels.length) {
-      return (
-        freeModels.find((entry) => entry.id === "openrouter/free")?.id ??
-        freeModels[0].id
-      );
+    const catalog = visibleCatalogModels(freeModels);
+    if (isFreeModelCampaignActive() && catalog.length) {
+      return catalog[0].id;
     }
     return DEFAULT_OPENROUTER_MODEL;
   });
@@ -547,16 +546,16 @@ export function CreateDeckForm({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {freeModels.length ? (
+                      {catalogModels.length ? (
                         <SelectGroup>
                           <SelectLabel>
                             {isFreeModelCampaignActive()
                               ? t("modelFreeCampaign")
                               : t("modelFree")}
                           </SelectLabel>
-                          {freeModels.map((entry) => (
+                          {catalogModels.map((entry) => (
                             <SelectItem key={entry.id} value={entry.id}>
-                              {catalogLabel(entry.name)}
+                              {displayOpenRouterModelName(entry.name, entry.id)}
                             </SelectItem>
                           ))}
                         </SelectGroup>

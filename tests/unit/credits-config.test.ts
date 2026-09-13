@@ -21,6 +21,8 @@ import {
   CHAT_OPENROUTER_MODEL,
   HK_SAFE_AUTO_MODELS,
   PAID_OPENROUTER_MODELS,
+  displayOpenRouterModelName,
+  isOpenRouterCatalogRouter,
   isOpenRouterFreeCatalogModel,
   isPaidOpenRouterModel,
   resolveBillingRates,
@@ -142,6 +144,17 @@ describe("unified token credits", () => {
     expect(isOpenRouterFreeCatalogModel("openrouter/free")).toBe(true);
     expect(isOpenRouterFreeCatalogModel("nex-agi/nex-n2.5-mini:free")).toBe(true);
     expect(isOpenRouterFreeCatalogModel("openrouter/auto")).toBe(false);
+    expect(isOpenRouterCatalogRouter("openrouter/free")).toBe(true);
+    expect(isOpenRouterCatalogRouter("nex-agi/nex-n2.5-mini:free")).toBe(false);
+    expect(
+      displayOpenRouterModelName(
+        "Nex-N2.5 Mini (free)",
+        "nex-agi/nex-n2.5-mini:free",
+      ),
+    ).toBe("Nex-N2.5 Mini");
+    expect(
+      displayOpenRouterModelName("Free Models Router", "openrouter/free"),
+    ).not.toMatch(/free/i);
   });
 
   it("charges topic less than text less than file", () => {

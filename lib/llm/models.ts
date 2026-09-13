@@ -144,6 +144,23 @@ export function isOpenRouterFreeCatalogModel(modelId: string) {
   return id === "openrouter/free" || id.endsWith(":free");
 }
 
+/** Picker label: never the word "free", never a raw `:free` slug. */
+export function displayOpenRouterModelName(name: string, id: string): string {
+  const cleaned = name
+    .replace(/\s*\(free\)/gi, "")
+    .replace(/:free\b/gi, "")
+    .replace(/\bfree\b/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .replace(/[:|-]\s*$/g, "")
+    .trim();
+  if (cleaned) return cleaned;
+  return id.replace(/:free$/i, "").replace(/^.*\//, "");
+}
+
+export function isOpenRouterCatalogRouter(modelId: string) {
+  return modelId.trim().toLowerCase() === "openrouter/free";
+}
+
 export function resolveBillingRates(input: {
   provider: "openrouter" | "ollama";
   modelId: string;

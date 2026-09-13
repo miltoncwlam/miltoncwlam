@@ -111,6 +111,10 @@ describe("public app urls", () => {
     expect(landing).toMatch(/Not now/);
     expect(landing).toMatch(/Do not show again/);
     expect(landing).toMatch(/60% energy until 22 Sep 23:59 UTC/);
+    expect(landing).not.toMatch(/free models/i);
+    expect(landing).not.toMatch(/OpenRouter free/i);
+    expect(landing).toMatch(/"modelFree": "More models"/);
+    expect(landing).not.toMatch(/Lower energy/);
     expect(landing).not.toMatch(/assign them with a class link/);
     const page = await readFile("app/page.tsx", "utf8");
     expect(page).toMatch(/sit this paper in the notebook/);
