@@ -234,6 +234,7 @@ export async function beginStudioArtifact(input: {
           sourceMode: source.sourceMode,
           sourceSize: { charCount: source.charCount },
           cardCount,
+          depth,
         })
       : estimateArtifactCredits({
           provider,
@@ -242,6 +243,7 @@ export async function beginStudioArtifact(input: {
           sourceSize: { charCount: source.charCount },
           kind: input.kind,
           questionCount: input.kind === "exam" ? plannedCount : undefined,
+          depth,
         });
   const spent = await assertAndSpendCredits({
     userId: input.userId,

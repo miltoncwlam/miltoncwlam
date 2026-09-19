@@ -8,6 +8,11 @@ import {
   type SourceSizeHints,
 } from "@/lib/credits/config";
 import { creditsFromImageUsd, creditsFromTokens } from "@/lib/credits/token-cost";
+import {
+  STUDIO_SECTION_CAP,
+  studioChunkChars,
+  type StudioDepth,
+} from "@/lib/i18n/locales";
 import { resolveBillingRates } from "@/lib/llm/models";
 import type { LLMProvider } from "@/lib/types/flashcard";
 
@@ -17,6 +22,7 @@ export type EstimateGenerationInput = {
   sourceMode: SourceMode;
   sourceSize?: SourceSizeHints;
   cardCount: number;
+  depth?: StudioDepth;
   illustrations?: boolean;
   imageCount?: number;
   usdPerImage?: number;
@@ -67,33 +73,57 @@ export function estimateInputTokens(
 
 export function estimateOutputTokens(cardCount: number): number {
   const count = Math.min(30, Math.max(3, cardCount));
-  return count * 180 + 200;
+  return count * 110 + 140;
 }
 
 export type ArtifactEstimateKind = "ingest" | "mindmap" | "notes" | "exam";
 
+function studioBilledSource(
+  kind: ArtifactEstimateKind | "cards",
+  sourceMode: SourceMode,
+  sourceSize: SourceSizeHints,
+  depth: StudioDepth = "basic",
+): { mode: SourceMode; chars: number; calls: number } {
+  const chunk = studioChunkChars(depth);
+  const raw = Math.max(0, sourceSize.charCount ?? 0);
+  const mode = sourceMode === "topic" ? "topic" : "text";
+  const calls =
+    kind === "notes" || kind === "mindmap"
+      ? Math.min(
+          STUDIO_SECTION_CAP,
+          Math.max(1, raw > chunk ? Math.ceil(raw / chunk) : 1),
+        )
+      : 1;
+  return { mode, chars: Math.min(raw, chunk), calls };
+}
+
 export function estimateArtifactOutputTokens(
   kind: ArtifactEstimateKind,
   questionCount = 12,
+  calls = 1,
 ) {
-  switch (kind) {
-    case "ingest":
-      return 220;
-    case "mindmap":
-      return 900;
-    case "notes":
-      return 1_400;
-    case "exam":
-      return Math.min(30, Math.max(6, questionCount)) * 140 + 200;
-    default:
-      return 800;
-  }
+  const perCall = (() => {
+    switch (kind) {
+      case "ingest":
+        return 220;
+      case "mindmap":
+        return 450;
+      case "notes":
+        return 650;
+      case "exam":
+        return Math.min(30, Math.max(6, questionCount)) * 70 + 120;
+      default:
+        return 500;
+    }
+  })();
+  return perCall * Math.max(1, calls);
 }
 
 export function estimateArtifactInputTokens(
   kind: ArtifactEstimateKind,
   sourceMode: SourceMode,
   sourceSize: SourceSizeHints = {},
+  depth: StudioDepth = "basic",
 ): number {
   if (kind === "ingest") {
     const raw = sourceSize.charCount;
@@ -106,7 +136,11 @@ export function estimateArtifactInputTokens(
     const mode = sourceMode === "file" ? "text" : sourceMode;
     return estimateInputTokens(mode, { charCount: chars });
   }
-  return estimateInputTokens(sourceMode, sourceSize);
+  const billed = studioBilledSource(kind, sourceMode, sourceSize, depth);
+  return (
+    billed.calls *
+    estimateInputTokens(billed.mode, { charCount: billed.chars })
+  );
 }
 
 export function estimateArtifactCredits(input: {
@@ -116,6 +150,7 @@ export function estimateArtifactCredits(input: {
   sourceSize?: SourceSizeHints;
   kind: ArtifactEstimateKind;
   questionCount?: number;
+  depth?: StudioDepth;
 }): GenerationEstimate {
   if (input.provider === "ollama") {
     return {
@@ -127,14 +162,23 @@ export function estimateArtifactCredits(input: {
       breakdown: "~0 energy",
     };
   }
+  const depth = input.depth ?? "basic";
+  const billed = studioBilledSource(
+    input.kind,
+    input.sourceMode,
+    input.sourceSize ?? {},
+    depth,
+  );
   const inputTokens = estimateArtifactInputTokens(
     input.kind,
     input.sourceMode,
     input.sourceSize ?? {},
+    depth,
   );
   const outputTokens = estimateArtifactOutputTokens(
     input.kind,
     input.questionCount,
+    input.kind === "ingest" ? 1 : billed.calls,
   );
   const rates = resolveBillingRates({
     provider: input.provider,
@@ -188,10 +232,15 @@ export function estimateGenerationCredits(
     };
   }
   const cardCount = Math.min(30, Math.max(3, input.cardCount));
-  const inputTokens = estimateInputTokens(
+  const billed = studioBilledSource(
+    "cards",
     input.sourceMode,
     input.sourceSize ?? {},
+    input.depth ?? "basic",
   );
+  const inputTokens = estimateInputTokens(billed.mode, {
+    charCount: billed.chars,
+  });
   const outputTokens = estimateOutputTokens(cardCount);
   const rates = resolveBillingRates({
     provider: input.provider,

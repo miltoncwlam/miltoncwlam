@@ -65,8 +65,52 @@ describe("token estimates", () => {
   });
 
   it("scales output with card count", () => {
-    expect(estimateOutputTokens(8)).toBe(8 * 180 + 200);
-    expect(estimateOutputTokens(3)).toBe(3 * 180 + 200);
+    expect(estimateOutputTokens(8)).toBe(8 * 110 + 140);
+    expect(estimateOutputTokens(3)).toBe(3 * 110 + 140);
+  });
+
+  it("bills studio on the extracted slice, not a scanned PDF byte dump", () => {
+    const longScan = {
+      provider: "openrouter" as const,
+      modelId: "qwen/qwen3.8-flash",
+      sourceMode: "file" as const,
+      sourceSize: {
+        charCount: 80_000,
+        mimeType: "application/pdf",
+        scannedPdf: true,
+      },
+    };
+    const exam = estimateArtifactCredits({ ...longScan, kind: "exam" });
+    const slice = estimateArtifactCredits({
+      provider: "openrouter",
+      modelId: "qwen/qwen3.8-flash",
+      sourceMode: "text",
+      sourceSize: { charCount: 12_000 },
+      kind: "exam",
+    });
+    expect(exam.textCredits).toBe(slice.textCredits);
+    expect(exam.inputTokens).toBe(slice.inputTokens);
+  });
+
+  it("charges long notes in up to three section calls", () => {
+    const base = {
+      provider: "openrouter" as const,
+      modelId: "deepseek/deepseek-v4-flash-0731",
+      sourceMode: "file" as const,
+    };
+    const oneChunk = estimateArtifactCredits({
+      ...base,
+      sourceSize: { charCount: 12_000 },
+      kind: "notes",
+    });
+    const long = estimateArtifactCredits({
+      ...base,
+      sourceSize: { charCount: 36_000 },
+      kind: "notes",
+    });
+    expect(long.inputTokens).toBe(oneChunk.inputTokens * 3);
+    expect(long.outputTokens).toBe(oneChunk.outputTokens * 3);
+    expect(long.textCredits).toBeGreaterThan(oneChunk.textCredits);
   });
 });
 

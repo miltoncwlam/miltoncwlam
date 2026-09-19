@@ -172,7 +172,7 @@ describe("unified token credits", () => {
     const file = estimateGenerationCredits({
       ...base,
       sourceMode: "file",
-      sourceSize: { mimeType: "application/pdf", scannedPdf: true },
+      sourceSize: { charCount: 20_000, mimeType: "application/pdf" },
     });
     expect(topic.credits).toBeLessThan(text.credits);
     expect(text.credits).toBeLessThan(file.credits);

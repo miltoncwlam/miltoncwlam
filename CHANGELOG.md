@@ -48,6 +48,7 @@ git checkout archive/milton-2026-09-06
 - Failed notes no longer crash the notebook page.
 - Notes that skip headings still become a study sheet from leftover sentences.
 - Create no longer lists rotating catalog models beside Auto, so the picker is not two routers.
+- Studio energy no longer bills a whole scanned PDF. Notes, maps, papers, and cards are charged for the extracted slice (notes and maps up to three sections), so the hold is closer to what generate actually uses.
 
 ### Removed
 - Leftover `/api/decks/generate` routes and regenerate-deck actions that wiped source.
