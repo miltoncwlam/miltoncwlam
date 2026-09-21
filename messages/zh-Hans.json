@@ -4,6 +4,7 @@
   },
   "nav": {
     "myDecks": "我的牌组",
+    "today": "今日",
     "createDeck": "创建笔记本",
     "signIn": "登录",
     "signUp": "注册",
@@ -68,6 +69,10 @@
     "title": "笔记本",
     "subtitle": "读取来源一次，再生成思维导图、学习笔记或试卷。",
     "newDeck": "新笔记本",
+    "todayEyebrow": "今日",
+    "todayDue": "各笔记本共 {count} 项到期",
+    "todayCaughtUp": "今日没有到期项目",
+    "todayCta": "开始复习",
     "emptyTitle": "创建第一本笔记本",
     "emptyBody": "粘贴笔记、上传文件，或先用示例牌组试试。",
     "startCreating": "開始建立",
@@ -668,7 +673,14 @@
       "cloze_free": "填空（自填）"
     },
     "true": "True",
-    "false": "False"
+    "false": "False",
+    "history": "过往作答",
+    "historyEmpty": "做一次这张卷，分数就会出现在这里。",
+    "latestScore": "最近 {percent}%",
+    "percent": "{value}%",
+    "trendUp": "比上次进步",
+    "trendDown": "比上次退步",
+    "trendSame": "与上次相同"
   },
   "mistakes": {
     "eyebrow": "错题本",
@@ -701,6 +713,23 @@
     "doneTitle": "今天的错题已复习完",
     "doneSubtitle": "到期题目会按间隔复习安排回来。",
     "backToList": "返回错题列表",
+    "saveFailed": "保存失败，请再试一次。"
+  },
+  "review": {
+    "eyebrow": "今日",
+    "title": "今日复习",
+    "subtitle": "各笔记本共 {count} 项到期",
+    "empty": "今日已完成。",
+    "emptyHint": "在笔记本评分闪卡或做卷，到期项目会出现在这里。",
+    "back": "返回笔记本",
+    "progress": "还剩 {left} 项",
+    "cardFrom": "闪卡来自",
+    "wrongFrom": "错题来自",
+    "done": "完成",
+    "caughtUp": "今日已完成",
+    "caughtUpBody": "到期闪卡与错题会按间隔复习安排回来。",
+    "backToLibrary": "返回笔记本",
+    "refresh": "刷新",
     "saveFailed": "保存失败，请再试一次。"
   },
   "printPack": {

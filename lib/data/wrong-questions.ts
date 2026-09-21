@@ -3,6 +3,7 @@ import "server-only";
 import { pool } from "@/lib/db";
 import { applySm2 } from "@/lib/study/sm2";
 import { shouldClearWrongItem, type WrongItemDraft } from "@/lib/study/wrong-questions";
+import type { DueWrongReview } from "@/lib/study/review-queue";
 import type { CardRating } from "@/lib/types/flashcard";
 import type {
   ExamQuestion,
@@ -128,6 +129,50 @@ export async function countDueWrongItems(
      where deck_id = $1 and user_id = $2
        and cleared_at is null and due_at <= now()`,
     [deckId, userId],
+  );
+  return Number(result.rows[0]?.count ?? 0);
+}
+
+export async function listDueWrongItemsAcrossDecks(
+  userId: string,
+  limit = 50,
+): Promise<DueWrongReview[]> {
+  const result = await pool.query<WrongItemRow & { deck_title: string }>(
+    `select w.id, w.deck_id, w.user_id, w.attempt_id, w.question_id, w.question,
+            w.your_answer, w.feedback, w.marks, w.marks_awarded, w.repetitions,
+            w.due_at, (w.due_at <= now()) as is_due, w.last_rating, w.created_at,
+            d.title as deck_title
+     from exam_wrong_items w
+     join decks d on d.id = w.deck_id
+     where w.user_id = $1
+       and w.cleared_at is null
+       and w.due_at <= now()
+       and d.archived_at is null
+     order by w.due_at asc, w.created_at asc
+     limit $2`,
+    [userId, limit],
+  );
+  return result.rows.map((row) => ({
+    kind: "wrong" as const,
+    dueAt: row.due_at,
+    deckId: row.deck_id,
+    deckTitle: row.deck_title,
+    item: mapWrongItem(row),
+  }));
+}
+
+export async function countDueWrongItemsAcrossDecks(
+  userId: string,
+): Promise<number> {
+  const result = await pool.query<{ count: string }>(
+    `select count(*)::text as count
+     from exam_wrong_items w
+     join decks d on d.id = w.deck_id
+     where w.user_id = $1
+       and w.cleared_at is null
+       and w.due_at <= now()
+       and d.archived_at is null`,
+    [userId],
   );
   return Number(result.rows[0]?.count ?? 0);
 }

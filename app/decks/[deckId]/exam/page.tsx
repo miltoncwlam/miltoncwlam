@@ -2,9 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
+import { ExamHistory } from "@/components/exam-history";
 import { ExamPlayer } from "@/components/exam-player";
 import { requireSession } from "@/lib/auth-server";
-import { getDeckArtifact } from "@/lib/data/artifacts";
+import { getDeckArtifact, listExamAttempts } from "@/lib/data/artifacts";
 import { getDeckWithCards } from "@/lib/data/decks";
 import { parseExamPayload } from "@/lib/llm/parse-studio";
 
@@ -20,6 +21,7 @@ export default async function DeckExamPage({
   const artifact = await getDeckArtifact(deckId, "exam");
   if (!artifact) notFound();
   const exam = parseExamPayload(artifact.payload);
+  const attempts = await listExamAttempts(deckId, session.user.id);
   const t = await getTranslations("exam");
 
   return (
@@ -32,6 +34,7 @@ export default async function DeckExamPage({
         <h1 className="page-title">{exam.title || deck.title}</h1>
         <p className="page-subtitle">{t("subtitle")}</p>
       </div>
+      <ExamHistory attempts={attempts} />
       <ExamPlayer deckId={deck.id} exam={exam} />
     </main>
   );

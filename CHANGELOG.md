@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 4.1.1** — one number only (`package.json`).
+**Version 4.2.0** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -21,12 +21,28 @@ git checkout archive/milton-2026-09-06
 
 ---
 
+## Version 4.2.0 — 2026-09-21
+
+**Minor.** One Today queue across notebooks, plus exam history. The header still says 4.1.0 until 13 Oct 2026 10:00 UTC.
+
+### Added
+- **Today** at `/review`: due flashcards and due mistake-book items from every active notebook, mixed by due date (cap 50). Rate cards with SM-2; drill 錯題 with the same auto-check / self-rate flow as the mistake book.
+- Header **Today** link with due count, and a Today card on the notebook library.
+- **Past sittings** on the exam page: score %, trend vs the previous sitting, and a sparkline of the last 10.
+
+### Changed
+- `displayAppVersion` checks clocks newest-first: 4.2.0 from 13 Oct 10:00 UTC, 4.1.0 from 25 Sep 10:00 UTC, 4.0.0 after 22 Sep 23:59 UTC.
+- Energy reset at 13 Oct 2026 10:00 UTC when the 4.2.0 label flips.
+
+---
+
 ## Version 4.1.1 — 2026-09-21
 
 **Miniscule.** Public beta stays labelled **Version 4.0.0**. The 4.1.0 header waits until 25 Sep 2026 10:00 UTC.
 
 ### Changed
 - Beta popup and campaign banner say Version 4.0.0 again. Header shows `4.0.0 beta` in beta, `4.0.0` after 22 Sep 23:59 UTC, then `4.1.0` at 25 Sep 10:00 UTC.
+- Energy reset (expire `period_end` so the next visit refills to 600) at 22 Sep 23:59 UTC and again at 25 Sep 10:00 UTC.
 
 ---
 

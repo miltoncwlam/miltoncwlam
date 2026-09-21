@@ -4,6 +4,7 @@
   },
   "nav": {
     "myDecks": "マイデッキ",
+    "today": "今日",
     "createDeck": "ノートを作成",
     "signIn": "ログイン",
     "signUp": "登録",
@@ -68,6 +69,10 @@
     "title": "ノート",
     "subtitle": "ソースを一度読み、マインドマップ・学習ノート・試験問題を生成します。",
     "newDeck": "新しいノート",
+    "todayEyebrow": "今日",
+    "todayDue": "ノート全体で {count} 件が期限",
+    "todayCaughtUp": "今日の復習はありません",
+    "todayCta": "復習する",
     "emptyTitle": "最初のノートを作る",
     "emptyBody": "ノートを貼るかファイルを上げるか、サンプルデッキで試せます。",
     "startCreating": "作成を開始",
@@ -668,7 +673,14 @@
       "cloze_free": "穴埋め（記述）"
     },
     "true": "True",
-    "false": "False"
+    "false": "False",
+    "history": "これまでの受験",
+    "historyEmpty": "この試験を一度受けると、得点がここに出ます。",
+    "latestScore": "最新 {percent}%",
+    "percent": "{value}%",
+    "trendUp": "前回よりアップ",
+    "trendDown": "前回よりダウン",
+    "trendSame": "前回と同じ"
   },
   "mistakes": {
     "eyebrow": "苦手ノート",
@@ -701,6 +713,23 @@
     "doneTitle": "今日の復習は終わりました",
     "doneSubtitle": "期限の問題は間隔反復の予定で戻ってきます。",
     "backToList": "一覧に戻る",
+    "saveFailed": "保存できませんでした。もう一度お試しください。"
+  },
+  "review": {
+    "eyebrow": "今日",
+    "title": "今日の復習",
+    "subtitle": "ノート全体で {count} 件が期限",
+    "empty": "今日は完了です。",
+    "emptyHint": "カードを評価するか試験を受けると、期限の項目がここに集まります。",
+    "back": "ノート一覧へ",
+    "progress": "残り {left} 件",
+    "cardFrom": "カード：",
+    "wrongFrom": "間違い：",
+    "done": "完了",
+    "caughtUp": "今日は完了",
+    "caughtUpBody": "期限のカードと間違いは間隔反復で戻ってきます。",
+    "backToLibrary": "ノート一覧へ",
+    "refresh": "更新",
     "saveFailed": "保存できませんでした。もう一度お試しください。"
   },
   "printPack": {

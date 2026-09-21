@@ -9,6 +9,7 @@ import { SignOutButton } from "@/components/sign-out-button";
 import { Button } from "@/components/ui/button";
 import type { AppSession } from "@/lib/auth-server";
 import { isAdminUser } from "@/lib/auth-server";
+import { countDueReviewItems } from "@/lib/data/study";
 
 export async function AppHeader({
   localDev = false,
@@ -24,6 +25,9 @@ export async function AppHeader({
   const t = await getTranslations("nav");
   const signedIn = Boolean(session);
   const isAdmin = session ? isAdminUser(session.user) : false;
+  const dueToday = session
+    ? await countDueReviewItems(session.user.id).catch(() => 0)
+    : 0;
 
   return (
     <header className="app-header">
@@ -44,6 +48,12 @@ export async function AppHeader({
               {session.user.isGuest ? null : (
                 <EnergyBadge userId={session.user.id} />
               )}
+              <Button asChild variant="ghost">
+                <Link href="/review">
+                  {t("today")}
+                  {dueToday > 0 ? ` (${dueToday})` : ""}
+                </Link>
+              </Button>
               <Button asChild variant="ghost">
                 <Link href="/decks">{t("myDecks")}</Link>
               </Button>

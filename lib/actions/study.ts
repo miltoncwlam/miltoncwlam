@@ -7,6 +7,7 @@ import { z } from "zod";
 import { requireSession } from "@/lib/auth-server";
 import {
   rateAndAdvance,
+  rateCardSrs,
   restartStudySession,
   startSharedStudySession,
 } from "@/lib/data/study";
@@ -62,4 +63,18 @@ export async function rateCardAction(input: {
     cardId: idSchema.parse(input.cardId),
     rating: ratingSchema.parse(input.rating),
   });
+}
+
+export async function rateCardSrsAction(input: {
+  cardId: string;
+  rating: "easy" | "ok" | "hard";
+}) {
+  const session = await requireSession();
+  await rateCardSrs({
+    userId: session.user.id,
+    cardId: idSchema.parse(input.cardId),
+    rating: ratingSchema.parse(input.rating),
+  });
+  revalidatePath("/review");
+  revalidatePath("/decks");
 }

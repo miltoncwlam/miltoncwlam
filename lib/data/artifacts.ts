@@ -241,3 +241,18 @@ export async function getLatestExamAttempt(
   );
   return result.rows[0] ? mapAttempt(result.rows[0]) : null;
 }
+
+export async function listExamAttempts(
+  deckId: string,
+  userId: string,
+  limit = 20,
+): Promise<ExamAttempt[]> {
+  const result = await pool.query<AttemptRow>(
+    `select * from exam_attempts
+     where deck_id = $1 and user_id = $2
+     order by created_at desc
+     limit $3`,
+    [deckId, userId, limit],
+  );
+  return result.rows.map(mapAttempt);
+}

@@ -4,6 +4,7 @@
   },
   "nav": {
     "myDecks": "Mes paquets",
+    "today": "Aujourd'hui",
     "createDeck": "Créer un carnet",
     "signIn": "Connexion",
     "signUp": "Inscription",
@@ -68,6 +69,10 @@
     "title": "Carnets",
     "subtitle": "Lisez la source une fois, puis générez une carte mentale, des notes ou un examen.",
     "newDeck": "Nouveau carnet",
+    "todayEyebrow": "Aujourd'hui",
+    "todayDue": "{count} à revoir dans tes carnets",
+    "todayCaughtUp": "Rien à revoir aujourd'hui",
+    "todayCta": "Réviser",
     "emptyTitle": "Créez votre premier carnet",
     "emptyBody": "Collez des notes, importez un fichier, ou commencez avec un paquet d’exemple.",
     "startCreating": "Commencer",
@@ -668,7 +673,14 @@
       "cloze_free": "Texte à trous (saisie)"
     },
     "true": "True",
-    "false": "False"
+    "false": "False",
+    "history": "Passations",
+    "historyEmpty": "Passe ce sujet une fois et tes notes apparaîtront ici.",
+    "latestScore": "Dernier {percent}%",
+    "percent": "{value}%",
+    "trendUp": "en hausse",
+    "trendDown": "en baisse",
+    "trendSame": "identique à la dernière fois"
   },
   "mistakes": {
     "eyebrow": "Cahier d'erreurs",
@@ -701,6 +713,23 @@
     "doneTitle": "Erreurs du jour révisées",
     "doneSubtitle": "Les questions reviennent selon la répétition espacée.",
     "backToList": "Retour à la liste",
+    "saveFailed": "Enregistrement impossible. Réessaie."
+  },
+  "review": {
+    "eyebrow": "Aujourd'hui",
+    "title": "File du jour",
+    "subtitle": "{count} à revoir dans tes carnets",
+    "empty": "Tu es à jour.",
+    "emptyHint": "Note des cartes ou passe un examen. Le dû arrive ici.",
+    "back": "Retour aux carnets",
+    "progress": "{left} restants",
+    "cardFrom": "Carte de",
+    "wrongFrom": "Erreur de",
+    "done": "Terminé",
+    "caughtUp": "Tu es à jour",
+    "caughtUpBody": "Les cartes et erreurs reviennent selon la répétition espacée.",
+    "backToLibrary": "Retour aux carnets",
+    "refresh": "Actualiser",
     "saveFailed": "Enregistrement impossible. Réessaie."
   },
   "printPack": {

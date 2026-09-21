@@ -4,6 +4,7 @@
   },
   "nav": {
     "myDecks": "Mis mazos",
+    "today": "Hoy",
     "createDeck": "Crear cuaderno",
     "signIn": "Iniciar sesión",
     "signUp": "Registrarse",
@@ -68,6 +69,10 @@
     "title": "Cuadernos",
     "subtitle": "Lee la fuente una vez y genera un mapa mental, apuntes o un examen.",
     "newDeck": "Nuevo cuaderno",
+    "todayEyebrow": "Hoy",
+    "todayDue": "{count} pendientes en tus cuadernos",
+    "todayCaughtUp": "Nada pendiente hoy",
+    "todayCta": "Repasar",
     "emptyTitle": "Crea tu primer cuaderno",
     "emptyBody": "Pega apuntes, sube un archivo o empieza con un mazo de ejemplo.",
     "startCreating": "Empezar a crear",
@@ -668,7 +673,14 @@
       "cloze_free": "Hueco sin opciones"
     },
     "true": "True",
-    "false": "False"
+    "false": "False",
+    "history": "Intentos anteriores",
+    "historyEmpty": "Haz este examen una vez y aquí verás las notas.",
+    "latestScore": "Último {percent}%",
+    "percent": "{value}%",
+    "trendUp": "mejor que la vez anterior",
+    "trendDown": "peor que la vez anterior",
+    "trendSame": "igual que la vez anterior"
   },
   "mistakes": {
     "eyebrow": "Cuaderno de errores",
@@ -701,6 +713,23 @@
     "doneTitle": "Errores de hoy repasados",
     "doneSubtitle": "Las preguntas vuelven según el repaso espaciado.",
     "backToList": "Volver a la lista",
+    "saveFailed": "No se pudo guardar. Inténtalo de nuevo."
+  },
+  "review": {
+    "eyebrow": "Hoy",
+    "title": "Cola de hoy",
+    "subtitle": "{count} pendientes en tus cuadernos",
+    "empty": "Al día.",
+    "emptyHint": "Valora tarjetas o haz un examen. Lo pendiente llega aquí.",
+    "back": "Volver a los cuadernos",
+    "progress": "{left} por hacer",
+    "cardFrom": "Tarjeta de",
+    "wrongFrom": "Error de",
+    "done": "Listo",
+    "caughtUp": "Al día",
+    "caughtUpBody": "Las tarjetas y errores vuelven según el repaso espaciado.",
+    "backToLibrary": "Volver a los cuadernos",
+    "refresh": "Actualizar",
     "saveFailed": "No se pudo guardar. Inténtalo de nuevo."
   },
   "printPack": {

@@ -22,6 +22,7 @@ export async function rateWrongItemAction(input: {
   });
   revalidatePath(`/decks/${idSchema.parse(input.deckId)}/mistakes`);
   revalidatePath(`/decks/${idSchema.parse(input.deckId)}`);
+  revalidatePath("/review");
   return result;
 }
 
@@ -34,4 +35,5 @@ export async function removeWrongItemAction(input: {
   await removeWrongItem(idSchema.parse(input.itemId), session.user.id);
   revalidatePath(`/decks/${deckId}/mistakes`);
   revalidatePath(`/decks/${deckId}`);
+  revalidatePath("/review");
 }

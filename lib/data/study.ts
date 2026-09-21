@@ -1,10 +1,13 @@
 import "server-only";
 
 import { pool } from "@/lib/db";
+import { mapCard } from "@/lib/data/decks";
 import { rememberStreak } from "@/lib/data/streaks";
+import { countDueWrongItemsAcrossDecks } from "@/lib/data/wrong-questions";
 import { applySm2, defaultSrsState } from "@/lib/study/sm2";
+import type { DueCardReview } from "@/lib/study/review-queue";
 import { shuffleIds } from "@/lib/study/shuffle";
-import type { CardRating, StudySession } from "@/lib/types/flashcard";
+import type { CardRating, Flashcard, StudySession } from "@/lib/types/flashcard";
 
 type SessionRow = {
   id: string;
@@ -127,6 +130,72 @@ export async function countDueCards(
     [deckId, userId],
   );
   return Number(result.rows[0]?.count ?? 0);
+}
+
+export async function listDueCardsAcrossDecks(
+  userId: string,
+  limit = 50,
+): Promise<DueCardReview[]> {
+  const result = await pool.query<{
+    id: string;
+    deck_id: string;
+    front: string;
+    back: string;
+    hint: string | null;
+    category: string | null;
+    card_type: Flashcard["cardType"];
+    options: unknown;
+    image_url: string | null;
+    image_attribution: Flashcard["imageAttribution"];
+    sort_order: number;
+    created_at: Date;
+    updated_at: Date;
+    deck_title: string;
+    due_at: Date;
+  }>(
+    `select c.id, c.deck_id, c.front, c.back, c.hint, c.category, c.card_type,
+            c.options, c.image_url, c.image_attribution, c.sort_order,
+            c.created_at, c.updated_at, d.title as deck_title,
+            coalesce(s.due_at, to_timestamp(0)) as due_at
+     from cards c
+     join decks d on d.id = c.deck_id
+     left join card_srs s on s.card_id = c.id and s.user_id = $1
+     where d.user_id = $1
+       and d.archived_at is null
+       and (s.due_at is null or s.due_at <= now())
+     order by coalesce(s.due_at, to_timestamp(0)) asc, c.sort_order, c.created_at
+     limit $2`,
+    [userId, limit],
+  );
+  return result.rows.map((row) => ({
+    kind: "card" as const,
+    dueAt: row.due_at,
+    deckId: row.deck_id,
+    deckTitle: row.deck_title,
+    card: mapCard(row),
+  }));
+}
+
+export async function countDueCardsAcrossDecks(userId: string): Promise<number> {
+  const result = await pool.query<{ count: string }>(
+    `select count(*)::text as count
+     from cards c
+     join decks d on d.id = c.deck_id
+     left join card_srs s on s.card_id = c.id and s.user_id = $1
+     where d.user_id = $1
+       and d.archived_at is null
+       and (s.due_at is null or s.due_at <= now())`,
+    [userId],
+  );
+  return Number(result.rows[0]?.count ?? 0);
+}
+
+export async function countDueReviewItems(userId: string): Promise<number> {
+  const [cards, wrongs] = await Promise.all([
+    countDueCardsAcrossDecks(userId),
+    countDueWrongItemsAcrossDecks(userId),
+  ]);
+  return cards + wrongs;
 }
 
 export async function startStudySession(
@@ -284,4 +353,80 @@ export async function rateAndAdvance(input: {
   } finally {
     client.release();
   }
+}
+
+export async function rateCardSrs(input: {
+  userId: string;
+  cardId: string;
+  rating: CardRating;
+}): Promise<void> {
+  const owned = await pool.query<{ id: string }>(
+    `select c.id
+     from cards c
+     join decks d on d.id = c.deck_id
+     where c.id = $1 and d.user_id = $2 and d.archived_at is null`,
+    [input.cardId, input.userId],
+  );
+  if (!owned.rows[0]) throw new Error("Card not found");
+
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query(
+      `insert into card_reviews (card_id, user_id, rating)
+       values ($1, $2, $3)`,
+      [input.cardId, input.userId, input.rating],
+    );
+    const prior = await client.query<{
+      ease_factor: number;
+      interval_days: number;
+      repetitions: number;
+      due_at: Date;
+      last_rating: CardRating | null;
+    }>(
+      `select ease_factor, interval_days, repetitions, due_at, last_rating
+       from card_srs
+       where user_id = $1 and card_id = $2
+       for update`,
+      [input.userId, input.cardId],
+    );
+    const previous = prior.rows[0]
+      ? {
+          easeFactor: prior.rows[0].ease_factor,
+          intervalDays: prior.rows[0].interval_days,
+          repetitions: prior.rows[0].repetitions,
+          dueAt: prior.rows[0].due_at,
+          lastRating: prior.rows[0].last_rating,
+        }
+      : defaultSrsState();
+    const nextSrs = applySm2(previous, input.rating);
+    await client.query(
+      `insert into card_srs (
+         user_id, card_id, ease_factor, interval_days, repetitions, due_at, last_rating, updated_at
+       ) values ($1, $2, $3, $4, $5, $6, $7, now())
+       on conflict (user_id, card_id) do update
+       set ease_factor = excluded.ease_factor,
+           interval_days = excluded.interval_days,
+           repetitions = excluded.repetitions,
+           due_at = excluded.due_at,
+           last_rating = excluded.last_rating,
+           updated_at = now()`,
+      [
+        input.userId,
+        input.cardId,
+        nextSrs.easeFactor,
+        nextSrs.intervalDays,
+        nextSrs.repetitions,
+        nextSrs.dueAt,
+        nextSrs.lastRating,
+      ],
+    );
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
+  await rememberStreak(input.userId);
 }
