@@ -1,8 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 
+import {
+  addChildNode,
+  deleteNode,
+  renameNode,
+  reparentNode,
+} from "@/lib/mindmap/edit";
 import type { MindmapNode } from "@/lib/types/notebook";
 
 const BRANCH_PASTELS = [
@@ -189,30 +195,67 @@ function curve(x1: number, y1: number, x2: number, y2: number) {
 export function MindmapTree({
   title,
   nodes,
+  deckId,
+  editable = false,
 }: {
   title: string;
   nodes: MindmapNode[];
+  deckId?: string;
+  editable?: boolean;
 }) {
   const t = useTranslations("studio");
-  const nodeKey = nodes.map((node) => node.id).join(",");
+  const nodeKey = nodes.map((node) => `${node.id}:${node.parentId}:${node.label}`).join(",");
   const [mapKey, setMapKey] = useState(nodeKey);
   const [collapsed, setCollapsed] = useState(() => new Set<string>());
   const [expandAll, setExpandAll] = useState(true);
+  const [draft, setDraft] = useState(nodes);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+  const saveTimer = useRef<number | null>(null);
+  const dragId = useRef<string | null>(null);
 
   if (mapKey !== nodeKey) {
     setMapKey(nodeKey);
     setCollapsed(new Set());
     setExpandAll(true);
+    setDraft(nodes);
+    setSelectedId(null);
+    setEditingId(null);
   }
 
+  const working = editable ? draft : nodes;
   const layout = useMemo(
-    () => layoutMindmap(nodes, collapsed, expandAll),
-    [nodes, collapsed, expandAll],
+    () => layoutMindmap(working, collapsed, expandAll),
+    [working, collapsed, expandAll],
   );
   const byId = useMemo(
     () => new Map(layout.items.map((item) => [item.id, item])),
     [layout.items],
   );
+
+  function persist(next: MindmapNode[]) {
+    if (!editable || !deckId) return;
+    if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(() => {
+      startTransition(async () => {
+        const { saveMindmapAction } = await import("@/lib/actions/mindmap");
+        await saveMindmapAction({ deckId, title, nodes: next });
+      });
+    }, 500);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    };
+  }, []);
+
+  function apply(next: MindmapNode[]) {
+    setDraft(next);
+    persist(next);
+  }
 
   function toggle(id: string) {
     setExpandAll(false);
@@ -236,17 +279,73 @@ export function MindmapTree({
     }, 50);
   }
 
+  const selected = working.find((node) => node.id === selectedId) ?? null;
+
+  function runAi(mode: "expand" | "rebranch") {
+    if (!editable || !deckId || !selectedId) return;
+    setError(null);
+    startTransition(async () => {
+      try {
+        const { expandMindmapNodeAction } = await import("@/lib/actions/mindmap");
+        const next = await expandMindmapNodeAction({
+          deckId,
+          nodeId: selectedId,
+          mode,
+        });
+        setDraft(next.nodes);
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : t("canvasFailed"));
+      }
+    });
+  }
+
   return (
     <section className="mindmap-tree">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-black">{title}</h2>
         <div className="flex flex-wrap items-center gap-2 no-print">
+          {editable ? (
+            <>
+              <button
+                className="secondary-button"
+                disabled={pending || !selected}
+                onClick={() => selected && apply(addChildNode(working, selected.id))}
+                type="button"
+              >
+                {t("addNode")}
+              </button>
+              <button
+                className="secondary-button"
+                disabled={pending || !selected || selected.parentId === null}
+                onClick={() => selected && apply(deleteNode(working, selected.id))}
+                type="button"
+              >
+                {t("deleteNode")}
+              </button>
+              <button
+                className="secondary-button"
+                disabled={pending || !selected}
+                onClick={() => runAi("expand")}
+                type="button"
+              >
+                {t("expandNode")}
+              </button>
+              <button
+                className="secondary-button"
+                disabled={pending || !selected}
+                onClick={() => runAi("rebranch")}
+                type="button"
+              >
+                {t("rebranchNode")}
+              </button>
+            </>
+          ) : null}
           <button
             className="secondary-button"
             onClick={() => {
               if (expandAll) {
                 setExpandAll(false);
-                setCollapsed(defaultCollapsedBranches(nodes));
+                setCollapsed(defaultCollapsedBranches(working));
               } else {
                 setExpandAll(true);
                 setCollapsed(new Set());
@@ -256,12 +355,15 @@ export function MindmapTree({
           >
             {expandAll ? t("collapseBranches") : t("expandAll")}
           </button>
-          <button className="secondary-button" onClick={printMap} type="button">
+          <button className="secondary-button" type="button" onClick={printMap}>
             {t("printMap")}
           </button>
         </div>
       </div>
-      <p className="mindmap-hint no-print">{t("expandHint")}</p>
+      <p className="mindmap-hint no-print">
+        {editable ? t("canvasHint") : t("expandHint")}
+      </p>
+      {error ? <p className="mindmap-hint no-print text-rose-700">{error}</p> : null}
       <div className="mindmap-canvas mt-3">
         <div
           className="mindmap-stage"
@@ -304,26 +406,74 @@ export function MindmapTree({
                 );
               })}
           </svg>
-          {layout.items.map((item) => (
+          {layout.items.map((item) => {
+            const style = {
+              left: item.x,
+              top: item.y,
+              borderColor: "transparent",
+              background: item.color,
+              color: item.ink,
+            } as const;
+            if (editingId === item.id) {
+              return (
+                <input
+                  autoFocus
+                  className={`mindmap-node mindmap-edit ${item.isRoot ? "is-root" : ""} is-selected`}
+                  defaultValue={item.label}
+                  key={item.id}
+                  maxLength={80}
+                  onBlur={(event) => {
+                    apply(renameNode(working, item.id, event.target.value));
+                    setEditingId(null);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") event.currentTarget.blur();
+                  }}
+                  style={style}
+                />
+              );
+            }
+            return (
             <button
-              className={`mindmap-node ${item.isRoot ? "is-root" : ""}`}
+              className={`mindmap-node ${item.isRoot ? "is-root" : ""} ${
+                selectedId === item.id ? "is-selected" : ""
+              }`}
+              draggable={editable && !item.isRoot}
               key={item.id}
               onClick={() => {
+                if (editable) {
+                  setSelectedId(item.id);
+                  return;
+                }
                 if (item.hasKids) toggle(item.id);
               }}
-              style={{
-                left: item.x,
-                top: item.y,
-                borderColor: "transparent",
-                background: item.color,
-                color: item.ink,
+              onDoubleClick={() => {
+                if (!editable) return;
+                setSelectedId(item.id);
+                setEditingId(item.id);
               }}
+              onDragOver={(event) => {
+                if (!editable) return;
+                event.preventDefault();
+              }}
+              onDragStart={() => {
+                dragId.current = item.id;
+              }}
+              onDrop={(event) => {
+                event.preventDefault();
+                const from = dragId.current;
+                dragId.current = null;
+                if (!from || from === item.id) return;
+                apply(reparentNode(working, from, item.id));
+              }}
+              style={style}
               title={item.label}
               type="button"
             >
               {item.label}
             </button>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

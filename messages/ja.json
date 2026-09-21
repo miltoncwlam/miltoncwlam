@@ -638,6 +638,12 @@
     "printNotes": "ノートを印刷",
     "printMap": "マップを印刷",
     "expandHint": "枝をクリックすると詳細が開きます。",
+    "canvasHint": "ノードを選び、別のノードへドラッグして付け替え。ダブルクリックで改名。AI で展開または再分岐できます。",
+    "addNode": "子を追加",
+    "deleteNode": "削除",
+    "expandNode": "AI で展開",
+    "rebranchNode": "AI で再分岐",
+    "canvasFailed": "この枝を広げられませんでした。",
     "expandAll": "すべて表示",
     "collapseBranches": "閉じる",
     "types": {

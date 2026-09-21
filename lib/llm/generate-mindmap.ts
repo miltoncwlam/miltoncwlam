@@ -1,4 +1,5 @@
 import { generateObject } from "ai";
+import { z } from "zod";
 
 import {
   mindmapLabelRules,
@@ -127,4 +128,58 @@ export async function generateMindmap(input: {
     };
   }
   return { mindmap: mergeMindmapPayloads(parts), usage };
+}
+
+const childrenSchema = z.object({
+  children: z
+    .array(z.object({ label: z.string().min(1).max(80) }))
+    .min(2)
+    .max(8),
+});
+
+export async function generateMindmapChildren(input: {
+  source: string;
+  nodeLabel: string;
+  parentLabel?: string | null;
+  siblingLabels: string[];
+  mode: "expand" | "rebranch";
+  language?: string;
+  model?: string;
+  provider?: LLMProvider;
+}): Promise<{ labels: string[]; usage: StudioUsage }> {
+  const snippet = input.source.trim().slice(0, 4_000);
+  const modeLine =
+    input.mode === "rebranch"
+      ? "Replace the branches under this node. Cover the same idea with a clearer split. Do not repeat the node label."
+      : "Add new child nodes under this node. Do not repeat existing sibling labels. Facts only from the source.";
+  const prompt = `Grow a study mind map from this source.
+${studioLanguageRules(input.language ?? "en")}
+${mindmapLabelRules(input.language ?? "en")}
+Node: ${input.nodeLabel}
+${input.parentLabel ? `Parent: ${input.parentLabel}` : ""}
+Existing children: ${input.siblingLabels.join("; ") || "(none)"}
+${modeLine}
+Return 3–6 short child labels. One idea each. No invented facts.
+
+Source:
+${snippet}`;
+  if (input.provider === "ollama") {
+    const parsed = childrenSchema.parse(await ollamaGenerateJson(prompt));
+    return {
+      labels: parsed.children.map((child) => child.label.trim()).filter(Boolean),
+      usage: { inputTokens: 0, outputTokens: 0 },
+    };
+  }
+  const result = await generateObjectWithRetry(() =>
+    generateObject({
+      model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
+      schema: childrenSchema,
+      abortSignal: AbortSignal.timeout(40_000),
+      prompt,
+    }),
+  );
+  return {
+    labels: result.object.children.map((child) => child.label.trim()).filter(Boolean),
+    usage: readUsage(result),
+  };
 }

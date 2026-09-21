@@ -8,6 +8,7 @@ import {
   V41_VERSION,
   V42_VERSION,
   V43_VERSION,
+  V44_VERSION,
   displayAppVersion,
   hasV4BetaAccess,
   isVercelPreviewEnv,
@@ -19,11 +20,13 @@ import {
   V41_RELEASES_AT,
   V42_RELEASES_AT,
   V43_RELEASES_AT,
+  V44_RELEASES_AT,
   isFreeModelCampaignActive,
   isV4GenerallyAvailable,
   isV41Released,
   isV42Released,
   isV43Released,
+  isV44Released,
 } from "@/lib/campaign";
 
 const DURING_CAMPAIGN = Date.UTC(2026, 8, 13, 3, 0, 0);
@@ -36,6 +39,7 @@ describe("v4 beta gate", () => {
     expect(V41_VERSION).toBe("4.1.0");
     expect(V42_VERSION).toBe("4.2.0");
     expect(V43_VERSION).toBe("4.3.0");
+    expect(V44_VERSION).toBe("4.4.0");
     expect(BETA_COOKIE).toBe("hkstudya-beta");
     expect(displayAppVersion(false, DURING_CAMPAIGN)).toBe("3.9.3");
     expect(displayAppVersion(true, DURING_CAMPAIGN)).toBe("4.0.0 beta");
@@ -107,6 +111,17 @@ describe("v4 beta gate", () => {
     );
     expect(displayAppVersion(false, V43_RELEASES_AT)).toBe("4.3.0");
     expect(displayAppVersion(true, V43_RELEASES_AT)).toBe("4.3.0");
+  });
+
+  it("flips the header to 4.4.0 on 18 Nov 2026 10:00 UTC", () => {
+    expect(V44_RELEASES_AT).toBe(Date.UTC(2026, 10, 18, 10, 0, 0));
+    expect(isV44Released(Date.UTC(2026, 10, 18, 9, 59, 59))).toBe(false);
+    expect(isV44Released(V44_RELEASES_AT)).toBe(true);
+    expect(displayAppVersion(false, Date.UTC(2026, 10, 18, 9, 59, 59))).toBe(
+      "4.3.0",
+    );
+    expect(displayAppVersion(false, V44_RELEASES_AT)).toBe("4.4.0");
+    expect(displayAppVersion(true, V44_RELEASES_AT)).toBe("4.4.0");
   });
 
   it("does not set a cookie from /beta", async () => {

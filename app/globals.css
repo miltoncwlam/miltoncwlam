@@ -3499,6 +3499,18 @@ html[data-theme="dark"] .play-lantern-text {
   border-radius: 1.25rem;
 }
 
+.mindmap-node.is-selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.mindmap-edit {
+  cursor: text;
+  font: inherit;
+  font-weight: 800;
+  text-align: center;
+}
+
 .study-notes-paper {
   border-radius: 1.25rem;
   border: 1px solid var(--border);

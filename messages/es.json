@@ -638,6 +638,12 @@
     "printNotes": "Imprimir notas",
     "printMap": "Imprimir mapa",
     "expandHint": "Pulsa una rama para ver los detalles.",
+    "canvasHint": "Elige un nodo. Arrástralo a otro para colgarlo. Doble clic para renombrar. Pide a la IA expandir o re-ramificar.",
+    "addNode": "Añadir hijo",
+    "deleteNode": "Quitar",
+    "expandNode": "Expandir con IA",
+    "rebranchNode": "Re-ramificar con IA",
+    "canvasFailed": "No se pudo ampliar esa rama.",
     "expandAll": "Mostrar todo",
     "collapseBranches": "Plegar",
     "types": {

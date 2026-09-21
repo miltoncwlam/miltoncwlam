@@ -220,6 +220,8 @@ export function NotebookStudio({
 
       {mindmap?.nodes?.length ? (
         <MindmapTree
+          deckId={deckId}
+          editable
           key={mindmap.nodes.map((node) => node.id).join("-")}
           nodes={mindmap.nodes}
           title={mindmap.title}

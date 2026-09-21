@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 4.3.0** — one number only (`package.json`).
+**Version 4.4.0** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,20 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 4.4.0 — 2026-09-21
+
+**Minor.** AI canvas: the mind map is editable. Features are live now. The header still says 4.3.0 until 18 Nov 2026 10:00 UTC.
+
+### Added
+- **Interactive mind map** in the notebook: select a node, drag it onto another to re-parent, double-click to rename, add or remove a child.
+- **Expand with AI** and **Re-branch with AI** on a selected node. New branches save back into the mind-map artifact. Community packs stay read-only.
+
+### Changed
+- `displayAppVersion` checks clocks newest-first: 4.4.0 from 18 Nov 10:00 UTC, then 4.3.0, 4.2.0, 4.1.0, 4.0.0.
+- Energy reset (expire `period_end` so the next visit refills to 600) at 18 Nov 2026 10:00 UTC when the 4.4.0 label flips.
 
 ---
 

@@ -638,6 +638,12 @@
     "printNotes": "打印笔记",
     "printMap": "打印思维导图",
     "expandHint": "点击分支即可展开细节。",
+    "canvasHint": "选一个节点。拖到另一个节点上可改挂。双击改名称。可用 AI 展开或重分枝。",
+    "addNode": "加子节点",
+    "deleteNode": "移除",
+    "expandNode": "AI 展开",
+    "rebranchNode": "AI 重分枝",
+    "canvasFailed": "无法展开这个分支。",
     "expandAll": "展开全部",
     "collapseBranches": "收起",
     "types": {

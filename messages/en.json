@@ -635,6 +635,12 @@
     "printNotes": "Print notes",
     "printMap": "Print map",
     "expandHint": "Click a branch to open its details.",
+    "canvasHint": "Select a node. Drag it onto another to re-parent. Double-click to rename. Ask AI to expand or re-branch.",
+    "addNode": "Add child",
+    "deleteNode": "Remove",
+    "expandNode": "Expand with AI",
+    "rebranchNode": "Re-branch with AI",
+    "canvasFailed": "Could not grow that branch.",
     "expandAll": "Show all",
     "collapseBranches": "Collapse",
     "types": {

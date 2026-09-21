@@ -711,6 +711,12 @@
     "printNotes": "列印筆記",
     "printMap": "列印心智圖",
     "expandHint": "點擊分支即可展開細節。",
+    "canvasHint": "選一個節點。拖到另一個節點上可改掛。雙擊改名稱。可用 AI 展開或重分枝。",
+    "addNode": "加子節點",
+    "deleteNode": "移除",
+    "expandNode": "AI 展開",
+    "rebranchNode": "AI 重分枝",
+    "canvasFailed": "無法展開這個分支。",
     "expandAll": "展開全部",
     "collapseBranches": "收合",
     "types": {

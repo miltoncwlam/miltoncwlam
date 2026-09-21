@@ -638,6 +638,12 @@
     "printNotes": "Imprimer les notes",
     "printMap": "Imprimer la carte",
     "expandHint": "Cliquez sur une branche pour voir le détail.",
+    "canvasHint": "Sélectionnez un nœud. Glissez-le sur un autre pour le rattacher. Double-clic pour renommer. Demandez à l’IA d’étendre ou de rebrancher.",
+    "addNode": "Ajouter un enfant",
+    "deleteNode": "Retirer",
+    "expandNode": "Étendre avec l’IA",
+    "rebranchNode": "Rebrancher avec l’IA",
+    "canvasFailed": "Impossible d’étendre cette branche.",
     "expandAll": "Tout afficher",
     "collapseBranches": "Replier",
     "types": {

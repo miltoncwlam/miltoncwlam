@@ -638,6 +638,12 @@
     "printNotes": "노트 인쇄",
     "printMap": "마인드맵 인쇄",
     "expandHint": "가지를 누르면 세부 내용이 열립니다.",
+    "canvasHint": "노드를 고르고 다른 노드로 끌어 다시 달 수 있습니다. 더블 클릭으로 이름 변경. AI로 펼치거나 다시 가지치기하세요.",
+    "addNode": "자식 추가",
+    "deleteNode": "삭제",
+    "expandNode": "AI로 펼치기",
+    "rebranchNode": "AI로 다시 가지치기",
+    "canvasFailed": "이 가지를 키울 수 없습니다.",
     "expandAll": "모두 보기",
     "collapseBranches": "접기",
     "types": {
