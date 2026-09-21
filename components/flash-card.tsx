@@ -42,6 +42,9 @@ function normalizeAnswer(value: string) {
   return value.trim().toLowerCase();
 }
 
+// Client-side cache of audio blobs so repeated card reads are instantaneous
+const cardAudioBlobCache = new Map<string, Blob>();
+
 export function useCardSpeech() {
   const locale = useLocale() as AppLocale;
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -80,21 +83,11 @@ export function useCardSpeech() {
     activeTextRef.current = trimmed;
     busyRef.current = true;
     setBusy(true);
-    const abort = new AbortController();
-    abortRef.current = abort;
 
-    try {
-      const response = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: trimmed, locale }),
-        signal: abort.signal,
-      });
-      if (!response.ok || generation !== generationRef.current) return;
+    const cacheKey = `${locale}:${trimmed}`;
+    const cachedBlob = cardAudioBlobCache.get(cacheKey);
 
-      const blob = await response.blob();
-      if (generation !== generationRef.current) return;
-
+    const playBlob = async (blob: Blob) => {
       const url = URL.createObjectURL(blob);
       objectUrlRef.current = url;
       const audio = new Audio(url);
@@ -113,8 +106,107 @@ export function useCardSpeech() {
       audio.onended = finish;
       audio.onerror = finish;
       await audio.play();
+    };
+
+    if (cachedBlob) {
+      try {
+        await playBlob(cachedBlob);
+      } catch {
+        if (generation === generationRef.current) {
+          busyRef.current = false;
+          activeTextRef.current = null;
+          setBusy(false);
+        }
+      }
+      return;
+    }
+
+    const abort = new AbortController();
+    abortRef.current = abort;
+
+    // Fast fallback: if the remote TTS takes >1.5s (or fails), use the browser's native SpeechSynthesis
+    let usedNativeFallback = false;
+    const fallbackTimer = window.setTimeout(() => {
+      if (typeof window !== "undefined" && "speechSynthesis" in window && generation === generationRef.current) {
+        try {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(trimmed);
+          utterance.lang = locale === "zh-Hant" ? "zh-HK" : locale === "zh-Hans" ? "zh-CN" : locale;
+          utterance.onend = () => {
+            if (generation !== generationRef.current) return;
+            busyRef.current = false;
+            activeTextRef.current = null;
+            setBusy(false);
+          };
+          utterance.onerror = () => {
+            if (generation !== generationRef.current) return;
+            busyRef.current = false;
+            activeTextRef.current = null;
+            setBusy(false);
+          };
+          usedNativeFallback = true;
+          window.speechSynthesis.speak(utterance);
+        } catch {
+          // ignore native speech fallback error
+        }
+      }
+    }, 1500);
+
+    try {
+      const response = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: trimmed, locale }),
+        signal: abort.signal,
+      });
+      window.clearTimeout(fallbackTimer);
+      if (!response.ok || generation !== generationRef.current) {
+        if (!usedNativeFallback) {
+          busyRef.current = false;
+          activeTextRef.current = null;
+          setBusy(false);
+        }
+        return;
+      }
+
+      const blob = await response.blob();
+      if (generation !== generationRef.current) return;
+
+      if (cardAudioBlobCache.size > 100) {
+        const firstKey = cardAudioBlobCache.keys().next().value;
+        if (firstKey) cardAudioBlobCache.delete(firstKey);
+      }
+      cardAudioBlobCache.set(cacheKey, blob);
+
+      // If native fallback was already triggered, don't double play
+      if (usedNativeFallback) return;
+
+      await playBlob(blob);
     } catch {
-      if (generation === generationRef.current) {
+      window.clearTimeout(fallbackTimer);
+      if (generation === generationRef.current && !usedNativeFallback) {
+        // Immediate fallback to speech synthesis on network/server error
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
+          try {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(trimmed);
+            utterance.lang = locale === "zh-Hant" ? "zh-HK" : locale === "zh-Hans" ? "zh-CN" : locale;
+            utterance.onend = () => {
+              busyRef.current = false;
+              activeTextRef.current = null;
+              setBusy(false);
+            };
+            utterance.onerror = () => {
+              busyRef.current = false;
+              activeTextRef.current = null;
+              setBusy(false);
+            };
+            window.speechSynthesis.speak(utterance);
+            return;
+          } catch {
+            // ignore
+          }
+        }
         busyRef.current = false;
         activeTextRef.current = null;
         setBusy(false);

@@ -1,8 +1,8 @@
 # Changelog
 
-**Version 4.4.0** — one number only (`package.json`).
+**Version 4.4.1** — one number only (`package.json`).
 
-Git has 39 commits (29 on `milton`). Chat turns are not versions.
+Git has 40 commits (30 on `milton`). Chat turns are not versions.
 
 ## Remotes
 
@@ -18,6 +18,16 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 4.4.1 — 2026-09-21
+
+**Miniscule.** Fast card speech caching with native speech fallback and expanded connection pooling.
+
+### Fixed
+- **Card speech caching & fallback**: Added client-side audio blob cache and server in-memory buffer cache for TTS. Spoken card prompts and answers now play instantly on repeat, and automatically fall back to browser `speechSynthesis` if remote TTS exceeds 1.5s.
+- **Connection pooling**: Expanded local database pool from 5 to 15 connections to prevent request queuing during concurrent spikes.
 
 ---
 

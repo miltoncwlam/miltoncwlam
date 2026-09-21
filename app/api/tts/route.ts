@@ -10,6 +10,18 @@ export const maxDuration = 30;
 const MAX_CHARS = 500;
 const CONNECTION_TIMEOUT_MS = 15_000;
 
+// Global in-memory LRU-style cache across dev server reloads
+const globalForTts = globalThis as unknown as {
+  ttsCache?: Map<string, Buffer>;
+};
+
+const ttsCache = globalForTts.ttsCache ?? new Map<string, Buffer>();
+if (process.env.NODE_ENV !== "production") {
+  globalForTts.ttsCache = ttsCache;
+}
+
+const MAX_CACHE_ENTRIES = 300;
+
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as {
     text?: string;
@@ -25,6 +37,18 @@ export async function POST(request: Request) {
 
   const locale = parseAppLocale(body?.locale);
   const voice = edgeVoiceForLocale(locale);
+  const cacheKey = `${voice}:${text}`;
+
+  const cached = ttsCache.get(cacheKey);
+  if (cached) {
+    return new NextResponse(new Uint8Array(cached), {
+      headers: {
+        "Content-Type": "audio/mpeg",
+        "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
+        "X-TTS-Cache": "HIT",
+      },
+    });
+  }
 
   try {
     const communicate = new Communicate(text, {
@@ -43,10 +67,18 @@ export async function POST(request: Request) {
     }
 
     const audio = Buffer.concat(audioChunks);
-    return new NextResponse(audio, {
+
+    if (ttsCache.size >= MAX_CACHE_ENTRIES) {
+      const firstKey = ttsCache.keys().next().value;
+      if (firstKey) ttsCache.delete(firstKey);
+    }
+    ttsCache.set(cacheKey, audio);
+
+    return new NextResponse(new Uint8Array(audio), {
       headers: {
         "Content-Type": "audio/mpeg",
-        "Cache-Control": "private, max-age=3600",
+        "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
+        "X-TTS-Cache": "MISS",
       },
     });
   } catch {
