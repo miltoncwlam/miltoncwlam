@@ -118,7 +118,7 @@ describe("public app urls", () => {
     const { readFile } = await import("node:fs/promises");
     const landing = await readFile("messages/en.json", "utf8");
     expect(landing).toMatch(/Stay in the notebook/);
-    expect(landing).toMatch(/Version 4.1.0 is now on beta/);
+    expect(landing).toMatch(/Version 4.0.0 is now on beta/);
     expect(landing).toMatch(/Not now/);
     expect(landing).toMatch(/Do not show again/);
     expect(landing).toMatch(/60% energy until 22 Sep 23:59 UTC/);

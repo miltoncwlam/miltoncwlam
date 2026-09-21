@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 4.1.0** — one number only (`package.json`).
+**Version 4.1.1** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -21,6 +21,15 @@ git checkout archive/milton-2026-09-06
 
 ---
 
+## Version 4.1.1 — 2026-09-21
+
+**Miniscule.** Public beta stays labelled **Version 4.0.0**. The 4.1.0 header waits until 25 Sep 2026 10:00 UTC.
+
+### Changed
+- Beta popup and campaign banner say Version 4.0.0 again. Header shows `4.0.0 beta` in beta, `4.0.0` after 22 Sep 23:59 UTC, then `4.1.0` at 25 Sep 10:00 UTC.
+
+---
+
 ## Version 4.1.0 — 2026-09-21
 
 **Minor.** Sit again from what you missed. 錯題本 + 溫習包.
@@ -33,7 +42,7 @@ git checkout archive/milton-2026-09-06
 - The notebook page links to the mistake book (with due count) and the print pack.
 
 ### Changed
-- Version labels move to 4.1.0: the beta popup, the header, and the label after the 22 Sep 23:59 UTC clock.
+- Header stays on 4.0.0 until 25 Sep 2026 10:00 UTC. Mistake book and print pack are live for beta users now.
 
 ---
 
