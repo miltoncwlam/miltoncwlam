@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 4.0.0 beta** — one number only (`package.json`).
+**Version 4.1.0** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,22 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 4.1.0 — 2026-09-21
+
+**Minor.** Sit again from what you missed. 錯題本 + 溫習包.
+
+### Added
+- **Mistake book (錯題本)** at `/decks/[id]/mistakes`. Every question that loses marks in a sat paper lands there with your answer and the marker feedback. Drill due questions: MCQ, true/false, matching, and exact cloze answers auto-check; written answers show the mark scheme and you rate hard / ok / easy.
+- Wrong items follow SM-2 (`exam_wrong_items` table). An item retires after the third drill when the latest rating is easy; you can also remove one by hand. Missing the same question on a re-sit refreshes it and restarts its schedule.
+- **Print pack (溫習包)** at `/decks/[id]/print`: study notes and the exam paper as one print-ready document, answer key on its own page.
+- After marking, the result screen says how many questions went into the mistake book and links to it.
+- The notebook page links to the mistake book (with due count) and the print pack.
+
+### Changed
+- Version labels move to 4.1.0: the beta popup, the header, and the label after the 22 Sep 23:59 UTC clock.
 
 ---
 

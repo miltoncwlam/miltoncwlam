@@ -22,11 +22,11 @@ const DURING_CAMPAIGN = Date.UTC(2026, 8, 13, 3, 0, 0);
 describe("v4 beta gate", () => {
   it("shows 3.9.3 until persist-enter, a session header, or a Vercel preview", () => {
     expect(STABLE_VERSION).toBe("3.9.3");
-    expect(BETA_VERSION).toBe("4.0.0 beta");
-    expect(GA_VERSION).toBe("4.0.0");
+    expect(BETA_VERSION).toBe("4.1.0 beta");
+    expect(GA_VERSION).toBe("4.1.0");
     expect(BETA_COOKIE).toBe("hkstudya-beta");
     expect(displayAppVersion(false, DURING_CAMPAIGN)).toBe("3.9.3");
-    expect(displayAppVersion(true, DURING_CAMPAIGN)).toBe("4.0.0 beta");
+    expect(displayAppVersion(true, DURING_CAMPAIGN)).toBe("4.1.0 beta");
     expect(persistBetaChoice(undefined)).toBe(null);
     expect(persistBetaChoice("1")).toBe("enter");
     expect(persistBetaChoice("enter")).toBe("enter");
@@ -60,8 +60,8 @@ describe("v4 beta gate", () => {
     expect(hasV4BetaAccess(undefined, "production", null, CAMPAIGN_ENDS_AT)).toBe(
       true,
     );
-    expect(displayAppVersion(false, CAMPAIGN_ENDS_AT)).toBe("4.0.0");
-    expect(displayAppVersion(true, CAMPAIGN_ENDS_AT)).toBe("4.0.0");
+    expect(displayAppVersion(false, CAMPAIGN_ENDS_AT)).toBe("4.1.0");
+    expect(displayAppVersion(true, CAMPAIGN_ENDS_AT)).toBe("4.1.0");
   });
 
   it("does not set a cookie from /beta", async () => {

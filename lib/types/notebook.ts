@@ -91,6 +91,24 @@ export type ExamAttempt = {
   createdAt: Date;
 };
 
+export type WrongQuestionItem = {
+  id: string;
+  deckId: string;
+  userId: string;
+  attemptId: string | null;
+  questionId: string;
+  question: ExamQuestion;
+  yourAnswer: ExamStudentAnswer | null;
+  feedback: string;
+  marks: number;
+  marksAwarded: number;
+  repetitions: number;
+  dueAt: Date;
+  isDue: boolean;
+  lastRating: "hard" | "ok" | "easy" | null;
+  createdAt: Date;
+};
+
 export type NotebookChatMessage = {
   id: string;
   deckId: string;

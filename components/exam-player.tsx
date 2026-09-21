@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -168,6 +169,7 @@ export function ExamPlayer({
   const [result, setResult] = useState<ExamQuestionResult[] | null>(null);
   const [score, setScore] = useState(0);
   const [maxScore, setMaxScore] = useState(0);
+  const [wrongCount, setWrongCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [remainingMs, setRemainingMs] = useState(durationMinutes * 60_000);
   const [isPending, startTransition] = useTransition();
@@ -200,6 +202,9 @@ export function ExamPlayer({
         setResult(payload.result);
         setScore(payload.score);
         setMaxScore(payload.maxScore);
+        setWrongCount(
+          typeof payload.wrongCount === "number" ? payload.wrongCount : 0,
+        );
       } catch (caught) {
         submittedRef.current = false;
         setError(caught instanceof Error ? caught.message : "Grading failed");
@@ -254,6 +259,17 @@ export function ExamPlayer({
           <p className="page-subtitle">
             {maxScore ? Math.round((score / maxScore) * 100) : 0}%
           </p>
+          {wrongCount > 0 ? (
+            <p className="mt-4 text-sm font-semibold text-slate-700">
+              {t("wrongBook", { count: wrongCount })}{" "}
+              <Link
+                className="text-indigo-700 underline"
+                href={`/decks/${deckId}/mistakes`}
+              >
+                {t("wrongBookLink")}
+              </Link>
+            </p>
+          ) : null}
           <div className="mt-8 flex justify-center gap-3 no-print">
             <button
               className="secondary-button"
@@ -268,6 +284,7 @@ export function ExamPlayer({
                 submittedRef.current = false;
                 setResult(null);
                 setAnswers({});
+                setWrongCount(0);
                 setRemainingMs(durationMinutes * 60_000);
                 try {
                   sessionStorage.removeItem(storageKey);

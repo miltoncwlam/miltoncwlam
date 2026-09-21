@@ -16,6 +16,7 @@ import { requireSession } from "@/lib/auth-server";
 import { listDeckArtifacts } from "@/lib/data/artifacts";
 import { listNotebookChatMessages } from "@/lib/data/notebook-chat";
 import { getDeckWithCards } from "@/lib/data/decks";
+import { listWrongItems } from "@/lib/data/wrong-questions";
 import { env } from "@/lib/env";
 import { TOPIC_SOURCE_MIME } from "@/lib/llm/generate-flashcards";
 import type { ExamPayload, MindmapPayload, NotesPayload } from "@/lib/types/notebook";
@@ -41,6 +42,8 @@ export default async function DeckDetailPage({
     deck.generationStatus === "complete" && deck.cards.length > 0;
   const artifacts = await listDeckArtifacts(deck.id);
   const chatMessages = await listNotebookChatMessages(deck.id, session.user.id);
+  const wrongItems = await listWrongItems(deck.id, session.user.id);
+  const dueWrongCount = wrongItems.filter((item) => item.isDue).length;
   const notes = artifacts.find(
     (item) => item.kind === "notes" && item.generationStatus === "complete",
   );
@@ -123,6 +126,28 @@ export default async function DeckDetailPage({
           ) : null}
         </div>
       </div>
+
+      {wrongItems.length || notes || exam ? (
+        <div className="no-print mt-4 flex flex-wrap gap-3">
+          {wrongItems.length ? (
+            <Link
+              className="secondary-button"
+              href={`/decks/${deck.id}/mistakes`}
+            >
+              Mistake book ({wrongItems.length})
+              {dueWrongCount ? ` · ${dueWrongCount} due` : ""}
+            </Link>
+          ) : null}
+          {notes || exam ? (
+            <Link
+              className="secondary-button"
+              href={`/decks/${deck.id}/print`}
+            >
+              Print pack
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
 
       {isFailed ? (
         <section className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-rose-900">

@@ -1,8 +1,8 @@
 import { isV4GenerallyAvailable } from "@/lib/campaign";
 
 export const STABLE_VERSION = "3.9.3";
-export const BETA_VERSION = "4.0.0 beta";
-export const GA_VERSION = "4.0.0";
+export const BETA_VERSION = "4.1.0 beta";
+export const GA_VERSION = "4.1.0";
 export const BETA_COOKIE = "hkstudya-beta";
 export const BETA_SESSION_KEY = "hkstudya-beta-session";
 export const BETA_EVENT = "hkstudya-beta";

@@ -3708,6 +3708,32 @@ html:has(dialog.v4-beta-popup-card[open]) .app-header {
   }
 }
 
+.print-pack-section {
+  margin-top: 2.5rem;
+}
+
+.print-pack-break {
+  break-before: page;
+}
+
+.print-pack-question {
+  break-inside: avoid;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.print-pack-lines {
+  height: 7rem;
+  margin-top: 0.75rem;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 1.55rem,
+    var(--border) 1.55rem,
+    var(--border) calc(1.55rem + 1px)
+  );
+}
+
 @media print {
   .app-header,
   .site-footer,

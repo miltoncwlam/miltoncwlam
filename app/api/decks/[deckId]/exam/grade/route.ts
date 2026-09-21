@@ -3,8 +3,11 @@ import { z } from "zod";
 import { requireApiSession } from "@/lib/auth-server";
 import { getDeckArtifact, insertExamAttempt } from "@/lib/data/artifacts";
 import { getDeckWithCards } from "@/lib/data/decks";
+import { upsertWrongItems } from "@/lib/data/wrong-questions";
 import { gradeExamPaper } from "@/lib/llm/grade-exam";
 import { parseExamPayload } from "@/lib/llm/parse-studio";
+import { captureException } from "@/lib/sentry";
+import { wrongItemsFromResult } from "@/lib/study/wrong-questions";
 import type { ExamAnswers } from "@/lib/types/notebook";
 
 const bodySchema = z.object({
@@ -46,11 +49,30 @@ export async function POST(
       maxScore,
       classLinkId: deck.classLinkId,
     });
+    const wrongItems = wrongItemsFromResult({
+      questions: exam.questions,
+      answers,
+      result,
+    });
+    let wrongCount = 0;
+    if (wrongItems.length) {
+      try {
+        wrongCount = await upsertWrongItems({
+          deckId,
+          userId: session.user.id,
+          attemptId: attempt.id,
+          items: wrongItems,
+        });
+      } catch (error) {
+        captureException(error, { deckId, route: "exam/grade", kind: "wrong_items" });
+      }
+    }
     return Response.json({
       attemptId: attempt.id,
       score,
       maxScore,
       result,
+      wrongCount,
     });
   } catch (error) {
     if (error instanceof Response) return error;
