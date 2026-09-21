@@ -10,6 +10,8 @@ import { StudyPlayer } from "@/components/study-player";
 import { Button } from "@/components/ui/button";
 import { adminAttachCommunityImagesAction } from "@/lib/actions/admin";
 import { isAdminUser, requireSession } from "@/lib/auth-server";
+import { displayNamesForUsers } from "@/lib/clerk";
+import { communityCreatorName } from "@/lib/community/copies";
 import {
   formatGradeLabel,
   formatTagLabel,
@@ -17,7 +19,7 @@ import {
 import { getPublicCommunityDeck } from "@/lib/data/community";
 import { listDeckArtifacts } from "@/lib/data/artifacts";
 import { pool } from "@/lib/db";
-import { listDeckComments, userLikedDeck } from "@/lib/data/social";
+import { getUserRating, listDeckComments, userLikedDeck } from "@/lib/data/social";
 import type { ExamPayload, MindmapPayload, NotesPayload } from "@/lib/types/notebook";
 
 export default async function CommunityDeckPage({
@@ -31,15 +33,28 @@ export default async function CommunityDeckPage({
   if (!deck) notFound();
   const t = await getTranslations("community");
   const studio = await getTranslations("studio");
-  const [liked, comments, meta, artifacts] = await Promise.all([
+  const [liked, comments, meta, artifacts, userRating] = await Promise.all([
     userLikedDeck(deck.id, session.user.id),
     listDeckComments(deck.id),
-    pool.query<{ like_count: number; is_featured: boolean }>(
-      `select like_count, is_featured from decks where id = $1`,
+    pool.query<{
+      like_count: number;
+      is_featured: boolean;
+      rating_avg: number;
+      rating_count: number;
+      copy_count: number;
+    }>(
+      `select like_count, is_featured, rating_avg, rating_count, copy_count
+       from decks where id = $1`,
       [deck.id],
     ),
     listDeckArtifacts(deck.id),
+    getUserRating(deck.id, session.user.id),
   ]);
+  const names = await displayNamesForUsers([
+    deck.userId,
+    ...comments.map((comment) => comment.user_id),
+  ]);
+  const creatorName = communityCreatorName(deck.userId, names);
   const notes = artifacts.find(
     (item) => item.kind === "notes" && item.generationStatus === "complete",
   );
@@ -50,14 +65,18 @@ export default async function CommunityDeckPage({
     (item) => item.kind === "exam" && item.generationStatus === "complete",
   );
 
+  const ratingAvg = Number(meta.rows[0]?.rating_avg ?? 0);
+  const ratingCount = Number(meta.rows[0]?.rating_count ?? 0);
+  const copyCount = Number(meta.rows[0]?.copy_count ?? 0);
   const subjectLabel = formatTagLabel(deck.subjectTag);
   const gradeLabel = formatGradeLabel(deck.gradeTag);
   const metaBits = [
     subjectLabel,
     gradeLabel || null,
     deck.cards.length ? t("cards", { count: deck.cards.length }) : t("notebook"),
-    deck.isSeed ? t("bySeed") : null,
     meta.rows[0]?.is_featured ? t("featured") : null,
+    ratingCount ? t("rating", { avg: ratingAvg.toFixed(1), count: ratingCount }) : null,
+    copyCount ? t("copies", { count: copyCount }) : null,
   ].filter(Boolean);
 
   return (
@@ -74,6 +93,14 @@ export default async function CommunityDeckPage({
             {deck.title}
           </h1>
           <p className="mt-1 text-sm text-[var(--muted)]">{metaBits.join(" · ")}</p>
+          <p className="mt-1 text-sm">
+            <Link
+              className="font-semibold text-[var(--accent)] hover:underline"
+              href={`/community/u/${encodeURIComponent(deck.userId)}`}
+            >
+              {t("byCreator", { name: creatorName })}
+            </Link>
+          </p>
         </div>
         <CommunityCopyButton deckId={deck.id} />
       </div>
@@ -90,10 +117,16 @@ export default async function CommunityDeckPage({
         </form>
       ) : null}
       <CommunitySocial
-        comments={comments}
+        comments={comments.map((comment) => ({
+          ...comment,
+          authorName: communityCreatorName(comment.user_id, names),
+        }))}
         deckId={deck.id}
         likeCount={meta.rows[0]?.like_count ?? 0}
         liked={liked}
+        ratingAvg={ratingAvg}
+        ratingCount={ratingCount}
+        userRating={userRating}
       />
       {mindmap?.payload ? (
         <MindmapTree

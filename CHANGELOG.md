@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 4.2.0** — one number only (`package.json`).
+**Version 4.3.0** — one number only (`package.json`).
 
 Git has 39 commits (29 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,22 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 4.3.0 — 2026-09-21
+
+**Minor.** Community depth: 1–5 star ratings (likes stay), a Featured row, copy counts, and creator profiles. Features are live now. The header still says 4.2.0 until 31 Oct 2026 10:00 UTC.
+
+### Added
+- **1–5 star ratings** on community packs, next to likes. One rating per signed-in user; changing stars updates the average. List cards and pack pages show `★ 4.6 (12)`.
+- **Copy counts** when someone copies a public pack to their library (class copies are not counted). Shown on cards and the pack page.
+- **Featured** row on `/community`: `is_featured` packs in a horizontal scroller (grid on large screens). Other public packs stay grouped by subject.
+- **Creator profiles** at `/community/u/[userId]`: public packs plus total copies. Cards and pack pages link “by {name}”. Seed packs show **HK Study A**. Comments show the author’s name.
+
+### Changed
+- `displayAppVersion` checks clocks newest-first: 4.3.0 from 31 Oct 10:00 UTC, then 4.2.0, 4.1.0, 4.0.0.
+- Energy reset (expire `period_end` so the next visit refills to 600) at 31 Oct 2026 10:00 UTC when the 4.3.0 label flips.
 
 ---
 

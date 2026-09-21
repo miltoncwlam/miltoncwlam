@@ -1,87 +1,18 @@
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
-import { CommunityCopyButton } from "@/components/community-copy-button";
+import { CommunityDeckCard } from "@/components/community-deck-card";
 import {
-  encyclopediaBandFromTitle,
-  encyclopediaTopicTitle,
-  formatGradeLabel,
   formatTagLabel,
   HK_GRADES,
   HK_SUBJECTS,
 } from "@/lib/community/hk-curriculum";
+import { communityCreatorName } from "@/lib/community/copies";
 import { requireSession } from "@/lib/auth-server";
+import { displayNamesForUsers } from "@/lib/clerk";
 import {
   listPublicCommunityDecks,
   type CommunityDeckSummary,
 } from "@/lib/data/community";
-
-function kindLabel(
-  kind: string,
-  studio: (key: string) => string,
-) {
-  if (kind === "mindmap" || kind === "notes" || kind === "exam") return studio(kind);
-  return kind;
-}
-
-function DeckCard({
-  deck,
-  t,
-  studio,
-}: {
-  deck: CommunityDeckSummary;
-  t: (key: string, values?: Record<string, string | number>) => string;
-  studio: (key: string) => string;
-}) {
-  const band = encyclopediaBandFromTitle(deck.title);
-  const kinds = deck.artifactKinds
-    .map((kind) => kindLabel(kind, studio))
-    .filter(Boolean)
-    .join(" · ");
-  const summary = [
-    deck.cardCount ? t("cards", { count: deck.cardCount }) : null,
-    kinds || null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
-  return (
-    <li className="deck-card flex flex-col p-5">
-      {deck.coverImageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          alt=""
-          className="mb-3 h-28 w-full rounded-xl object-cover"
-          src={deck.coverImageUrl}
-        />
-      ) : null}
-      <p className="text-xs font-bold tracking-wide text-[var(--accent)]">
-        {deck.isFeatured ? `${t("featured")} · ` : null}
-        {formatTagLabel(deck.subjectTag)}
-        {band
-          ? ` · ${band === "primary" ? t("primary") : band === "junior" ? t("junior") : t("senior")}`
-          : deck.gradeTag
-            ? ` · ${formatGradeLabel(deck.gradeTag)}`
-            : null}
-      </p>
-      <h2 className="mt-2 font-display text-lg font-bold text-[var(--ink)]">
-        <Link className="hover:text-[var(--accent)]" href={`/community/${deck.id}`}>
-          {deck.title}
-        </Link>
-      </h2>
-      <p className="mt-1 text-sm text-[var(--muted)]">
-        {summary || t("notebook")}
-        {deck.isSeed ? ` · ${t("bySeed")}` : null}
-        {` · ♥ ${deck.likeCount}`}
-      </p>
-      <div className="mt-auto flex gap-2 pt-5">
-        <Link className="secondary-button" href={`/community/${deck.id}`}>
-          {t("study")}
-        </Link>
-        <CommunityCopyButton deckId={deck.id} />
-      </div>
-    </li>
-  );
-}
 
 export default async function CommunityPage({
   searchParams,
@@ -97,16 +28,15 @@ export default async function CommunityPage({
     subject: params.subject,
     grade: params.grade,
   });
+  const names = await displayNamesForUsers(decks.map((deck) => deck.ownerUserId));
+  const translate = t as unknown as (
+    key: string,
+    values?: Record<string, string | number>,
+  ) => string;
+  const studioTranslate = studio as unknown as (key: string) => string;
 
   const featured = decks.filter((deck) => deck.isFeatured);
   const rest = decks.filter((deck) => !deck.isFeatured);
-  const featuredTopics = new Map<string, CommunityDeckSummary[]>();
-  for (const deck of featured) {
-    const topic = encyclopediaTopicTitle(deck.title);
-    const list = featuredTopics.get(topic) ?? [];
-    list.push(deck);
-    featuredTopics.set(topic, list);
-  }
   const bySubject = new Map<string, CommunityDeckSummary[]>();
   for (const deck of rest) {
     const subject = formatTagLabel(deck.subjectTag);
@@ -175,30 +105,36 @@ export default async function CommunityPage({
         </p>
       ) : (
         <div className="space-y-10">
-          {featuredTopics.size ? (
-            <section className="space-y-6">
-              <h2 className="font-display text-xl font-bold">{t("illustratedTopics")}</h2>
-              {[...featuredTopics.entries()].map(([topic, packs]) => (
-                <div className="space-y-3" key={topic}>
-                  <h3 className="text-sm font-bold tracking-wide text-[var(--muted)]">
-                    {topic}
-                  </h3>
-                  <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {packs.map((deck) => (
-                      <DeckCard deck={deck} key={deck.id} studio={studio} t={t} />
-                    ))}
-                  </ul>
-                </div>
-              ))}
+          {featured.length ? (
+            <section className="space-y-3">
+              <h2 className="font-display text-xl font-bold">{t("featured")}</h2>
+              <ul className="flex gap-4 overflow-x-auto pb-2 lg:grid lg:grid-cols-3 lg:overflow-visible">
+                {featured.map((deck) => (
+                  <CommunityDeckCard
+                    compact
+                    creatorName={communityCreatorName(deck.ownerUserId, names)}
+                    deck={deck}
+                    key={deck.id}
+                    studio={studioTranslate}
+                    t={translate}
+                  />
+                ))}
+              </ul>
             </section>
           ) : null}
           {[...bySubject.entries()].map(([subject, packs]) => (
             <section className="space-y-3" key={subject}>
               <h2 className="font-display text-xl font-bold">{subject}</h2>
               <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {packs.map((deck) => (
-                    <DeckCard deck={deck} key={deck.id} studio={studio} t={t} />
-                  ))}
+                {packs.map((deck) => (
+                  <CommunityDeckCard
+                    creatorName={communityCreatorName(deck.ownerUserId, names)}
+                    deck={deck}
+                    key={deck.id}
+                    studio={studioTranslate}
+                    t={translate}
+                  />
+                ))}
               </ul>
             </section>
           ))}

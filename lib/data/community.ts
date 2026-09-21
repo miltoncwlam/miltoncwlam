@@ -2,6 +2,7 @@ import "server-only";
 
 import { pool } from "@/lib/db";
 import { mapCard, mapDeck } from "@/lib/data/decks";
+import { communityCopyPatch } from "@/lib/community/copies";
 import {
   copyableNotebookSource,
   encyclopediaAnchorGrade,
@@ -33,16 +34,61 @@ function parseKindArray(value: unknown): string[] {
 }
 
 export type CommunityDeckSummary = DeckSummary & {
+  ownerUserId: string;
   isSeed: boolean;
   isFeatured: boolean;
   likeCount: number;
+  ratingAvg: number;
+  ratingCount: number;
+  copyCount: number;
   coverImageUrl: string | null;
 };
+
+type CommunityListRow = Parameters<typeof mapDeck>[0] & {
+  card_count: string;
+  is_featured: boolean;
+  like_count: number;
+  rating_avg?: number;
+  rating_count?: number;
+  copy_count?: number;
+  cover_image_url: string | null;
+  artifact_kinds: string[] | null;
+};
+
+function toCommunitySummary(row: CommunityListRow): CommunityDeckSummary {
+  const deck = mapDeck(row);
+  return {
+    id: deck.id,
+    title: deck.title,
+    sourceType: deck.sourceType,
+    generationStatus: deck.generationStatus,
+    generationError: deck.generationError,
+    isShared: deck.isShared,
+    visibility: deck.visibility,
+    subjectTag: deck.subjectTag,
+    gradeTag: deck.gradeTag,
+    archivedAt: deck.archivedAt,
+    folderTag: deck.folderTag,
+    createdAt: deck.createdAt,
+    updatedAt: deck.updatedAt,
+    cardCount: Number(row.card_count),
+    artifactKinds: parseKindArray(row.artifact_kinds),
+    isSeed: deck.isSeed,
+    isFeatured: Boolean(row.is_featured),
+    likeCount: Number(row.like_count ?? 0),
+    ratingAvg: Number(row.rating_avg ?? 0),
+    ratingCount: Number(row.rating_count ?? 0),
+    copyCount: Number(row.copy_count ?? 0),
+    ownerUserId: deck.userId,
+    coverImageUrl: row.cover_image_url ?? null,
+  };
+}
 
 export async function listPublicCommunityDecks(input?: {
   query?: string;
   subject?: string;
   grade?: string;
+  userId?: string;
 }): Promise<CommunityDeckSummary[]> {
   const clauses = [
     `d.visibility = 'public'`,
@@ -71,6 +117,11 @@ export async function listPublicCommunityDecks(input?: {
     );
   }
 
+  if (input?.userId?.trim()) {
+    values.push(input.userId.trim());
+    clauses.push(`d.user_id = $${values.length}`);
+  }
+
   if (input?.query?.trim()) {
     values.push(`%${input.query.trim().toLowerCase()}%`);
     clauses.push(
@@ -80,15 +131,7 @@ export async function listPublicCommunityDecks(input?: {
     );
   }
 
-  const result = await pool.query<
-    Parameters<typeof mapDeck>[0] & {
-      card_count: string;
-      is_featured: boolean;
-      like_count: number;
-      cover_image_url: string | null;
-      artifact_kinds: string[] | null;
-    }
-  >(
+  const result = await pool.query<CommunityListRow>(
     `select d.*, count(c.id)::text as card_count,
             (select c2.image_url from cards c2
              where c2.deck_id = d.id and c2.image_url is not null
@@ -108,30 +151,7 @@ export async function listPublicCommunityDecks(input?: {
     values,
   );
 
-  return result.rows.map((row) => {
-    const deck = mapDeck(row);
-    return {
-      id: deck.id,
-      title: deck.title,
-      sourceType: deck.sourceType,
-      generationStatus: deck.generationStatus,
-      generationError: deck.generationError,
-      isShared: deck.isShared,
-      visibility: deck.visibility,
-      subjectTag: deck.subjectTag,
-      gradeTag: deck.gradeTag,
-      archivedAt: deck.archivedAt,
-      folderTag: deck.folderTag,
-      createdAt: deck.createdAt,
-      updatedAt: deck.updatedAt,
-      cardCount: Number(row.card_count),
-      artifactKinds: parseKindArray(row.artifact_kinds),
-      isSeed: deck.isSeed,
-      isFeatured: Boolean(row.is_featured),
-      likeCount: Number(row.like_count ?? 0),
-      coverImageUrl: row.cover_image_url ?? null,
-    };
-  });
+  return result.rows.map(toCommunitySummary);
 }
 
 export async function listCommunitySubjects(): Promise<string[]> {
@@ -201,7 +221,7 @@ export async function copyDeckByIdToUser(
     ).rows.map(mapCard),
   };
 
-  return insertDeckCopy(source, userId, options?.classLinkId);
+  return insertDeckCopy(source, userId, { classLinkId: options?.classLinkId });
 }
 
 export async function copyCommunityDeckToUser(
@@ -210,13 +230,13 @@ export async function copyCommunityDeckToUser(
 ): Promise<string> {
   const source = await getPublicCommunityDeck(sourceDeckId);
   if (!source) throw new Error("Community deck not found");
-  return insertDeckCopy(source, userId);
+  return insertDeckCopy(source, userId, { trackCommunityCopy: true });
 }
 
 async function insertDeckCopy(
   source: DeckWithCards,
   userId: string,
-  classLinkId?: string | null,
+  options?: { classLinkId?: string | null; trackCommunityCopy?: boolean },
 ): Promise<string> {
 
   const client = await pool.connect();
@@ -225,13 +245,17 @@ async function insertDeckCopy(
     const rawSource = source.sourceContent?.trim() ?? "";
     const synthesized = !rawSource || /^seed:/i.test(rawSource);
     const sourceText = copyableNotebookSource(source);
+    const tracking = communityCopyPatch(
+      Boolean(options?.trackCommunityCopy),
+      source.id,
+    );
     const deckResult = await client.query<{ id: string }>(
       `insert into decks (
         user_id, title, source_type, source_content, source_mime_type,
         generation_status, share_token, is_shared, visibility,
-        subject_tag, is_seed, class_link_id
+        subject_tag, is_seed, class_link_id, copied_from_deck_id
       ) values (
-        $1, $2, $3, $4, $5, 'complete', null, false, 'private', $6, false, $7
+        $1, $2, $3, $4, $5, 'complete', null, false, 'private', $6, false, $7, $8
       ) returning id`,
       [
         userId,
@@ -240,7 +264,8 @@ async function insertDeckCopy(
         sourceText,
         synthesized ? "text/plain" : source.sourceMimeType,
         source.subjectTag,
-        classLinkId ?? null,
+        options?.classLinkId ?? null,
+        tracking.copiedFromDeckId,
       ],
     );
     const deckId = deckResult.rows[0].id;
@@ -272,6 +297,13 @@ async function insertDeckCopy(
        where deck_id = $1 and generation_status = 'complete'`,
       [source.id, deckId],
     );
+
+    if (tracking.incrementCopyCount) {
+      await client.query(
+        `update decks set copy_count = copy_count + 1 where id = $1`,
+        [source.id],
+      );
+    }
 
     await client.query("commit");
     return deckId;

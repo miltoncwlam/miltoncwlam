@@ -9,6 +9,7 @@ import {
   createModerationReport,
   likeCommunityDeck,
   unlikeCommunityDeck,
+  upsertDeckRating,
 } from "@/lib/data/social";
 
 const idSchema = z.string().uuid();
@@ -25,6 +26,15 @@ export async function unlikeDeckAction(deckIdValue: string) {
   const session = await requireSession();
   const deckId = idSchema.parse(deckIdValue);
   await unlikeCommunityDeck(deckId, session.user.id);
+  revalidatePath(`/community/${deckId}`);
+  revalidatePath("/community");
+}
+
+export async function rateDeckAction(input: { deckId: string; stars: number }) {
+  const session = await requireSession();
+  const deckId = idSchema.parse(input.deckId);
+  const stars = z.number().int().min(1).max(5).parse(input.stars);
+  await upsertDeckRating({ deckId, userId: session.user.id, stars });
   revalidatePath(`/community/${deckId}`);
   revalidatePath("/community");
 }

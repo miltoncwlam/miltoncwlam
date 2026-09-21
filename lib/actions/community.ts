@@ -23,6 +23,8 @@ export async function copyCommunityDeckAction(deckIdValue: string) {
   const deckId = idSchema.parse(deckIdValue);
   const copiedId = await copyCommunityDeckToUser(deckId, session.user.id);
   revalidatePath("/decks");
+  revalidatePath("/community");
+  revalidatePath(`/community/${deckId}`);
   return copiedId;
 }
 
