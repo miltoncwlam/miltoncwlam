@@ -10,6 +10,7 @@ import { StudyPlayer } from "@/components/study-player";
 import { Button } from "@/components/ui/button";
 import { adminAttachCommunityImagesAction } from "@/lib/actions/admin";
 import { isAdminUser, requireSession } from "@/lib/auth-server";
+import { isV43FeaturesLive } from "@/lib/campaign";
 import { displayNamesForUsers } from "@/lib/clerk";
 import { communityCreatorName } from "@/lib/community/copies";
 import {
@@ -68,15 +69,18 @@ export default async function CommunityDeckPage({
   const ratingAvg = Number(meta.rows[0]?.rating_avg ?? 0);
   const ratingCount = Number(meta.rows[0]?.rating_count ?? 0);
   const copyCount = Number(meta.rows[0]?.copy_count ?? 0);
+  const v43 = isV43FeaturesLive();
   const subjectLabel = formatTagLabel(deck.subjectTag);
   const gradeLabel = formatGradeLabel(deck.gradeTag);
   const metaBits = [
     subjectLabel,
     gradeLabel || null,
     deck.cards.length ? t("cards", { count: deck.cards.length }) : t("notebook"),
-    meta.rows[0]?.is_featured ? t("featured") : null,
-    ratingCount ? t("rating", { avg: ratingAvg.toFixed(1), count: ratingCount }) : null,
-    copyCount ? t("copies", { count: copyCount }) : null,
+    v43 && meta.rows[0]?.is_featured ? t("featured") : null,
+    v43 && ratingCount
+      ? t("rating", { avg: ratingAvg.toFixed(1), count: ratingCount })
+      : null,
+    v43 && copyCount ? t("copies", { count: copyCount }) : null,
   ].filter(Boolean);
 
   return (
@@ -93,14 +97,16 @@ export default async function CommunityDeckPage({
             {deck.title}
           </h1>
           <p className="mt-1 text-sm text-[var(--muted)]">{metaBits.join(" · ")}</p>
-          <p className="mt-1 text-sm">
-            <Link
-              className="font-semibold text-[var(--accent)] hover:underline"
-              href={`/community/u/${encodeURIComponent(deck.userId)}`}
-            >
-              {t("byCreator", { name: creatorName })}
-            </Link>
-          </p>
+          {v43 ? (
+            <p className="mt-1 text-sm">
+              <Link
+                className="font-semibold text-[var(--accent)] hover:underline"
+                href={`/community/u/${encodeURIComponent(deck.userId)}`}
+              >
+                {t("byCreator", { name: creatorName })}
+              </Link>
+            </p>
+          ) : null}
         </div>
         <CommunityCopyButton deckId={deck.id} />
       </div>
@@ -119,13 +125,16 @@ export default async function CommunityDeckPage({
       <CommunitySocial
         comments={comments.map((comment) => ({
           ...comment,
-          authorName: communityCreatorName(comment.user_id, names),
+          authorName: v43
+            ? communityCreatorName(comment.user_id, names)
+            : undefined,
         }))}
         deckId={deck.id}
         likeCount={meta.rows[0]?.like_count ?? 0}
         liked={liked}
         ratingAvg={ratingAvg}
         ratingCount={ratingCount}
+        showRatings={v43}
         userRating={userRating}
       />
       {mindmap?.payload ? (

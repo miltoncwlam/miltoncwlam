@@ -34,3 +34,18 @@ export function isV43Released(now = Date.now()) {
 export function isV44Released(now = Date.now()) {
   return now >= V44_RELEASES_AT;
 }
+
+/** Today queue + exam history — only after the 4.2.0 header flip. */
+export function isV42FeaturesLive(now = Date.now()) {
+  return isV42Released(now);
+}
+
+/** Community ratings, Featured, copy counts, creator profiles — after 4.3.0. */
+export function isV43FeaturesLive(now = Date.now()) {
+  return isV43Released(now);
+}
+
+/** Editable mind map + AI expand/re-branch — after 4.4.0. */
+export function isV44FeaturesLive(now = Date.now()) {
+  return isV44Released(now);
+}

@@ -8,6 +8,7 @@ import { useGenerationJobs } from "@/components/generation-jobs";
 import { MindmapTree } from "@/components/mindmap-tree";
 import { StudyNotesView } from "@/components/study-notes-view";
 import { friendlyGenerateError } from "@/lib/friendly-generate-error";
+import { isV44FeaturesLive } from "@/lib/campaign";
 import { EXAM_QUESTION_TYPES, type ArtifactKind } from "@/lib/types/notebook";
 import type { ExamPayload, MindmapPayload, NotesPayload } from "@/lib/types/notebook";
 import type { AppLocale, StudioDepth, StudioPurpose } from "@/lib/i18n/locales";
@@ -221,7 +222,7 @@ export function NotebookStudio({
       {mindmap?.nodes?.length ? (
         <MindmapTree
           deckId={deckId}
-          editable
+          editable={isV44FeaturesLive()}
           key={mindmap.nodes.map((node) => node.id).join("-")}
           nodes={mindmap.nodes}
           title={mindmap.title}

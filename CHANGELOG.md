@@ -1,8 +1,8 @@
 # Changelog
 
-**Version 4.4.1** — one number only (`package.json`).
+**Version 4.4.2** — one number only (`package.json`).
 
-Git has 40 commits (30 on `milton`). Chat turns are not versions.
+Git has 41 commits (31 on `milton`). Chat turns are not versions.
 
 ## Remotes
 
@@ -21,6 +21,15 @@ git checkout archive/milton-2026-09-06
 
 ---
 
+## Version 4.4.2 — 2026-09-26
+
+**Miniscule.** Version number and features stay aligned: 4.2+ capabilities unlock only when the header flips.
+
+### Fixed
+- **Feature clocks**: Today (`/review`), exam history, community ratings / Featured / copy counts / creator profiles, and editable AI mind-map canvas stay off until their release clocks (13 Oct, 31 Oct, 18 Nov 2026 10:00 UTC). Public users on **Version 4.1.0** only get through mistake book + print pack.
+
+---
+
 ## Version 4.4.1 — 2026-09-21
 
 **Miniscule.** Fast card speech caching with native speech fallback and expanded connection pooling.
@@ -33,7 +42,7 @@ git checkout archive/milton-2026-09-06
 
 ## Version 4.4.0 — 2026-09-21
 
-**Minor.** AI canvas: the mind map is editable. Features are live now. The header still says 4.3.0 until 18 Nov 2026 10:00 UTC.
+**Minor.** AI canvas: the mind map is editable. Unlocks with the header at 18 Nov 2026 10:00 UTC.
 
 ### Added
 - **Interactive mind map** in the notebook: select a node, drag it onto another to re-parent, double-click to rename, add or remove a child.
@@ -42,12 +51,13 @@ git checkout archive/milton-2026-09-06
 ### Changed
 - `displayAppVersion` checks clocks newest-first: 4.4.0 from 18 Nov 10:00 UTC, then 4.3.0, 4.2.0, 4.1.0, 4.0.0.
 - Energy reset (expire `period_end` so the next visit refills to 600) at 18 Nov 2026 10:00 UTC when the 4.4.0 label flips.
+- Canvas edit and AI expand stay gated behind that same clock (see Version 4.4.2).
 
 ---
 
 ## Version 4.3.0 — 2026-09-21
 
-**Minor.** Community depth: 1–5 star ratings (likes stay), a Featured row, copy counts, and creator profiles. Features are live now. The header still says 4.2.0 until 31 Oct 2026 10:00 UTC.
+**Minor.** Community depth: 1–5 star ratings (likes stay), a Featured row, copy counts, and creator profiles. Unlocks with the header at 31 Oct 2026 10:00 UTC.
 
 ### Added
 - **1–5 star ratings** on community packs, next to likes. One rating per signed-in user; changing stars updates the average. List cards and pack pages show `★ 4.6 (12)`.
@@ -58,12 +68,13 @@ git checkout archive/milton-2026-09-06
 ### Changed
 - `displayAppVersion` checks clocks newest-first: 4.3.0 from 31 Oct 10:00 UTC, then 4.2.0, 4.1.0, 4.0.0.
 - Energy reset (expire `period_end` so the next visit refills to 600) at 31 Oct 2026 10:00 UTC when the 4.3.0 label flips.
+- Ratings, Featured, copy counts, and creator profiles stay gated behind that same clock (see Version 4.4.2).
 
 ---
 
 ## Version 4.2.0 — 2026-09-21
 
-**Minor.** One Today queue across notebooks, plus exam history. The header still says 4.1.0 until 13 Oct 2026 10:00 UTC.
+**Minor.** One Today queue across notebooks, plus exam history. Unlocks with the header at 13 Oct 2026 10:00 UTC.
 
 ### Added
 - **Today** at `/review`: due flashcards and due mistake-book items from every active notebook, mixed by due date (cap 50). Rate cards with SM-2; drill 錯題 with the same auto-check / self-rate flow as the mistake book.
@@ -73,6 +84,7 @@ git checkout archive/milton-2026-09-06
 ### Changed
 - `displayAppVersion` checks clocks newest-first: 4.2.0 from 13 Oct 10:00 UTC, 4.1.0 from 25 Sep 10:00 UTC, 4.0.0 after 22 Sep 23:59 UTC.
 - Energy reset at 13 Oct 2026 10:00 UTC when the 4.2.0 label flips.
+- Today and exam history stay gated behind that same clock (see Version 4.4.2).
 
 ---
 

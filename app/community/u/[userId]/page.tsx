@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 
 import { CommunityDeckCard } from "@/components/community-deck-card";
 import { requireSession } from "@/lib/auth-server";
+import { isV43FeaturesLive } from "@/lib/campaign";
 import { displayNamesForUsers } from "@/lib/clerk";
 import { communityCreatorName } from "@/lib/community/copies";
 import { listPublicCommunityDecks } from "@/lib/data/community";
@@ -13,6 +14,7 @@ export default async function CommunityCreatorPage({
 }: {
   params: Promise<{ userId: string }>;
 }) {
+  if (!isV43FeaturesLive()) notFound();
   await requireSession();
   const { userId: rawId } = await params;
   const userId = decodeURIComponent(rawId).trim();
@@ -57,6 +59,7 @@ export default async function CommunityCreatorPage({
             creatorName={name}
             deck={deck}
             key={deck.id}
+            showV43
             studio={studioTranslate}
             t={translate}
           />

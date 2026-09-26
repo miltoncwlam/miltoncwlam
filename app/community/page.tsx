@@ -8,6 +8,7 @@ import {
 } from "@/lib/community/hk-curriculum";
 import { communityCreatorName } from "@/lib/community/copies";
 import { requireSession } from "@/lib/auth-server";
+import { isV43FeaturesLive } from "@/lib/campaign";
 import { displayNamesForUsers } from "@/lib/clerk";
 import {
   listPublicCommunityDecks,
@@ -23,6 +24,7 @@ export default async function CommunityPage({
   const params = await searchParams;
   const t = await getTranslations("community");
   const studio = await getTranslations("studio");
+  const v43 = isV43FeaturesLive();
   const decks = await listPublicCommunityDecks({
     query: params.q,
     subject: params.subject,
@@ -35,8 +37,8 @@ export default async function CommunityPage({
   ) => string;
   const studioTranslate = studio as unknown as (key: string) => string;
 
-  const featured = decks.filter((deck) => deck.isFeatured);
-  const rest = decks.filter((deck) => !deck.isFeatured);
+  const featured = v43 ? decks.filter((deck) => deck.isFeatured) : [];
+  const rest = v43 ? decks.filter((deck) => !deck.isFeatured) : decks;
   const bySubject = new Map<string, CommunityDeckSummary[]>();
   for (const deck of rest) {
     const subject = formatTagLabel(deck.subjectTag);
@@ -115,6 +117,7 @@ export default async function CommunityPage({
                     creatorName={communityCreatorName(deck.ownerUserId, names)}
                     deck={deck}
                     key={deck.id}
+                    showV43={v43}
                     studio={studioTranslate}
                     t={translate}
                   />
@@ -131,6 +134,7 @@ export default async function CommunityPage({
                     creatorName={communityCreatorName(deck.ownerUserId, names)}
                     deck={deck}
                     key={deck.id}
+                    showV43={v43}
                     studio={studioTranslate}
                     t={translate}
                   />

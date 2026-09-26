@@ -1,13 +1,16 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { ReviewQueue } from "@/components/review-queue";
 import { requireSession } from "@/lib/auth-server";
+import { isV42FeaturesLive } from "@/lib/campaign";
 import { listDueCardsAcrossDecks } from "@/lib/data/study";
 import { listDueWrongItemsAcrossDecks } from "@/lib/data/wrong-questions";
 import { mergeReviewQueue } from "@/lib/study/review-queue";
 
 export default async function ReviewPage() {
+  if (!isV42FeaturesLive()) notFound();
   const session = await requireSession();
   const t = await getTranslations("review");
   const [cards, wrongs] = await Promise.all([

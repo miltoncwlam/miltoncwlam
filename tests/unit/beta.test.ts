@@ -124,6 +124,22 @@ describe("v4 beta gate", () => {
     expect(displayAppVersion(true, V44_RELEASES_AT)).toBe("4.4.0");
   });
 
+  it("keeps 4.2+ features off until each header clock", async () => {
+    const {
+      isV42FeaturesLive,
+      isV43FeaturesLive,
+      isV44FeaturesLive,
+    } = await import("@/lib/campaign");
+    const now = Date.UTC(2026, 8, 26, 1, 0, 0);
+    expect(displayAppVersion(false, now)).toBe("4.1.0");
+    expect(isV42FeaturesLive(now)).toBe(false);
+    expect(isV43FeaturesLive(now)).toBe(false);
+    expect(isV44FeaturesLive(now)).toBe(false);
+    expect(isV42FeaturesLive(V42_RELEASES_AT)).toBe(true);
+    expect(isV43FeaturesLive(V43_RELEASES_AT)).toBe(true);
+    expect(isV44FeaturesLive(V44_RELEASES_AT)).toBe(true);
+  });
+
   it("does not set a cookie from /beta", async () => {
     const { readFile } = await import("node:fs/promises");
     const page = await readFile("app/beta/page.tsx", "utf8");

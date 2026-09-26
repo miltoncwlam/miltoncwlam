@@ -19,6 +19,7 @@ export function CommunitySocial({
   ratingCount,
   userRating,
   comments,
+  showRatings = false,
 }: {
   deckId: string;
   likeCount: number;
@@ -26,6 +27,7 @@ export function CommunitySocial({
   ratingAvg: number;
   ratingCount: number;
   userRating: number | null;
+  showRatings?: boolean;
   comments: Array<{
     id: string;
     body: string;
@@ -53,35 +55,37 @@ export function CommunitySocial({
         >
           {liked ? t("liked") : t("like")} · {likeCount}
         </button>
-        <div className="flex items-center gap-1" role="group" aria-label={t("rate")}>
-          {[1, 2, 3, 4, 5].map((stars) => (
-            <button
-              aria-label={t("starsAria", { stars })}
-              aria-pressed={userRating === stars}
-              className={`text-2xl leading-none ${
-                stars <= filled ? "text-amber-500" : "text-slate-300"
-              }`}
-              disabled={pending}
-              key={stars}
-              onClick={() =>
-                startTransition(async () => {
-                  await rateDeckAction({ deckId, stars });
-                })
-              }
-              type="button"
-            >
-              ★
-            </button>
-          ))}
-          {ratingCount ? (
-            <span className="ml-1 text-sm text-[var(--muted)]">
-              {t("rating", {
-                avg: ratingAvg.toFixed(1),
-                count: ratingCount,
-              })}
-            </span>
-          ) : null}
-        </div>
+        {showRatings ? (
+          <div className="flex items-center gap-1" role="group" aria-label={t("rate")}>
+            {[1, 2, 3, 4, 5].map((stars) => (
+              <button
+                aria-label={t("starsAria", { stars })}
+                aria-pressed={userRating === stars}
+                className={`text-2xl leading-none ${
+                  stars <= filled ? "text-amber-500" : "text-slate-300"
+                }`}
+                disabled={pending}
+                key={stars}
+                onClick={() =>
+                  startTransition(async () => {
+                    await rateDeckAction({ deckId, stars });
+                  })
+                }
+                type="button"
+              >
+                ★
+              </button>
+            ))}
+            {ratingCount ? (
+              <span className="ml-1 text-sm text-[var(--muted)]">
+                {t("rating", {
+                  avg: ratingAvg.toFixed(1),
+                  count: ratingCount,
+                })}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       <form action={commentDeckAction} className="space-y-2">

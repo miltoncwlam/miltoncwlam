@@ -6,6 +6,7 @@ import { AccountTutorial } from "@/components/account-tutorial";
 import { DeckCard } from "@/components/deck-card";
 import { createSampleDeckAction } from "@/lib/actions/decks";
 import { requireSession } from "@/lib/auth-server";
+import { isV42FeaturesLive } from "@/lib/campaign";
 import { listDeckFolders, listDecks } from "@/lib/data/decks";
 import { countDueReviewItems } from "@/lib/data/study";
 import type { LibraryFilter, LibrarySort } from "@/lib/types/flashcard";
@@ -52,12 +53,15 @@ export default async function DecksPage({
   let decks;
   let folders: string[] = [];
   let dueToday = 0;
+  const todayLive = isV42FeaturesLive();
   try {
     [decks, folders] = await Promise.all([
       listDecks(session.user.id, { filter, sort, folder }),
       listDeckFolders(session.user.id),
     ]);
-    dueToday = await countDueReviewItems(session.user.id).catch(() => 0);
+    if (todayLive) {
+      dueToday = await countDueReviewItems(session.user.id).catch(() => 0);
+    }
   } catch {
     return (
       <main className="page-shell">
@@ -92,22 +96,24 @@ export default async function DecksPage({
         </Link>
       </div>
 
-      <Link
-        className="mt-8 flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4"
-        href="/review"
-      >
-        <div>
-          <p className="text-xs font-black uppercase tracking-widest text-slate-500">
-            {t("todayEyebrow")}
-          </p>
-          <p className="mt-1 text-lg font-black">
-            {dueToday > 0
-              ? t("todayDue", { count: dueToday })
-              : t("todayCaughtUp")}
-          </p>
-        </div>
-        <span className="secondary-button">{t("todayCta")}</span>
-      </Link>
+      {todayLive ? (
+        <Link
+          className="mt-8 flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4"
+          href="/review"
+        >
+          <div>
+            <p className="text-xs font-black uppercase tracking-widest text-slate-500">
+              {t("todayEyebrow")}
+            </p>
+            <p className="mt-1 text-lg font-black">
+              {dueToday > 0
+                ? t("todayDue", { count: dueToday })
+                : t("todayCaughtUp")}
+            </p>
+          </div>
+          <span className="secondary-button">{t("todayCta")}</span>
+        </Link>
+      ) : null}
 
       {folders.length ? (
         <div className="mt-6 flex flex-wrap gap-2" aria-label="Folders">

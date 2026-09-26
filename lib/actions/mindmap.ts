@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { requireSession } from "@/lib/auth-server";
+import { isV44FeaturesLive } from "@/lib/campaign";
 import { estimateArtifactCredits } from "@/lib/credits/estimate-generation";
 import { creditsFromTokens } from "@/lib/credits/token-cost";
 import { getDeckArtifact, upsertDeckArtifact } from "@/lib/data/artifacts";
@@ -34,6 +35,7 @@ export async function saveMindmapAction(input: {
   title: string;
   nodes: MindmapNode[];
 }) {
+  if (!isV44FeaturesLive()) throw new Error("Mind map editing is not available yet");
   const session = await requireSession();
   const deckId = idSchema.parse(input.deckId);
   const deck = await getDeckWithCards(deckId, session.user.id);
@@ -54,6 +56,7 @@ export async function expandMindmapNodeAction(input: {
   nodeId: string;
   mode: "expand" | "rebranch";
 }): Promise<MindmapPayload> {
+  if (!isV44FeaturesLive()) throw new Error("Mind map editing is not available yet");
   const session = await requireSession();
   const deckId = idSchema.parse(input.deckId);
   const nodeId = z.string().min(1).max(40).parse(input.nodeId);

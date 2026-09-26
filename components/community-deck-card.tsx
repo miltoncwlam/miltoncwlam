@@ -21,12 +21,14 @@ export function CommunityDeckCard({
   t,
   studio,
   compact,
+  showV43 = false,
 }: {
   deck: CommunityDeckSummary;
   creatorName: string;
   t: Translate;
   studio: Translate;
   compact?: boolean;
+  showV43?: boolean;
 }) {
   const band = encyclopediaBandFromTitle(deck.title);
   const kinds = deck.artifactKinds
@@ -36,10 +38,10 @@ export function CommunityDeckCard({
   const stats = [
     deck.cardCount ? t("cards", { count: deck.cardCount }) : null,
     kinds || null,
-    deck.ratingCount
+    showV43 && deck.ratingCount
       ? t("rating", { avg: deck.ratingAvg.toFixed(1), count: deck.ratingCount })
       : null,
-    deck.copyCount ? t("copies", { count: deck.copyCount }) : null,
+    showV43 && deck.copyCount ? t("copies", { count: deck.copyCount }) : null,
     `♥ ${deck.likeCount}`,
   ]
     .filter(Boolean)
@@ -60,7 +62,7 @@ export function CommunityDeckCard({
         />
       ) : null}
       <p className="text-xs font-bold tracking-wide text-[var(--accent)]">
-        {deck.isFeatured && !compact ? `${t("featured")} · ` : null}
+        {showV43 && deck.isFeatured && !compact ? `${t("featured")} · ` : null}
         {formatTagLabel(deck.subjectTag)}
         {band
           ? ` · ${band === "primary" ? t("primary") : band === "junior" ? t("junior") : t("senior")}`
@@ -76,14 +78,16 @@ export function CommunityDeckCard({
       <p className="mt-1 text-sm text-[var(--muted)]">
         {stats || t("notebook")}
       </p>
-      <p className="mt-1 text-sm">
-        <Link
-          className="font-semibold text-[var(--accent)] hover:underline"
-          href={`/community/u/${encodeURIComponent(deck.ownerUserId)}`}
-        >
-          {t("byCreator", { name: creatorName })}
-        </Link>
-      </p>
+      {showV43 ? (
+        <p className="mt-1 text-sm">
+          <Link
+            className="font-semibold text-[var(--accent)] hover:underline"
+            href={`/community/u/${encodeURIComponent(deck.ownerUserId)}`}
+          >
+            {t("byCreator", { name: creatorName })}
+          </Link>
+        </p>
+      ) : null}
       <div className="mt-auto flex gap-2 pt-5">
         <Link className="secondary-button" href={`/community/${deck.id}`}>
           {t("study")}
