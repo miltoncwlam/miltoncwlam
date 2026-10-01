@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 4.4.2** — one number only (`package.json`).
+**Version 4.4.3** — one number only (`package.json`).
 
 Git has 41 commits (31 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,17 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 4.4.3 — 2026-10-01
+`e8b92ea`
+
+**Miniscule.** Long PDF OCR no longer stalls mid-read when the between-page kick drops.
+
+### Fixed
+- **OCR page chaining**: Process route keeps ticking pages in-request (within the function budget) and re-enqueues when time runs out, so notebooks do not freeze on “Reading page N of M”.
+- **Stale OCR re-kick**: Jobs poll and the generation banner re-start idle or reclaimable ingest work; Retry also works while still processing.
 
 ---
 

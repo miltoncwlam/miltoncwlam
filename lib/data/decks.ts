@@ -747,6 +747,8 @@ export type GenerationJobRow = {
   kind: "ingest" | "mindmap" | "notes" | "exam" | "cards";
   ocrNext?: number;
   ocrTotal?: number;
+  ocrBusy?: boolean;
+  updatedAt?: string;
 };
 
 export async function listUserGenerationJobs(
@@ -758,8 +760,9 @@ export async function listUserGenerationJobs(
     generation_status: Deck["generationStatus"];
     generation_error: string | null;
     ingest_progress: unknown;
+    updated_at: Date;
   }>(
-    `select id, title, generation_status, generation_error, ingest_progress
+    `select id, title, generation_status, generation_error, ingest_progress, updated_at
      from decks
      where user_id = $1
        and archived_at is null
@@ -808,6 +811,8 @@ export async function listUserGenerationJobs(
       kind: "ingest",
       ocrNext: progress?.ocrNext,
       ocrTotal: progress?.ocrTotal,
+      ocrBusy: progress?.ocrBusy,
+      updatedAt: row.updated_at.toISOString(),
     };
   });
   for (const row of artifacts.rows) {

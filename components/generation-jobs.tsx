@@ -25,6 +25,8 @@ export type GenerationJob = {
   kind: "ingest" | "mindmap" | "notes" | "exam" | "cards";
   ocrNext?: number;
   ocrTotal?: number;
+  ocrBusy?: boolean;
+  updatedAt?: string;
 };
 
 type JobsContextValue = {
@@ -103,6 +105,39 @@ export function GenerationJobsProvider({ children }: { children: ReactNode }) {
     }, 4000);
     return () => window.clearInterval(id);
   }, [refresh]);
+
+  // Re-kick OCR when a page chain drops. Match server stale windows so we do
+  // not POST every poll while a page claim is still legitimately busy.
+  useEffect(() => {
+    const now = Date.now();
+    const stale = jobs.filter((job) => {
+      if (
+        job.kind !== "ingest" ||
+        (job.status !== "processing" && job.status !== "pending")
+      ) {
+        return false;
+      }
+      if (!job.ocrTotal || (job.ocrNext ?? 1) > job.ocrTotal) return false;
+      const updated = job.updatedAt ? Date.parse(job.updatedAt) : 0;
+      const staleMs = now - (Number.isFinite(updated) ? updated : 0);
+      if (job.ocrBusy && staleMs < 3 * 60_000) return false;
+      if (!job.ocrBusy && staleMs < 8_000) return false;
+      return true;
+    });
+    if (!stale.length) return;
+    const timers = stale.map((job) =>
+      window.setTimeout(() => {
+        void fetch(`/api/notebooks/${job.deckId}/process`, {
+          method: "POST",
+        }).catch(() => {
+          // next poll retries
+        });
+      }, 0),
+    );
+    return () => {
+      for (const timer of timers) window.clearTimeout(timer);
+    };
+  }, [jobs]);
 
   const watchDeck = useCallback((deckId: string, title?: string) => {
     setJobs((current) => {
@@ -197,6 +232,19 @@ function GenerationBanner({ jobs }: { jobs: GenerationJob[] }) {
             {t("openNotebook")}
           </Link>
           {job.status === "failed" && job.kind === "ingest" ? (
+            <button
+              className="text-button"
+              onClick={() => {
+                void fetch(`/api/notebooks/${job.deckId}/process`, {
+                  method: "POST",
+                });
+              }}
+              type="button"
+            >
+              {t("retry")}
+            </button>
+          ) : null}
+          {job.status === "processing" && job.kind === "ingest" ? (
             <button
               className="text-button"
               onClick={() => {
