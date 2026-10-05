@@ -39,12 +39,44 @@ function parseNoteSections(markdown: string) {
   return { terms, facts, remember };
 }
 
+function noteHeadingTitles(markdown: string) {
+  return (markdown.match(/^##\s+(.+)$/gm) ?? []).map((line) =>
+    line.replace(/^##\s+/, "").trim().toLowerCase(),
+  );
+}
+
+function isGenericBucketNotes(markdown: string, language: string) {
+  const headings = notesSectionHeadings(language);
+  const buckets = new Set(
+    [headings.terms, headings.facts, headings.remember, "key terms", "facts", "how to remember"].map(
+      (value) => value.toLowerCase(),
+    ),
+  );
+  const titles = noteHeadingTitles(markdown);
+  if (!titles.length) return true;
+  return titles.every(
+    (title) =>
+      buckets.has(title) || /term|詞|词|fact|實|实|remember|記誦|记诵|记忆/.test(title),
+  );
+}
+
 export function mergeNotesPayloads(
   parts: NotesPayload[],
   language = "en",
 ): NotesPayload {
   if (parts.length <= 1) {
     return parts[0] ?? { title: "Study notes", markdown: "" };
+  }
+  const title = parts[0]?.title?.trim() || "Study notes";
+  if (!parts.every((part) => isGenericBucketNotes(part.markdown, language))) {
+    return {
+      title,
+      markdown: parts
+        .map((part) => part.markdown.trim())
+        .filter(Boolean)
+        .join("\n\n")
+        .slice(0, 20_000),
+    };
   }
   const headings = notesSectionHeadings(language);
   const terms: string[] = [];

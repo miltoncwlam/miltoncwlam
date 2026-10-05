@@ -365,6 +365,23 @@ describe("study notes and mind map layout", () => {
     expect(notesAreStudyReady(cleaned)).toBe(true);
   });
 
+  it("treats topic headings plus teaching sentences as study notes", () => {
+    const topical = `## Palaeolithic
+Hunter-gatherers used chipped stone for about 1.7 million years. They moved with the animals they hunted.
+- **打製石器** chipped stone tools
+## Neolithic
+Farming and polished tools spread from about 7000 years ago. Settlements became more permanent.
+- **磨製石器** polished stone tools`;
+    expect(notesAreStudyReady(topical)).toBe(true);
+    const shaped = forceStudyNotesShape(topical, {
+      terms: "Key terms",
+      facts: "Facts",
+      remember: "How to remember",
+    });
+    expect(shaped).toMatch(/## Palaeolithic/);
+    expect(shaped).not.toMatch(/## Key terms/);
+  });
+
   it("does not crash when stored notes have no title", () => {
     expect(() => parseStudyNotes("", undefined as unknown as string)).not.toThrow();
   });
@@ -513,6 +530,27 @@ describe("studio merge", () => {
     expect(merged.markdown).toMatch(/Chlorophyll/);
     expect(merged.markdown).toMatch(/Calvin cycle/);
     expect(merged.markdown).toMatch(/## Key terms/);
+  });
+
+  it("keeps topic headings when merging real notes slices", () => {
+    const merged = mergeNotesPayloads(
+      [
+        {
+          title: "World History",
+          markdown:
+            "## Palaeolithic\nHunter-gatherers used chipped stone.\n- **打製石器** chipped tools",
+        },
+        {
+          title: "More",
+          markdown:
+            "## Neolithic\nFarming and polished tools spread.\n- **磨製石器** polished tools",
+        },
+      ],
+      "en",
+    );
+    expect(merged.markdown).toMatch(/## Palaeolithic/);
+    expect(merged.markdown).toMatch(/## Neolithic/);
+    expect(merged.markdown).not.toMatch(/## Key terms/);
   });
 
   it("merges mind maps onto one root", () => {

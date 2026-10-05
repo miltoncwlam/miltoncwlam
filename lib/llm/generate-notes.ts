@@ -59,23 +59,28 @@ function notesOutputRules(language: string) {
     language === "zh-Hant" || language === "zh-Hans"
       ? "- **葉綠素** 吸收光的色素"
       : "- **Chlorophyll** pigment that absorbs sunlight";
-  return `Put the title only in the title JSON field. Do not repeat it in markdown.
+  const tip =
+    language === "zh-Hant"
+      ? "考試提示"
+      : language === "zh-Hans"
+        ? "考试提示"
+        : "Exam tip";
+  return `Put the title only in the title JSON field. Do not repeat it as a # heading in markdown.
 Do not discuss these instructions. Do not explain the language. Markdown is the notes only — no planning sentences.
-The markdown field MUST use real newline characters (not a single paragraph).
-Use these three headings exactly:
-## ${headings.terms}
-## ${headings.facts}
-## ${headings.remember}
-Use "- " bullets under each heading. One bullet per line.
+Write notes a student would revise from the night before a lesson — not a glossary dump.
+Use ## headings taken from the source (units, periods, processes, arguments). One topic per heading.
+Under each heading write 2–5 sentences that teach the idea (what it is, what happened, why it matters), then "- " bullets for names, dates, and definitions.
+You may add a short ### ${tip} (1–3 bullets) only if the source supports it.
+Do NOT use the generic headings "${headings.terms}", "${headings.facts}", or "${headings.remember}" unless the source is only a word list.
 Term bullets look like: ${example} (meaning on the SAME line).
-Write enough to study from. No invented facts. No Punycode (xn--).`;
+Real newline characters. No invented facts. No Punycode (xn--).`;
 }
 
 function shapeNotes(notes: NotesPayload, language: string, fallbackSource: string) {
   const headings = notesSectionHeadings(language);
   const title = notes.title.trim() || "Study notes";
-  const fromModel = forceStudyNotesShape(notes.markdown, headings);
-  if (notesAreStudyReady(fromModel)) return { title, markdown: fromModel };
+  const cleaned = forceStudyNotesShape(notes.markdown, headings);
+  if (notesAreStudyReady(cleaned)) return { title, markdown: cleaned };
   const fromSource = forceStudyNotesShape(fallbackSource, headings);
   return { title, markdown: fromSource };
 }
@@ -182,7 +187,7 @@ export async function generateNotes(input: {
       timeoutMs,
       sectionNote:
         sections.length > 1
-          ? `This is section ${index + 1} of ${sections.length} of a longer source. Cover only this section. Still use the three headings.`
+          ? `This is section ${index + 1} of ${sections.length} of a longer source. Cover only this section. Headings from this section’s topics.`
           : undefined,
     });
     parts.push(generated.notes);

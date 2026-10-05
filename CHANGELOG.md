@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 4.4.4** — one number only (`package.json`).
+**Version 4.4.5** — one number only (`package.json`).
 
 Git has 41 commits (31 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,15 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 4.4.5 — 2026-10-05
+
+**Miniscule.** Study notes follow the source’s topics instead of three generic bullet buckets.
+
+### Changed
+- **Notes as a revision page**: The model is asked for `##` headings from the source, a short explanation under each, then terms/dates. Generic “Key terms / Facts / How to remember” is only for word-list sources. Topic slices concatenate instead of being dumped into one glossary.
 
 ---
 

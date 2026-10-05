@@ -35,8 +35,10 @@ export function notesContainPromptLeak(text: string) {
 export function notesAreStudyReady(markdown: string) {
   if (notesContainPromptLeak(markdown)) return false;
   const bullets = (markdown.match(/^\s*[-*]\s+\S/gm) || []).length;
-  const headings = (markdown.match(/^##\s+\S/gm) || []).length;
-  return bullets >= 4 && headings >= 2;
+  const headings = (markdown.match(/^#{2,3}\s+\S/gm) || []).length;
+  const sentences = (markdown.match(/[.!?。！？]/g) || []).length;
+  if (headings >= 2 && (bullets >= 2 || sentences >= 2)) return true;
+  return headings >= 1 && bullets >= 3 && sentences >= 3;
 }
 
 /** If the model skipped headings/bullets, rebuild a study sheet from leftover lines. */
@@ -45,7 +47,7 @@ export function forceStudyNotesShape(
   headings: { terms: string; facts: string; remember: string },
 ): string {
   const cleaned = sanitizeStudyMarkdown(markdown);
-  if (notesAreStudyReady(cleaned)) return cleaned;
+  if (notesAreStudyReady(cleaned) && /^#{2,3}\s+\S/m.test(cleaned)) return cleaned;
 
   const skip = new Set(
     [headings.terms, headings.facts, headings.remember].map((value) =>
