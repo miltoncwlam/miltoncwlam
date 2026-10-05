@@ -107,6 +107,11 @@ export function studioChunkChars(depth: StudioDepth = "basic") {
   return depth === "detailed" ? 18_000 : 12_000;
 }
 
+/** Notes slices stay small so one generateObject cannot sit on 12–18k until the 150s abort. */
+export function studioNotesChunkChars(depth: StudioDepth = "basic") {
+  return depth === "detailed" ? 6_000 : 4_000;
+}
+
 export function studioSourceSlice(source: string, depth: StudioDepth = "basic") {
   return source.slice(0, studioChunkChars(depth));
 }
@@ -123,8 +128,9 @@ function splitSourceBlocks(text: string): string[] {
 export function studioSourceSections(
   source: string,
   depth: StudioDepth = "basic",
+  chunkChars = studioChunkChars(depth),
 ): string[] {
-  const chunk = studioChunkChars(depth);
+  const chunk = chunkChars;
   const text = source.trim();
   if (!text) return [""];
   if (text.length <= chunk) return [text];

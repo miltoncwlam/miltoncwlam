@@ -4,6 +4,7 @@ import {
   notesSectionHeadings,
   studioIntentRules,
   studioLanguageRules,
+  studioNotesChunkChars,
   studioSourceSections,
   type StudioDepth,
   type StudioPurpose,
@@ -132,7 +133,22 @@ ${input.source}`;
     return { notes, usage: readUsage(result) };
   }
 
-  return generateObjectWithRetry(run);
+  try {
+    return await generateObjectWithRetry(run);
+  } catch (error) {
+    const name = error instanceof Error ? error.name : "";
+    const message = error instanceof Error ? error.message : String(error);
+    if (!/timeout|aborted|timed out|TimeoutError|AbortError/i.test(`${name} ${message}`)) {
+      throw error;
+    }
+    const notes = shapeNotes(
+      { title: "Study notes", markdown: "" },
+      input.language,
+      input.source,
+    );
+    if (!notesAreStudyReady(notes.markdown)) throw error;
+    return { notes, usage: { inputTokens: 0, outputTokens: 0 } };
+  }
 }
 
 export async function generateNotes(input: {
@@ -148,8 +164,12 @@ export async function generateNotes(input: {
   const language = input.language ?? "en";
   const depth = input.depth ?? "basic";
   const purpose = input.purpose ?? "starter";
-  const sections = studioSourceSections(input.source, depth);
-  const timeoutMs = sections.length > 1 ? 50_000 : 150_000;
+  const sections = studioSourceSections(
+    input.source,
+    depth,
+    studioNotesChunkChars(depth),
+  );
+  const timeoutMs = 40_000;
   const parts: NotesPayload[] = [];
   let usage: StudioUsage = { inputTokens: 0, outputTokens: 0 };
   for (const [index, section] of sections.entries()) {

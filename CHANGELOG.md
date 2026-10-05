@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 4.4.3** — one number only (`package.json`).
+**Version 4.4.4** — one number only (`package.json`).
 
 Git has 41 commits (31 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,15 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 4.4.4 — 2026-10-05
+
+**Miniscule.** Study notes finish instead of dying on “The model took too long.”
+
+### Fixed
+- **Notes generation timeout**: Notes run in 4k slices with a 40s cap per call (not one 150s 12k request). If a slice still aborts, the source is shaped into the study sheet so the job completes.
 
 ---
 

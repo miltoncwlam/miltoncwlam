@@ -100,12 +100,12 @@ describe("token estimates", () => {
     };
     const oneChunk = estimateArtifactCredits({
       ...base,
-      sourceSize: { charCount: 12_000 },
+      sourceSize: { charCount: 4_000 },
       kind: "notes",
     });
     const long = estimateArtifactCredits({
       ...base,
-      sourceSize: { charCount: 36_000 },
+      sourceSize: { charCount: 12_000 },
       kind: "notes",
     });
     expect(long.inputTokens).toBe(oneChunk.inputTokens * 3);

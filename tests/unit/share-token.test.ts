@@ -112,6 +112,8 @@ describe("public app urls", () => {
     const notes = await readFile("lib/llm/generate-notes.ts", "utf8");
     expect(notes).not.toMatch(/unless the output language is English/);
     expect(notes).toMatch(/Do not discuss these instructions/);
+    expect(notes).toMatch(/timeoutMs = 40_000/);
+    expect(notes).not.toMatch(/150_000/);
   });
 
   it("drops class-link assign from the landing hero", async () => {

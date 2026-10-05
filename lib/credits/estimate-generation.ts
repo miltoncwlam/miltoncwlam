@@ -11,6 +11,7 @@ import { creditsFromImageUsd, creditsFromTokens } from "@/lib/credits/token-cost
 import {
   STUDIO_SECTION_CAP,
   studioChunkChars,
+  studioNotesChunkChars,
   type StudioDepth,
 } from "@/lib/i18n/locales";
 import { resolveBillingRates } from "@/lib/llm/models";
@@ -84,7 +85,8 @@ function studioBilledSource(
   sourceSize: SourceSizeHints,
   depth: StudioDepth = "basic",
 ): { mode: SourceMode; chars: number; calls: number } {
-  const chunk = studioChunkChars(depth);
+  const chunk =
+    kind === "notes" ? studioNotesChunkChars(depth) : studioChunkChars(depth);
   const raw = Math.max(0, sourceSize.charCount ?? 0);
   const mode = sourceMode === "topic" ? "topic" : "text";
   const calls =

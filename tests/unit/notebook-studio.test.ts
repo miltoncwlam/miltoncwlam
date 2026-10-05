@@ -6,6 +6,7 @@ import { estimateArtifactOutputTokens } from "@/lib/credits/estimate-generation"
 import {
   studioIntentRules,
   studioLanguageRules,
+  studioNotesChunkChars,
   studioSourceSlice,
   studioSourceSections,
   notesSectionHeadings,
@@ -482,6 +483,14 @@ describe("studio depth and purpose", () => {
     expect(sections.length).toBeLessThanOrEqual(3);
     expect(sections.every((section) => section.length <= 12_000)).toBe(true);
     expect(sections.join("")).toMatch(/Part 1/);
+  });
+
+  it("splits notes into 4k slices instead of one long call", () => {
+    const source = "fact ".repeat(2_000);
+    const sections = studioSourceSections(source, "basic", studioNotesChunkChars("basic"));
+    expect(sections.length).toBeGreaterThan(1);
+    expect(sections.length).toBeLessThanOrEqual(3);
+    expect(sections.every((section) => section.length <= 4_000)).toBe(true);
   });
 });
 
