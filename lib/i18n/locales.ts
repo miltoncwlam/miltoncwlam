@@ -187,14 +187,14 @@ export function studioIntentRules(
           ? "DEPTH: detailed. Cover more facts; still one idea per card."
           : kind === "exam"
             ? "DEPTH: detailed. Prefer comparisons, dates, and multi-step items within the time limit."
-            : "DEPTH: detailed. Fuller revision notes under the source’s own headings. Explain, then list terms and dates."
+            : "DEPTH: detailed. Point-form summary under the source’s own headings. More points, still one idea per bullet."
       : kind === "mindmap"
         ? "DEPTH: basic. 4–5 main branches, 8–14 nodes, depth 2 only (no grandchildren)."
         : kind === "cards"
           ? "DEPTH: basic. Only the most testable facts. No filler."
           : kind === "exam"
             ? "DEPTH: basic. Shorter prompts. One idea per question."
-            : "DEPTH: basic. A short revision page: headings from the source, a few teaching sentences, then the key names and dates. Not a glossary dump.";
+            : "DEPTH: basic. A short point-form summary. Headings from the source, then a few summary bullets. Not a glossary."
   const purposeLine =
     purpose === "exam"
       ? "PURPOSE: exam revision. Prefer dates, cause/effect, compare/contrast, and likely exam wording. No trick questions that the source does not support."

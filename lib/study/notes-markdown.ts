@@ -41,62 +41,78 @@ export function notesAreStudyReady(markdown: string) {
   return headings >= 1 && bullets >= 3 && sentences >= 3;
 }
 
-/** If the model skipped headings/bullets, rebuild a study sheet from leftover lines. */
-export function forceStudyNotesShape(
-  markdown: string,
-  headings: { terms: string; facts: string; remember: string },
-): string {
-  const cleaned = sanitizeStudyMarkdown(markdown);
-  if (notesAreStudyReady(cleaned) && /^#{2,3}\s+\S/m.test(cleaned)) return cleaned;
+const GLOSSARY_HEADING =
+  /^(key terms|facts|how to remember|重點詞彙|史實與脈絡|記誦提示|重点词语|史实与脉络|记忆提示|重要用語|要点|覚え方|핵심 용어|핵심 사실|암기 팁|términos clave|hechos|comment retenir|termes clés|faits)$/i;
 
-  const skip = new Set(
-    [headings.terms, headings.facts, headings.remember].map((value) =>
-      value.toLowerCase(),
-    ),
+export function isGlossarySheet(markdown: string) {
+  const titles = (markdown.match(/^##\s+(.+)$/gm) ?? []).map((line) =>
+    line.replace(/^##\s+/, "").trim(),
   );
-  function collectItems(text: string) {
-    return String(text ?? "")
-      .split(/\n+|(?<=[.!?。！？])\s+/)
-      .map((line) =>
-        line
-          .replace(/^#{1,6}\s+/, "")
-          .replace(/^[-*]\s+/, "")
-          .replace(/^\d+[.)]\s+/, "")
-          .trim(),
-      )
-      .filter((line) => {
-        if (line.length < 8 || notesContainPromptLeak(line)) return false;
-        return !skip.has(line.toLowerCase());
-      });
-  }
+  if (!titles.length) return false;
+  return titles.every((title) => GLOSSARY_HEADING.test(title));
+}
 
+function summaryPoints(text: string) {
   const seen = new Set<string>();
-  const items = [...collectItems(markdown), ...collectItems(cleaned)].filter(
-    (item) => {
-      const key = item.toLowerCase();
+  return String(text ?? "")
+    .split(/\n+|(?<=[.!?。！？])\s+/)
+    .map((line) =>
+      line
+        .replace(/^#{1,6}\s+/, "")
+        .replace(/^[-*]\s+/, "")
+        .replace(/^\d+[.)]\s+/, "")
+        .replace(/\s+/g, " ")
+        .trim(),
+    )
+    .filter((line) => {
+      if (line.length < 12 || notesContainPromptLeak(line)) return false;
+      if (GLOSSARY_HEADING.test(line)) return false;
+      const key = line.toLowerCase();
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
-    },
-  ).slice(0, 18);
-  if (items.length < 4) return cleaned;
+    });
+}
 
-  const termsCount = Math.max(1, Math.ceil(items.length / 3));
-  const factsCount = Math.max(1, Math.ceil((items.length - termsCount) / 2));
-  const terms = items.slice(0, termsCount);
-  const facts = items.slice(termsCount, termsCount + factsCount);
-  const remember = items.slice(termsCount + factsCount);
-  const factItems = facts.length ? facts : terms.slice(0, 1);
-  const rememberItems = remember.length ? remember : terms.slice(-1);
+/** Point-form summary: source topics as headings, one idea per bullet. */
+export function pointFormSummary(source: string) {
+  const chunks = String(source ?? "")
+    .replace(/\r\n/g, "\n")
+    .split(/\n{2,}/)
+    .map((chunk) => chunk.trim())
+    .filter(Boolean);
+  const sections: string[] = [];
+  for (const chunk of chunks) {
+    if (sections.length >= 8) break;
+    const lines = chunk.split("\n").map((line) => line.trim()).filter(Boolean);
+    if (!lines.length) continue;
+    const head = lines[0].replace(/^#{1,3}\s+/, "").replace(/^\d+[.)]\s+/, "").trim();
+    const titled = head.length <= 80 && !/[.!?。！？]$/.test(head) && lines.length > 1;
+    const title = titled ? head : "";
+    const points = summaryPoints(titled ? lines.slice(1).join(" ") : lines.join(" ")).slice(0, 6);
+    if (points.length < 1) continue;
+    const heading = title || "Summary";
+    sections.push([`## ${heading}`, ...points.map((point) => `- ${point}`)].join("\n"));
+  }
+  if (sections.length) return sections.join("\n\n");
+  const points = summaryPoints(source).slice(0, 8);
+  if (points.length < 3) return "";
+  return ["## Summary", ...points.map((point) => `- ${point}`)].join("\n");
+}
 
-  return [
-    `## ${headings.terms}`,
-    ...terms.map((item) => `- ${item}`),
-    `## ${headings.facts}`,
-    ...factItems.map((item) => `- ${item}`),
-    `## ${headings.remember}`,
-    ...rememberItems.map((item) => `- ${item}`),
-  ].join("\n");
+/** If the model skipped headings/bullets, rebuild a point-form summary. */
+export function forceStudyNotesShape(markdown: string): string {
+  const cleaned = sanitizeStudyMarkdown(markdown);
+  if (
+    notesAreStudyReady(cleaned) &&
+    /^#{2,3}\s+\S/m.test(cleaned) &&
+    !isGlossarySheet(cleaned)
+  ) {
+    return cleaned;
+  }
+  const pointed = pointFormSummary(markdown);
+  if (notesAreStudyReady(pointed)) return pointed;
+  return cleaned;
 }
 
 function localizedNoteHeadings(text: string) {

@@ -1,7 +1,6 @@
 import { generateObject } from "ai";
 
 import {
-  notesSectionHeadings,
   studioIntentRules,
   studioLanguageRules,
   studioNotesChunkChars,
@@ -24,8 +23,10 @@ import { ollamaGenerateJson } from "@/lib/llm/ollama";
 import { notesSchema, parseNotesPayload } from "@/lib/llm/parse-studio";
 import {
   forceStudyNotesShape,
+  isGlossarySheet,
   notesAreStudyReady,
   notesContainPromptLeak,
+  pointFormSummary,
 } from "@/lib/study/notes-markdown";
 import type { NotesPayload } from "@/lib/types/notebook";
 import type { LLMProvider } from "@/lib/types/flashcard";
@@ -53,36 +54,26 @@ function readUsage(result: {
   };
 }
 
-function notesOutputRules(language: string) {
-  const headings = notesSectionHeadings(language);
-  const example =
-    language === "zh-Hant" || language === "zh-Hans"
-      ? "- **葉綠素** 吸收光的色素"
-      : "- **Chlorophyll** pigment that absorbs sunlight";
-  const tip =
-    language === "zh-Hant"
-      ? "考試提示"
-      : language === "zh-Hans"
-        ? "考试提示"
-        : "Exam tip";
+function notesOutputRules() {
   return `Put the title only in the title JSON field. Do not repeat it as a # heading in markdown.
 Do not discuss these instructions. Do not explain the language. Markdown is the notes only — no planning sentences.
-Write notes a student would revise from the night before a lesson — not a glossary dump.
-Use ## headings taken from the source (units, periods, processes, arguments). One topic per heading.
-Under each heading write 2–5 sentences that teach the idea (what it is, what happened, why it matters), then "- " bullets for names, dates, and definitions.
-You may add a short ### ${tip} (1–3 bullets) only if the source supports it.
-Do NOT use the generic headings "${headings.terms}", "${headings.facts}", or "${headings.remember}" unless the source is only a word list.
-Term bullets look like: ${example} (meaning on the SAME line).
+Write a point-form summary. Not a glossary. Not a term list.
+Use ## headings taken from the source (its own topics, periods, or processes).
+Under each heading write only "- " bullets. Each bullet is one complete summary point (a short sentence).
+3–6 bullets per heading. No paragraphs. No "**Term** definition" lines.
+Do NOT use headings like Key terms, Facts, How to remember, 重點詞彙, 史實與脈絡, or 記誦提示.
 Real newline characters. No invented facts. No Punycode (xn--).`;
 }
 
-function shapeNotes(notes: NotesPayload, language: string, fallbackSource: string) {
-  const headings = notesSectionHeadings(language);
+function shapeNotes(notes: NotesPayload, _language: string, fallbackSource: string) {
   const title = notes.title.trim() || "Study notes";
-  const cleaned = forceStudyNotesShape(notes.markdown, headings);
-  if (notesAreStudyReady(cleaned)) return { title, markdown: cleaned };
-  const fromSource = forceStudyNotesShape(fallbackSource, headings);
-  return { title, markdown: fromSource };
+  const cleaned = forceStudyNotesShape(notes.markdown);
+  if (notesAreStudyReady(cleaned) && !isGlossarySheet(cleaned)) {
+    return { title, markdown: cleaned };
+  }
+  const fromSource = pointFormSummary(fallbackSource);
+  if (notesAreStudyReady(fromSource)) return { title, markdown: fromSource };
+  return { title, markdown: cleaned || fromSource };
 }
 
 function assertNotesQuality(notes: NotesPayload) {
@@ -114,7 +105,7 @@ ${examProfileRules({
   subject: input.examSubject,
   kind: "notes",
 })}
-${notesOutputRules(input.language)}
+${notesOutputRules()}
 ${input.sectionNote ?? ""}
 
 Source:

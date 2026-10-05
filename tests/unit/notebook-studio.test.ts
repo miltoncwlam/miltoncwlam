@@ -22,7 +22,7 @@ import {
   parseNotesPayload,
   planExamQuestions,
 } from "@/lib/llm/parse-studio";
-import { parseStudyNotes, sanitizeStudyMarkdown, splitNoteTerm, notesAreStudyReady, notesContainPromptLeak, forceStudyNotesShape } from "@/lib/study/notes-markdown";
+import { parseStudyNotes, sanitizeStudyMarkdown, splitNoteTerm, notesAreStudyReady, notesContainPromptLeak, forceStudyNotesShape, pointFormSummary, isGlossarySheet } from "@/lib/study/notes-markdown";
 import { mergeMindmapPayloads, mergeNotesPayloads } from "@/lib/llm/merge-studio";
 import type { ExamQuestion } from "@/lib/types/notebook";
 
@@ -373,11 +373,7 @@ Hunter-gatherers used chipped stone for about 1.7 million years. They moved with
 Farming and polished tools spread from about 7000 years ago. Settlements became more permanent.
 - **磨製石器** polished stone tools`;
     expect(notesAreStudyReady(topical)).toBe(true);
-    const shaped = forceStudyNotesShape(topical, {
-      terms: "Key terms",
-      facts: "Facts",
-      remember: "How to remember",
-    });
+    const shaped = forceStudyNotesShape(topical);
     expect(shaped).toMatch(/## Palaeolithic/);
     expect(shaped).not.toMatch(/## Key terms/);
   });
@@ -386,19 +382,28 @@ Farming and polished tools spread from about 7000 years ago. Settlements became 
     expect(() => parseStudyNotes("", undefined as unknown as string)).not.toThrow();
   });
 
-  it("rebuilds headings and bullets from a short paragraph dump", () => {
+  it("rebuilds a paragraph dump into point-form bullets", () => {
     const shaped = forceStudyNotesShape(
       "Photosynthesis converts light energy into chemical energy in plants. Chlorophyll in chloroplasts absorbs sunlight.\nThe Calvin cycle fixes carbon dioxide into glucose.\nOxygen is released as a byproduct.\nPlants need water, carbon dioxide, and light to photosynthesize.",
-      { terms: "Key terms", facts: "Facts", remember: "How to remember" },
     );
     expect(notesAreStudyReady(shaped)).toBe(true);
-    expect(shaped).toMatch(/## Key terms/);
+    expect(shaped).toMatch(/^- /m);
+    expect(isGlossarySheet(shaped)).toBe(false);
+  });
+
+  it("turns numbered source sections into a point-form summary", () => {
+    const shaped = pointFormSummary(
+      "1. Overview\nPhotosynthesis converts light energy into chemical energy in plants. Carbon dioxide and water become glucose and oxygen.\n\n2. Where it happens\nLeaf palisade cells are packed with chloroplasts. Stomata let carbon dioxide in.",
+    );
+    expect(shaped).toMatch(/## Overview/);
+    expect(shaped).toMatch(/## Where it happens/);
+    expect(shaped).toMatch(/^- Photosynthesis converts/m);
+    expect(shaped).not.toMatch(/## Key terms/);
   });
 
   it("rebuilds notes from a single leaked paragraph using leftover sentences", () => {
     const shaped = forceStudyNotesShape(
       "注意：输出语言为英文. Photosynthesis converts light energy into chemical energy in plants. Chlorophyll in chloroplasts absorbs sunlight. The Calvin cycle fixes carbon dioxide into glucose. Oxygen is released as a byproduct. Plants need water, carbon dioxide, and light.",
-      { terms: "Key terms", facts: "Facts", remember: "How to remember" },
     );
     expect(notesContainPromptLeak(shaped)).toBe(false);
     expect(notesAreStudyReady(shaped)).toBe(true);
