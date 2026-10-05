@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { parseChatMakeIntent } from "@/lib/llm/chat-intent";
+import { chatRepliesInTraditionalChinese } from "@/lib/llm/chat-language";
 import { CHAT_OPENROUTER_MODEL } from "@/lib/llm/models";
 
 describe("notebook chat", () => {
@@ -18,7 +19,23 @@ describe("notebook chat", () => {
     expect(prompt).not.toMatch(/v4\.1/);
     expect(prompt).not.toMatch(/DEFAULT_OPENROUTER_MODEL/);
     expect(prompt).not.toMatch(/openrouter\/auto/);
-    expect(prompt).toMatch(/test\(input\.message\)/);
+    expect(prompt).toMatch(/chatRepliesInTraditionalChinese/);
+    expect(prompt).not.toMatch(/examSystem === "dse"/);
+  });
+
+  it("keeps an English notebook in English even when the source has Chinese", () => {
+    const source = "Photosynthesis converts light. 葉綠素 absorbs sunlight. " + "x".repeat(20);
+    expect(
+      chatRepliesInTraditionalChinese({ language: "en", source }),
+    ).toBe(false);
+    expect(
+      chatRepliesInTraditionalChinese({ language: "zh-Hant", source: "Photosynthesis only." }),
+    ).toBe(true);
+    expect(
+      chatRepliesInTraditionalChinese({
+        source: "光合作用把光能轉成化學能。葉綠素吸收陽光。植物需要水和二氧化碳。",
+      }),
+    ).toBe(true);
   });
 
   it("strips a MAKE line from the tutor reply", () => {

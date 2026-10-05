@@ -2,6 +2,7 @@ import "server-only";
 
 import { generateText } from "ai";
 
+import { chatRepliesInTraditionalChinese } from "@/lib/llm/chat-language";
 import { getOpenRouterClient } from "@/lib/llm/config";
 import { CHAT_OPENROUTER_MODEL } from "@/lib/llm/models";
 import { parseChatMakeIntent } from "@/lib/llm/chat-intent";
@@ -40,15 +41,10 @@ export async function generateNotebookChat(input: {
   history: { role: "user" | "assistant"; content: string }[];
   message: string;
 }): Promise<{ reply: string; make: "cards" | "exam" | "notes" | "mindmap" | null; usage: ChatUsage }> {
-  const traditional =
-    input.examSystem === "dse" &&
-    (input.language === "zh-Hant" ||
-      input.language === "zh-Hans" ||
-      /[\u4e00-\u9fff]/.test(input.source.slice(0, 800)) ||
-      /[\u4e00-\u9fff]/.test(input.message));
+  const traditional = chatRepliesInTraditionalChinese(input);
   const languageLine = traditional
-    ? "Reply in Traditional Chinese 書面語 (香港教科書). Short. No Cantonese particles."
-    : `Reply in ${input.language === "en" || !input.language ? "English" : input.language}. Short.`;
+    ? "Reply in Traditional Chinese 書面語 (香港教科書). Short. No Cantonese particles. Keep this language even if an earlier reply used another one."
+    : `Reply in ${input.language === "en" || !input.language ? "English" : input.language} only. Short. Do not switch to Chinese because the source or the exam lane contains Chinese words. Keep this language even if an earlier reply used another one.`;
   const artifacts = [
     input.notesTitle ? `Notes: ${input.notesTitle}` : null,
     input.mindmapTitle ? `Mind map: ${input.mindmapTitle}` : null,
