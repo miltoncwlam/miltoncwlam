@@ -21,6 +21,18 @@ git checkout archive/milton-2026-09-06
 
 ---
 
+## Version 4.4.9 — 2026-10-05
+
+**Miniscule.** PDF uploads keep every page, and earlier notebooks get the text that was cut off.
+
+### Changed
+- **PDF upload**: The 10 MB app cap and the 10-page OCR cap are gone. A selectable PDF stores its full text. A scan is read one page at a time until the last page. The storage host allows files up to 50 MB.
+
+### Fixed
+- **Earlier PDFs**: Star Voyager’s text is stored again. The 12-page Chinese History scan and the matching notebook now include pages 11 and 12. World History was already complete.
+
+---
+
 ## Version 4.4.8 — 2026-10-05
 
 **Miniscule.** Printing notes prints the notes, with visible summary points.

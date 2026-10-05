@@ -97,7 +97,7 @@
     "material": "Matériel d’étude",
     "materialPlaceholder": "Collez des notes ou un article…",
     "fileLabel": "PDF, TXT ou Markdown",
-    "fileHint": "Max 10 Mo ; texte max 2 Mo. Les PDF scannés sont lus par OCR (plus d’énergie, jusqu’à 10 pages).",
+    "fileHint": "Texte max 2 Mo. Les PDF jusqu’à 50 Mo, sans limite de pages. Les PDF scannés sont lus par OCR, toutes les pages.",
     "provider": "Fournisseur IA",
     "cardCount": "Nombre de cartes",
     "difficulty": "Difficulté",

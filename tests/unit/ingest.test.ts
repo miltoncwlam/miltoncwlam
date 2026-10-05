@@ -5,8 +5,6 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { extractStudyText, isSparsePdfText, readPdfTextLayer } from "@/lib/ingest/extract-text";
-import { OCR_PAGE_CAP } from "@/lib/ingest/ocr-pdf";
-import { MAX_OCR_PAGES } from "@/lib/credits/config";
 import {
   assertOwnedStoragePath,
   validateUpload,
@@ -18,10 +16,25 @@ import {
 } from "@/tests/fixtures/test-sources";
 
 describe("source ingestion", () => {
-  it("OCRs up to the advertised page cap, one page per tick", () => {
-    expect(OCR_PAGE_CAP).toBe(MAX_OCR_PAGES);
-    expect(OCR_PAGE_CAP).toBe(10);
+  it("does not cap how many PDF pages are read", async () => {
+    const route = await readFile("app/api/notebooks/route.ts", "utf8");
+    const extract = await readFile("lib/ingest/extract-text.ts", "utf8");
+    const job = await readFile("lib/ingest/notebook-job.ts", "utf8");
+    expect(route).toMatch(/layer\.totalPages/);
+    expect(route).not.toMatch(/OCR_PAGE_CAP/);
+    expect(extract).not.toMatch(/limited to/);
+    expect(job).not.toMatch(/80_000/);
   });
+  it("accepts a PDF larger than the old 10 MB cap", () => {
+    expect(
+      validateUpload({
+        name: "book.pdf",
+        type: "application/pdf",
+        size: 20 * 1024 * 1024,
+      }).extension,
+    ).toBe("pdf");
+  });
+
   it("accepts matching allowed uploads", () => {
     expect(
       validateUpload({

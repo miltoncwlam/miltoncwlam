@@ -4,7 +4,6 @@ import { extractText } from "unpdf";
 
 import { MIN_PDF_TEXT_CHARS } from "@/lib/credits/config";
 
-const MAX_PDF_PAGES = 50;
 const MAX_SOURCE_CHARACTERS = 80_000;
 
 export function isSparsePdfText(text: string) {
@@ -35,11 +34,8 @@ export async function readPdfTextLayer(data: Uint8Array): Promise<{
 }> {
   const pdfBytes = new Uint8Array(data);
   const result = await extractText(pdfBytes, { mergePages: true });
-  if (result.totalPages > MAX_PDF_PAGES) {
-    throw new Error(`PDF files are limited to ${MAX_PDF_PAGES} pages`);
-  }
   return {
-    text: cleanText(result.text).slice(0, MAX_SOURCE_CHARACTERS),
+    text: cleanText(result.text),
     totalPages: result.totalPages,
   };
 }
@@ -59,7 +55,7 @@ export async function extractStudyText(
   if (mimeType === "application/pdf") {
     const layer = await readPdfTextLayer(data);
     if (!isSparsePdfText(layer.text)) {
-      return layer.text.slice(0, MAX_SOURCE_CHARACTERS);
+      return layer.text;
     }
     if (options?.ocr) {
       const { ocrPdfPages } = await import("@/lib/ingest/ocr-pdf");

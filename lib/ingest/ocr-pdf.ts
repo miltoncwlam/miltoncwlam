@@ -2,7 +2,6 @@ import "server-only";
 
 import { generateText } from "ai";
 
-import { MAX_OCR_PAGES } from "@/lib/credits/config";
 import { fitPageImage, pdfPagesToImages } from "@/lib/ingest/pdf-to-images";
 import { DEFAULT_OCR_MODEL } from "@/lib/llm/models";
 
@@ -12,9 +11,6 @@ const OCR_PAGE_MS = 70_000;
 const OCR_RETRY_MS = 45_000;
 const OCR_RETRY_DIMENSION = 640;
 const OCR_FIRST_DIMENSION = 768;
-const MAX_SOURCE = 80_000;
-/** One page per serverless tick, so we can use the advertised page cap. */
-export const OCR_PAGE_CAP = MAX_OCR_PAGES;
 
 function readUsage(result: {
   usage?: {
@@ -141,7 +137,6 @@ export async function ocrPdfPages(
   usage: { inputTokens: number; outputTokens: number };
 }> {
   const pages = await pdfPagesToImages(data, {
-    maxPages: OCR_PAGE_CAP,
     maxDimension: OCR_FIRST_DIMENSION,
   });
   const { getOpenRouterClient } = await import("@/lib/llm/config");
@@ -209,7 +204,7 @@ export async function ocrPdfPages(
     }
   }
 
-  const text = parts.join("\n\n").trim().slice(0, MAX_SOURCE);
+  const text = parts.join("\n\n").trim();
   if (!text) {
     throw new Error(
       timedOut

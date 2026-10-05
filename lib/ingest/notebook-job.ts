@@ -4,7 +4,7 @@ import { after } from "next/server";
 
 import { env } from "@/lib/env";
 import { ingestJobToken } from "@/lib/ingest/job-token";
-import { OCR_PAGE_CAP, isTransientOcrError, ocrPdfPage } from "@/lib/ingest/ocr-pdf";
+import { isTransientOcrError, ocrPdfPage } from "@/lib/ingest/ocr-pdf";
 import type { IngestProgress } from "@/lib/ingest/progress";
 import { parseIngestProgress } from "@/lib/ingest/progress";
 import { creditsFromTokens } from "@/lib/credits/token-cost";
@@ -167,7 +167,7 @@ export async function processNotebookTick(deckId: string): Promise<ProcessTickRe
     needsOcr: false,
   };
   const nextPage = progress.ocrNext ?? 1;
-  const total = Math.min(progress.ocrTotal ?? 0, OCR_PAGE_CAP);
+  const total = progress.ocrTotal ?? 0;
   const needsOcr = Boolean(progress.needsOcr && nextPage <= total && deck.storagePath);
 
   if (!needsOcr) {
@@ -192,7 +192,7 @@ export async function processNotebookTick(deckId: string): Promise<ProcessTickRe
       outputTokens: (progress.outputTokens ?? 0) + page.usage.outputTokens,
     };
     await saveIngestProgress(deckId, nextProgress, {
-      sourceContent: combined.slice(0, 80_000) || undefined,
+      sourceContent: combined || undefined,
       generationStatus: "processing",
     });
 

@@ -11,9 +11,10 @@ export const MIN_GENERATION_CREDITS = 10;
 
 /** Title prompt only reads this many source characters. */
 export const INGEST_TITLE_CHARS = 6_000;
-/** Matches extract cap — never bill file bytes as if they were tokens past this. */
+/** File-byte fallback when the text layer is not counted yet. */
 export const MAX_FILE_INPUT_TOKENS = 24_000;
 
+/** Fallback only when a scan’s page count is still unknown. */
 export const MAX_OCR_PAGES = 10;
 export const OCR_INPUT_TOKENS_PER_PAGE = 1_600;
 export const OCR_OUTPUT_TOKENS_PER_PAGE = 450;

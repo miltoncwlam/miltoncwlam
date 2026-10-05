@@ -3,7 +3,7 @@ import { z } from "zod";
 const uploadSchema = z.object({
   name: z.string().min(1).max(255),
   type: z.enum(["text/plain", "text/markdown", "application/pdf"]),
-  size: z.number().int().positive().max(10 * 1024 * 1024),
+  size: z.number().int().positive(),
 });
 
 const extensionsByMime: Record<string, string[]> = {

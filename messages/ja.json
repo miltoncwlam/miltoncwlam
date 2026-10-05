@@ -97,7 +97,7 @@
     "material": "学習素材",
     "materialPlaceholder": "ノートや記事を貼り付け…",
     "fileLabel": "PDF・TXT・Markdown",
-    "fileHint": "最大 10MB、テキストは最大 2MB。スキャンPDFはOCRで読みます（エネルギー多め、最大10ページ）。",
+    "fileHint": "テキストは最大 2MB。PDF は 50MB まで、ページ数の上限はありません。スキャン PDF は全ページを OCR します。",
     "provider": "AIプロバイダ",
     "cardCount": "カード枚数",
     "difficulty": "難易度",

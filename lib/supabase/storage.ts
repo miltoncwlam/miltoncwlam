@@ -6,11 +6,18 @@ const bucket = () => env.SUPABASE_STORAGE_BUCKET;
 export async function ensureStorageBucket(): Promise<void> {
   const admin = createAdminClient();
   const { data } = await admin.storage.getBucket(bucket());
-  if (data) return;
+  // Host maximum on this project. A larger value is rejected and the old cap stays.
+  const fileSizeLimit = 50 * 1024 * 1024;
+  if (data) {
+    await admin.storage
+      .updateBucket(bucket(), { public: false, fileSizeLimit })
+      .catch(() => undefined);
+    return;
+  }
 
   const { error } = await admin.storage.createBucket(bucket(), {
     public: false,
-    fileSizeLimit: 10 * 1024 * 1024,
+    fileSizeLimit,
     allowedMimeTypes: [
       "text/plain",
       "text/markdown",

@@ -101,7 +101,7 @@
     "material": "Study material",
     "materialPlaceholder": "Paste notes, an article, or lesson content…",
     "fileLabel": "PDF, TXT, or Markdown file",
-    "fileHint": "Maximum 10 MB; text files maximum 2 MB. Scanned PDFs are read with OCR (uses more energy, up to 10 pages).",
+    "fileHint": "Text files maximum 2 MB. PDFs up to 50 MB, with no page cap. Scanned PDFs are read with OCR, every page.",
     "model": "Model",
     "modelFree": "More models",
     "modelFreeCampaign": "60% energy until 22 Sep 23:59 UTC",

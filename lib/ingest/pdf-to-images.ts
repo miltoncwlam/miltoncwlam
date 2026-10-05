@@ -16,9 +16,8 @@ import {
 
 const require = createRequire(import.meta.url);
 
-const DEFAULT_MAX_PAGES = 8;
-const DEFAULT_MAX_DIMENSION = 1024;
 const MIN_JPEG_BYTES = 400;
+const DEFAULT_MAX_DIMENSION = 1024;
 
 function standaloneBytes(data: Uint8Array): Uint8Array {
   return Uint8Array.from(data);
@@ -275,7 +274,10 @@ export async function pdfPagesToImages(
     pageNumber?: number;
   } = {},
 ): Promise<PdfPageImage[]> {
-  const maxPages = Math.max(1, options.maxPages ?? DEFAULT_MAX_PAGES);
+  const maxPages =
+    options.pageNumber != null
+      ? Math.max(options.pageNumber, options.maxPages ?? options.pageNumber)
+      : (options.maxPages ?? 10_000);
   const maxDimension = options.maxDimension ?? DEFAULT_MAX_DIMENSION;
   const pageNumber = options.pageNumber;
 

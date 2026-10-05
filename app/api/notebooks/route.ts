@@ -32,7 +32,6 @@ import {
 } from "@/lib/data/decks";
 import { extractStudyText, isSparsePdfText, readPdfTextLayer } from "@/lib/ingest/extract-text";
 import { enqueueNotebookProcess } from "@/lib/ingest/notebook-job";
-import { OCR_PAGE_CAP } from "@/lib/ingest/ocr-pdf";
 import { fetchStudyTextFromUrl } from "@/lib/ingest/fetch-url";
 import {
   assertOwnedStoragePath,
@@ -175,7 +174,7 @@ async function readNotebookSource(
       sourceSizeBytes: upload.size,
       ocr: {
         data,
-        pageCount: Math.min(OCR_PAGE_CAP, Math.max(1, layer.totalPages)),
+        pageCount: Math.max(1, layer.totalPages),
       },
     };
   }

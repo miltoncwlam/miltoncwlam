@@ -97,7 +97,7 @@
     "material": "Material de estudio",
     "materialPlaceholder": "Pega apuntes o un artículo…",
     "fileLabel": "PDF, TXT o Markdown",
-    "fileHint": "Máx. 10 MB; texto máx. 2 MB. Los PDF escaneados se leen con OCR (más energía, hasta 10 páginas).",
+    "fileHint": "Texto máx. 2 MB. Los PDF hasta 50 MB, sin límite de páginas. Los escaneados se leen con OCR, todas las páginas.",
     "provider": "Proveedor de IA",
     "cardCount": "Número de tarjetas",
     "difficulty": "Dificultad",

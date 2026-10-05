@@ -1,7 +1,6 @@
 import {
   INGEST_TITLE_CHARS,
   MAX_FILE_INPUT_TOKENS,
-  MAX_OCR_PAGES,
   OCR_INPUT_TOKENS_PER_PAGE,
   OCR_OUTPUT_TOKENS_PER_PAGE,
   type SourceMode,
@@ -202,7 +201,7 @@ export function estimateOcrCredits(input: {
   modelId: string;
   pageCount: number;
 }): GenerationEstimate {
-  const pages = Math.min(MAX_OCR_PAGES, Math.max(1, Math.floor(input.pageCount)));
+  const pages = Math.max(1, Math.floor(input.pageCount));
   const inputTokens = pages * OCR_INPUT_TOKENS_PER_PAGE + 300;
   const outputTokens = pages * OCR_OUTPUT_TOKENS_PER_PAGE;
   const rates = resolveBillingRates({

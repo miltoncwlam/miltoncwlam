@@ -53,6 +53,11 @@ import type { LLMProvider } from "@/lib/types/flashcard";
 
 type SourceMode = "topic" | "text" | "url" | "file";
 
+function countPdfPages(data: Uint8Array) {
+  const text = new TextDecoder("latin1").decode(data);
+  return text.match(/\/Type\s*\/Page(?!s)\b/g)?.length ?? 0;
+}
+
 export function CreateDeckForm({
   providers,
   canUpload,
@@ -93,9 +98,11 @@ export function CreateDeckForm({
   );
   const [topicChars, setTopicChars] = useState(0);
   const [textChars, setTextChars] = useState(0);
-  const [fileMeta, setFileMeta] = useState<{ bytes: number; mimeType: string } | null>(
-    null,
-  );
+  const [fileMeta, setFileMeta] = useState<{
+    bytes: number;
+    mimeType: string;
+    pageCount?: number;
+  } | null>(null);
   const activeMode =
     mode === "text" || mode === "url" || mode === "topic" || canUpload
       ? mode
@@ -127,7 +134,10 @@ export function CreateDeckForm({
     const ocr = estimateOcrCredits({
       provider,
       modelId: DEFAULT_OCR_MODEL,
-      pageCount: MAX_OCR_PAGES,
+      pageCount:
+        fileMeta?.pageCount && fileMeta.pageCount > 0
+          ? fileMeta.pageCount
+          : MAX_OCR_PAGES,
     });
     return {
       ...base,
@@ -144,6 +154,23 @@ export function CreateDeckForm({
     !energyUnlimited &&
     estimate.textCredits > energyBalance;
 
+  function rememberFile(file: File | null) {
+    if (!file) {
+      setFileMeta(null);
+      return;
+    }
+    const mimeType = file.type || "application/octet-stream";
+    setFileMeta({ bytes: file.size, mimeType });
+    const isPdf = mimeType === "application/pdf" || /\.pdf$/i.test(file.name);
+    if (!isPdf) return;
+    void file.arrayBuffer().then((buffer) => {
+      const pages = countPdfPages(new Uint8Array(buffer));
+      if (pages > 0) {
+        setFileMeta({ bytes: file.size, mimeType, pageCount: pages });
+      }
+    });
+  }
+
   function acceptDroppedFile(file: File) {
     if (!canUpload || pending) return;
     const allowed =
@@ -151,7 +178,7 @@ export function CreateDeckForm({
       ["application/pdf", "text/plain", "text/markdown"].includes(file.type);
     if (!allowed) return;
     setMode("file");
-    setFileMeta({ bytes: file.size, mimeType: file.type || "application/octet-stream" });
+    rememberFile(file);
     const transfer = new DataTransfer();
     transfer.items.add(file);
     if (fileInputRef.current) fileInputRef.current.files = transfer.files;
@@ -472,10 +499,7 @@ export function CreateDeckForm({
               id="sourceFile"
               name="sourceFile"
               onChange={(event) => {
-                const file = event.target.files?.[0];
-                setFileMeta(
-                  file ? { bytes: file.size, mimeType: file.type } : null,
-                );
+                rememberFile(event.target.files?.[0] ?? null);
               }}
               ref={fileInputRef}
               required
