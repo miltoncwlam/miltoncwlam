@@ -36,10 +36,12 @@ export function StudyNotesView({
 
   function printNotes() {
     document.body.dataset.print = "notes";
-    window.print();
-    window.setTimeout(() => {
+    const done = () => {
       delete document.body.dataset.print;
-    }, 400);
+      window.removeEventListener("afterprint", done);
+    };
+    window.addEventListener("afterprint", done);
+    window.print();
   }
 
   return (
@@ -62,7 +64,8 @@ export function StudyNotesView({
             return (
               <ul key={index}>
                 {block.items.map((item, itemIndex) => {
-                  const split = splitNoteTerm(item);
+                  const text = item.replace(/^[•●▪︎]\s+/, "");
+                  const split = splitNoteTerm(text);
                   if (split) {
                     return (
                       <li className="study-notes-term" key={itemIndex}>
@@ -71,7 +74,7 @@ export function StudyNotesView({
                       </li>
                     );
                   }
-                  return <li key={itemIndex}>{renderInline(item)}</li>;
+                  return <li key={itemIndex}>{renderInline(text)}</li>;
                 })}
               </ul>
             );

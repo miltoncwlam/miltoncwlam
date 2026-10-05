@@ -1,6 +1,6 @@
 # Changelog
 
-**Version 4.4.7** — one number only (`package.json`).
+**Version 4.4.8** — one number only (`package.json`).
 
 Git has 41 commits (31 on `milton`). Chat turns are not versions.
 
@@ -18,6 +18,15 @@ git checkout archive/study-only-production
 git checkout archive/play-core-two
 git checkout archive/milton-2026-09-06
 ```
+
+---
+
+## Version 4.4.8 — 2026-10-05
+
+**Miniscule.** Printing notes prints the notes, with visible summary points.
+
+### Fixed
+- **Print notes**: Print notes keeps only the notes sheet (not the source, chat, or studio). Summary points show a bullet. The print style stays on until the print dialog closes. The English print-pack label is no longer 溫習包.
 
 ---
 

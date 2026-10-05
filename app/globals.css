@@ -3570,6 +3570,19 @@ html[data-theme="dark"] .play-lantern-text {
 
 .study-notes-body li {
   margin: 0.35rem 0;
+  overflow-wrap: anywhere;
+}
+
+.study-notes-body ul > li:not(.study-notes-term) {
+  position: relative;
+  padding-left: 1.15rem;
+}
+
+.study-notes-body ul > li:not(.study-notes-term)::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  font-weight: 800;
 }
 
 .study-notes-term {
@@ -3774,6 +3787,40 @@ html:has(dialog.v4-beta-popup-card[open]) .app-header {
   .study-notes-paper {
     border: 0;
     padding: 0;
+    background: white;
+  }
+
+  .study-notes-title,
+  .study-notes-body,
+  .study-notes-body h2,
+  .study-notes-body h3,
+  .study-notes-body li,
+  .study-notes-term span {
+    color: #111 !important;
+  }
+
+  .study-notes-body h2,
+  .study-notes-body h3 {
+    break-after: avoid;
+  }
+
+  .study-notes-body li,
+  .study-notes-term {
+    break-inside: avoid;
+    background: transparent;
+    border-color: #ccc;
+  }
+
+  body[data-print="notes"] .notebook-workspace {
+    display: block !important;
+  }
+
+  body[data-print="notes"] .notebook-source,
+  body[data-print="notes"] .notebook-chat,
+  body[data-print="notes"] .studio-panel > :not(.study-notes-paper),
+  body[data-print="notes"] .print-pack-section:not(:has(.study-notes-paper)),
+  body[data-print="notes"] .print-pack > header {
+    display: none !important;
   }
 
   body[data-print="notes"] .mindmap-tree,
