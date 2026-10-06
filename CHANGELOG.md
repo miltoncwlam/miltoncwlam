@@ -21,6 +21,15 @@ git checkout archive/milton-2026-09-06
 
 ---
 
+## Version 4.5.0 — 2026-10-06
+
+**Minor.** The header shows Version 4.5.0 now. Queued features stay on their dates.
+
+### Changed
+- **Version label**: The header and footer say Version 4.5.0 immediately. Today, community, and mind-map editing still open on 13 Oct, 31 Oct, and 18 Nov.
+
+---
+
 ## Version 4.4.10 — 2026-10-06
 
 **Miniscule.** Mind maps sit in a real tree, and a stalled generate still leaves a map.

@@ -8,6 +8,8 @@ export const V42_RELEASES_AT = Date.UTC(2026, 9, 13, 10, 0, 0);
 export const V43_RELEASES_AT = Date.UTC(2026, 9, 31, 10, 0, 0);
 /** Version 4.4.0 label flips for everyone at this instant. */
 export const V44_RELEASES_AT = Date.UTC(2026, 10, 18, 10, 0, 0);
+/** Version 4.5.0 is a fix, so the header shows it immediately. */
+export const V45_RELEASES_AT = Date.UTC(2026, 9, 6, 0, 0, 0);
 export const FREE_MODEL_CAMPAIGN_RATE = 0.6;
 
 export function isFreeModelCampaignActive(now = Date.now()) {
@@ -33,6 +35,10 @@ export function isV43Released(now = Date.now()) {
 
 export function isV44Released(now = Date.now()) {
   return now >= V44_RELEASES_AT;
+}
+
+export function isV45Released(now = Date.now()) {
+  return now >= V45_RELEASES_AT;
 }
 
 /** Today queue + exam history — only after the 4.2.0 header flip. */
