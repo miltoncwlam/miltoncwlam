@@ -95,9 +95,13 @@ export async function POST(
     spentTextAmount = spent.isUnlimited ? 0 : textCredits;
 
     const artifacts = await listDeckArtifacts(deck.id);
-    const notes = artifacts.find((item) => item.kind === "notes");
-    const mindmap = artifacts.find((item) => item.kind === "mindmap");
-    const exam = artifacts.find((item) => item.kind === "exam");
+    const latestOf = (kind: "notes" | "mindmap" | "exam") =>
+      [...artifacts]
+        .reverse()
+        .find((item) => item.kind === kind && item.generationStatus === "complete");
+    const notes = latestOf("notes");
+    const mindmap = latestOf("mindmap");
+    const exam = latestOf("exam");
     const history = await listNotebookChatMessages(deckId, userId, 12);
     const generated = await generateNotebookChat({
       source: slice,

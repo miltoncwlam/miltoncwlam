@@ -655,7 +655,11 @@
       "cloze_choice": "Hueco con opciones",
       "cloze_free": "Hueco sin opciones"
     },
-    "guestCreateAccount": "Create a free account"
+    "guestCreateAccount": "Create a free account",
+    "sourceButton": "Fuente",
+    "requirements": "Requisitos",
+    "requirementsHint": "Opcional. Di en qué centrarte, qué omitir o qué incluir.",
+    "librarySubtitle": "Abre un documento o genera otro. Puedes tener varias notas."
   },
   "chat": {
     "eyebrow": "Ask this notebook",

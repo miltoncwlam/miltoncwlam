@@ -5,7 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { ExamHistory } from "@/components/exam-history";
 import { ExamPlayer } from "@/components/exam-player";
 import { requireSession } from "@/lib/auth-server";
-import { isV42FeaturesLive } from "@/lib/campaign";
+import { isV43FeaturesLive } from "@/lib/campaign";
 import { getDeckArtifact, listExamAttempts } from "@/lib/data/artifacts";
 import { getDeckWithCards } from "@/lib/data/decks";
 import { parseExamPayload } from "@/lib/llm/parse-studio";
@@ -22,7 +22,7 @@ export default async function DeckExamPage({
   const artifact = await getDeckArtifact(deckId, "exam");
   if (!artifact) notFound();
   const exam = parseExamPayload(artifact.payload);
-  const showHistory = isV42FeaturesLive();
+  const showHistory = isV43FeaturesLive();
   const attempts = showHistory
     ? await listExamAttempts(deckId, session.user.id)
     : [];

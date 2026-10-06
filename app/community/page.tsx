@@ -8,7 +8,7 @@ import {
 } from "@/lib/community/hk-curriculum";
 import { communityCreatorName } from "@/lib/community/copies";
 import { requireSession } from "@/lib/auth-server";
-import { isV43FeaturesLive } from "@/lib/campaign";
+import { isV44FeaturesLive } from "@/lib/campaign";
 import { displayNamesForUsers } from "@/lib/clerk";
 import {
   listPublicCommunityDecks,
@@ -24,7 +24,7 @@ export default async function CommunityPage({
   const params = await searchParams;
   const t = await getTranslations("community");
   const studio = await getTranslations("studio");
-  const v43 = isV43FeaturesLive();
+  const v43 = isV44FeaturesLive();
   const decks = await listPublicCommunityDecks({
     query: params.q,
     subject: params.subject,

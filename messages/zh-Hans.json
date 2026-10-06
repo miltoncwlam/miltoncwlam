@@ -655,7 +655,11 @@
       "cloze_choice": "填空（有选项）",
       "cloze_free": "填空（自填）"
     },
-    "guestCreateAccount": "Create a free account"
+    "guestCreateAccount": "Create a free account",
+    "sourceButton": "原文",
+    "requirements": "要求",
+    "requirementsHint": "可选。写下要聚焦、略过或包含的内容。",
+    "librarySubtitle": "打开一份文档，或再生成一份。学习笔记可以有多份。"
   },
   "chat": {
     "eyebrow": "Ask this notebook",

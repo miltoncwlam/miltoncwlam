@@ -666,6 +666,12 @@ body:has(.auth-stage) .site-footer {
   transform: translateY(-1px);
 }
 
+.secondary-button[aria-pressed="true"] {
+  border-color: var(--accent, #4f46e5);
+  background: #eef2ff;
+  color: #312e81;
+}
+
 .text-button {
   padding-inline: 0.6rem;
   color: var(--muted);
@@ -781,6 +787,12 @@ html[data-theme="dark"] .primary-button {
 
 html[data-theme="dark"] .secondary-button {
   box-shadow: none;
+}
+
+html[data-theme="dark"] .secondary-button[aria-pressed="true"] {
+  border-color: #a5b4fc;
+  background: #312e81;
+  color: #e0e7ff;
 }
 
 .hero-card {

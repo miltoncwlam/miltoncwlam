@@ -22,6 +22,7 @@ const bodySchema = z.object({
   purpose: z.enum(["starter", "exam"]).optional(),
   durationMinutes: z.number().int().min(10).max(90).optional(),
   types: z.array(z.enum(EXAM_QUESTION_TYPES)).min(1).max(7).optional(),
+  requirements: z.string().max(500).optional(),
 });
 
 export const maxDuration = 180;
@@ -84,6 +85,7 @@ export async function POST(
       purpose: input.purpose,
       durationMinutes: input.durationMinutes,
       examTypes: input.types,
+      requirements: input.requirements?.trim() || undefined,
       userId,
       isGuest,
     });

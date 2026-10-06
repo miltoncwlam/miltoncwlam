@@ -13,6 +13,7 @@ import {
   updateCardAction,
 } from "@/lib/actions/decks";
 import { requireSession } from "@/lib/auth-server";
+import { isV42FeaturesLive } from "@/lib/campaign";
 import { listDeckArtifacts } from "@/lib/data/artifacts";
 import { listNotebookChatMessages } from "@/lib/data/notebook-chat";
 import { getDeckWithCards } from "@/lib/data/decks";
@@ -61,6 +62,7 @@ export default async function DeckDetailPage({
   const isFailed = deck.generationStatus === "failed";
   const isEmpty = deck.cards.length === 0;
   const canShare = hasSource;
+  const documentsLive = isV42FeaturesLive();
   const sourcePreview = previewSource(deck.sourceContent);
   const sourceHeading =
     deck.sourceFilename?.trim() ||
@@ -81,7 +83,9 @@ export default async function DeckDetailPage({
             {" · "}
             {deck.generationProvider ?? "sample"} · {deck.generationStatus}
           </p>
-          <ExamLaneChips deckId={deck.id} examSystem={deck.examSystem} />
+          {documentsLive ? null : (
+            <ExamLaneChips deckId={deck.id} examSystem={deck.examSystem} />
+          )}
         </div>
         <div className="no-print flex flex-wrap gap-3">
           {canStudy ? (
@@ -160,30 +164,77 @@ export default async function DeckDetailPage({
           </div>
         </section>
       ) : (
-        <div className="notebook-workspace mt-10 grid gap-8 lg:grid-cols-2">
-          <section className="notebook-source">
-            <p className="eyebrow">Source</p>
-            <h2 className="mt-2 text-2xl font-black">{sourceHeading}</h2>
-            {isProcessing ? (
-              <p className="mt-3 rounded-xl bg-indigo-50 px-3 py-2 text-sm text-indigo-950">
-                Reading your source. You can leave this page.
-              </p>
-            ) : null}
-            {sourcePreview ? (
-              <pre className="notebook-source-body">{sourcePreview}</pre>
-            ) : (
-              <p className="mt-3 text-sm text-slate-600">
-                {isProcessing
-                  ? "The text will appear here as soon as we finish reading."
-                  : "This notebook has no source text yet."}
-              </p>
-            )}
-          </section>
+        <div
+          className={
+            documentsLive
+              ? "notebook-workspace mt-10"
+              : "notebook-workspace mt-10 grid gap-8 lg:grid-cols-2"
+          }
+        >
+          {documentsLive ? null : (
+            <section className="notebook-source">
+              <p className="eyebrow">Source</p>
+              <h2 className="mt-2 text-2xl font-black">{sourceHeading}</h2>
+              {isProcessing ? (
+                <p className="mt-3 rounded-xl bg-indigo-50 px-3 py-2 text-sm text-indigo-950">
+                  Reading your source. You can leave this page.
+                </p>
+              ) : null}
+              {sourcePreview ? (
+                <pre className="notebook-source-body">{sourcePreview}</pre>
+              ) : (
+                <p className="mt-3 text-sm text-slate-600">
+                  {isProcessing
+                    ? "The text will appear here as soon as we finish reading."
+                    : "This notebook has no source text yet."}
+                </p>
+              )}
+            </section>
+          )}
           <NotebookStudio
             cardCount={deck.cards.length}
             deckId={deck.id}
             exam={exam ? (exam.payload as ExamPayload) : null}
             hasSource={hasSource}
+            library={
+              documentsLive
+                ? {
+                    sourceHeading,
+                    sourcePreview,
+                    examSystem: deck.examSystem,
+                    cards: deck.cards.map((card) => ({
+                      id: card.id,
+                      front: card.front,
+                      back: card.back,
+                      hint: card.hint,
+                      category: card.category,
+                      cardType: card.cardType,
+                    })),
+                    documents: artifacts.map((item) => {
+                      const payload = item.payload as NotesPayload & MindmapPayload & ExamPayload;
+                      return {
+                        id: item.id,
+                        kind: item.kind,
+                        title: payload.title ?? "",
+                        status: item.generationStatus,
+                        error: item.generationError,
+                        notes:
+                          item.kind === "notes" && item.generationStatus === "complete"
+                            ? (item.payload as NotesPayload)
+                            : null,
+                        mindmap:
+                          item.kind === "mindmap" && item.generationStatus === "complete"
+                            ? (item.payload as MindmapPayload)
+                            : null,
+                        exam:
+                          item.kind === "exam" && item.generationStatus === "complete"
+                            ? (item.payload as ExamPayload)
+                            : null,
+                      };
+                    }),
+                  }
+                : null
+            }
             mindmap={mindmap ? (mindmap.payload as MindmapPayload) : null}
             notes={notes ? (notes.payload as NotesPayload) : null}
           />
@@ -208,6 +259,7 @@ export default async function DeckDetailPage({
       ) : null}
 
       <div className="no-print mt-10 grid gap-8 lg:grid-cols-[1fr_320px]">
+        {documentsLive ? null : (
         <section className="space-y-4">
           {deck.cards.length ? (
             <>
@@ -274,6 +326,7 @@ export default async function DeckDetailPage({
             </p>
           )}
         </section>
+        )}
 
         <aside className="space-y-5">
           <DeckLibraryControls

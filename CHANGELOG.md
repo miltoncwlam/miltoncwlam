@@ -21,6 +21,23 @@ git checkout archive/milton-2026-09-06
 
 ---
 
+## Version 4.6.0 — 2026-10-06
+
+**Minor.** A notebook opens as documents.
+
+### Added
+- **Document library**: The notebook shows a Source button, one button per saved document, and the generate tiles. Opening a button shows only that document. Chat stays underneath.
+- **Requirements**: A box under the generate settings is sent with study notes, the mind map, the exam, and the cards.
+- **Another study note**: Generating study notes adds a document. The mind map and the exam still replace their one document. Cards stay one set, opened from Flashcards when any exist.
+
+### Changed
+- **Header**: Version 4.1.2 until 6 Oct 2026, 9:30 PM HKT, then Version 4.2.0 when this library opens. Today and exam history are Version 4.3.0 on 24 Oct. Community is Version 4.4.0 on 11 Nov. An editable mind map is Version 4.5.0 on 29 Nov.
+- **Exam options**: HKDSE, IGCSE, A-level, the time limit, and question types appear after Exam is chosen.
+
+Existing notebooks become those document buttons. Nothing is regenerated.
+
+---
+
 ## Version 4.5.2 — 2026-10-06
 
 **Miniscule.** Study notes drop the worksheet and then get a cleanup pass.

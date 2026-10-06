@@ -6,7 +6,7 @@ import { AccountTutorial } from "@/components/account-tutorial";
 import { DeckCard } from "@/components/deck-card";
 import { createSampleDeckAction } from "@/lib/actions/decks";
 import { requireSession } from "@/lib/auth-server";
-import { isV42FeaturesLive } from "@/lib/campaign";
+import { isV43FeaturesLive } from "@/lib/campaign";
 import { listDeckFolders, listDecks } from "@/lib/data/decks";
 import { countDueReviewItems } from "@/lib/data/study";
 import type { LibraryFilter, LibrarySort } from "@/lib/types/flashcard";
@@ -53,7 +53,7 @@ export default async function DecksPage({
   let decks;
   let folders: string[] = [];
   let dueToday = 0;
-  const todayLive = isV42FeaturesLive();
+  const todayLive = isV43FeaturesLive();
   try {
     [decks, folders] = await Promise.all([
       listDecks(session.user.id, { filter, sort, folder }),

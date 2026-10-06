@@ -9,7 +9,7 @@ import { SignOutButton } from "@/components/sign-out-button";
 import { Button } from "@/components/ui/button";
 import type { AppSession } from "@/lib/auth-server";
 import { isAdminUser } from "@/lib/auth-server";
-import { isV42FeaturesLive } from "@/lib/campaign";
+import { isV43FeaturesLive } from "@/lib/campaign";
 import { countDueReviewItems } from "@/lib/data/study";
 
 export async function AppHeader({
@@ -26,7 +26,7 @@ export async function AppHeader({
   const t = await getTranslations("nav");
   const signedIn = Boolean(session);
   const isAdmin = session ? isAdminUser(session.user) : false;
-  const todayLive = isV42FeaturesLive();
+  const todayLive = isV43FeaturesLive();
   const dueToday =
     todayLive && session
       ? await countDueReviewItems(session.user.id).catch(() => 0)

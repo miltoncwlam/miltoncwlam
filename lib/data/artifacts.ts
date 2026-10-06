@@ -66,7 +66,7 @@ export async function listDeckArtifacts(
   const result = await pool.query<ArtifactRow>(
     `select * from deck_artifacts
      where deck_id = $1
-     order by kind`,
+     order by created_at`,
     [deckId],
   );
   return result.rows.map(mapArtifact);
@@ -78,7 +78,9 @@ export async function getDeckArtifact(
 ): Promise<DeckArtifact | null> {
   const result = await pool.query<ArtifactRow>(
     `select * from deck_artifacts
-     where deck_id = $1 and kind = $2`,
+     where deck_id = $1 and kind = $2
+     order by created_at desc
+     limit 1`,
     [deckId, kind],
   );
   return result.rows[0] ? mapArtifact(result.rows[0]) : null;
@@ -94,7 +96,7 @@ export async function upsertDeckArtifact(input: {
     `insert into deck_artifacts (
        deck_id, kind, payload, generation_status, generation_model, generation_error, updated_at
      ) values ($1, $2, $3::jsonb, 'complete', $4, null, now())
-     on conflict (deck_id, kind) do update set
+     on conflict (deck_id, kind) where kind in ('mindmap', 'exam') do update set
        payload = excluded.payload,
        generation_status = 'complete',
        generation_model = excluded.generation_model,
@@ -111,22 +113,59 @@ export async function upsertDeckArtifact(input: {
   return mapArtifact(result.rows[0]);
 }
 
+export async function beginArtifactRow(input: {
+  deckId: string;
+  kind: ArtifactKind;
+  model?: string | null;
+}): Promise<string> {
+  if (input.kind === "notes") {
+    const result = await pool.query<{ id: string }>(
+      `insert into deck_artifacts (
+         deck_id, kind, payload, generation_status, generation_model, generation_error, updated_at
+       ) values ($1, 'notes', '{}'::jsonb, 'processing', $2, null, now())
+       returning id`,
+      [input.deckId, input.model ?? null],
+    );
+    return result.rows[0].id;
+  }
+  const result = await pool.query<{ id: string }>(
+    `insert into deck_artifacts (
+       deck_id, kind, payload, generation_status, generation_model, generation_error, updated_at
+     ) values ($1, $2, '{}'::jsonb, 'processing', $3, null, now())
+     on conflict (deck_id, kind) where kind in ('mindmap', 'exam') do update set
+       generation_status = 'processing',
+       generation_model = excluded.generation_model,
+       generation_error = null,
+       updated_at = now()
+     returning id`,
+    [input.deckId, input.kind, input.model ?? null],
+  );
+  return result.rows[0].id;
+}
+
+export async function completeArtifactRow(input: {
+  id: string;
+  payload: ArtifactPayload;
+  model?: string | null;
+}): Promise<void> {
+  await pool.query(
+    `update deck_artifacts
+     set payload = $2::jsonb,
+         generation_status = 'complete',
+         generation_model = coalesce($3, generation_model),
+         generation_error = null,
+         updated_at = now()
+     where id = $1`,
+    [input.id, JSON.stringify(input.payload), input.model ?? null],
+  );
+}
+
 export async function markArtifactProcessing(input: {
   deckId: string;
   kind: ArtifactKind;
   model?: string | null;
 }): Promise<void> {
-  await pool.query(
-    `insert into deck_artifacts (
-       deck_id, kind, payload, generation_status, generation_model, generation_error, updated_at
-     ) values ($1, $2, '{}'::jsonb, 'processing', $3, null, now())
-     on conflict (deck_id, kind) do update set
-       generation_status = 'processing',
-       generation_model = excluded.generation_model,
-       generation_error = null,
-       updated_at = now()`,
-    [input.deckId, input.kind, input.model ?? null],
-  );
+  await beginArtifactRow(input);
 }
 
 export async function markArtifactFailed(input: {
@@ -139,8 +178,27 @@ export async function markArtifactFailed(input: {
      set generation_status = 'failed',
          generation_error = $3,
          updated_at = now()
-     where deck_id = $1 and kind = $2`,
+     where id = (
+       select id from deck_artifacts
+       where deck_id = $1 and kind = $2 and generation_status = 'processing'
+       order by created_at desc
+       limit 1
+     )`,
     [input.deckId, input.kind, input.message.slice(0, 500)],
+  );
+}
+
+export async function failArtifactRow(input: {
+  id: string;
+  message: string;
+}): Promise<void> {
+  await pool.query(
+    `update deck_artifacts
+     set generation_status = 'failed',
+         generation_error = $2,
+         updated_at = now()
+     where id = $1`,
+    [input.id, input.message.slice(0, 500)],
   );
 }
 

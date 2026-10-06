@@ -169,6 +169,12 @@ export function studioSourceSections(
   return sections.length ? sections : [text.slice(0, chunk)];
 }
 
+export function studioRequirementsLine(requirements?: string | null) {
+  const text = String(requirements ?? "").replace(/\s+/g, " ").trim().slice(0, 500);
+  if (!text) return "";
+  return `Student requirements: follow these when they fit the source. Do not invent facts to satisfy them.\n${text}\n`;
+}
+
 export function studioCardCount(depth: StudioDepth = "basic") {
   return depth === "detailed" ? 16 : 8;
 }

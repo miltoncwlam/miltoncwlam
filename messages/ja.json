@@ -655,7 +655,11 @@
       "cloze_choice": "穴埋め（選択肢あり）",
       "cloze_free": "穴埋め（記述）"
     },
-    "guestCreateAccount": "Create a free account"
+    "guestCreateAccount": "Create a free account",
+    "sourceButton": "原文",
+    "requirements": "要望",
+    "requirementsHint": "任意。重点、省略、含めたいことを書いてください。",
+    "librarySubtitle": "文書を開くか、新しく作ります。学習ノートは何枚でも作れます。"
   },
   "chat": {
     "eyebrow": "Ask this notebook",

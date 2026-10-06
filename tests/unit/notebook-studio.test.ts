@@ -9,6 +9,7 @@ import {
   studioLanguageRules,
   studioNotesChunkChars,
   studioSourceSlice,
+  studioRequirementsLine,
   studioSourceSections,
   notesSectionHeadings,
   mindmapLabelRules,
@@ -592,6 +593,12 @@ describe("generate retry", () => {
 });
 
 describe("studio depth and purpose", () => {
+  it("passes student requirements through as one prompt line", () => {
+    expect(studioRequirementsLine("  focus on dates  ")).toMatch(/focus on dates/);
+    expect(studioRequirementsLine("   ")).toBe("");
+    expect(studioRequirementsLine("x".repeat(800)).length).toBeLessThan(600);
+  });
+
   it("slices less source on basic and writes first-look rules", () => {
     const long = "x".repeat(20_000);
     expect(studioSourceSlice(long, "basic")).toHaveLength(12_000);

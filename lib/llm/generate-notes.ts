@@ -4,6 +4,7 @@ import {
   studioIntentRules,
   studioLanguageRules,
   studioNotesChunkChars,
+  studioRequirementsLine,
   studioSourceSections,
   type StudioDepth,
   type StudioPurpose,
@@ -100,6 +101,7 @@ async function polishNotes(input: {
   language: string;
   model?: string;
   provider?: LLMProvider;
+  requirements?: string;
   timeoutMs: number;
 }): Promise<{ notes: NotesPayload; usage: StudioUsage }> {
   const programmed = programmedNotes(input.notes);
@@ -112,6 +114,7 @@ Put each kept fact under the teaching topic it belongs to. One event or person p
 Write years of 10000 or more with thousands separators. Do not invent a new date range.
 ${studioLanguageRules(input.language)}
 ${notesOutputRules()}
+${studioRequirementsLine(input.requirements)}
 
 Title: ${programmed.title}
 
@@ -166,6 +169,7 @@ async function generateNotesSlice(input: {
   examSystem?: ExamSystem;
   examSubject?: ExamSubjectBrain;
   sectionNote?: string;
+  requirements?: string;
   timeoutMs: number;
 }): Promise<{ notes: NotesPayload; usage: StudioUsage }> {
   const prompt = `Write revision-sheet study notes from this source.
@@ -177,6 +181,7 @@ ${examProfileRules({
   kind: "notes",
 })}
 ${notesOutputRules()}
+${studioRequirementsLine(input.requirements)}
 ${input.sectionNote ?? ""}
 
 Source:
@@ -227,6 +232,7 @@ export async function generateNotes(input: {
   provider?: LLMProvider;
   examSystem?: ExamSystem;
   examSubject?: ExamSubjectBrain;
+  requirements?: string;
 }): Promise<{ notes: NotesPayload; usage: StudioUsage }> {
   const language = input.language ?? "en";
   const depth = input.depth ?? "basic";
@@ -264,6 +270,7 @@ export async function generateNotes(input: {
     language,
     model: input.model,
     provider: input.provider,
+    requirements: input.requirements,
     timeoutMs: 30_000,
   });
   return {

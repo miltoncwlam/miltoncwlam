@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { requireSession } from "@/lib/auth-server";
-import { isV43FeaturesLive } from "@/lib/campaign";
+import { isV44FeaturesLive } from "@/lib/campaign";
 import {
   addDeckComment,
   createModerationReport,
@@ -32,7 +32,7 @@ export async function unlikeDeckAction(deckIdValue: string) {
 }
 
 export async function rateDeckAction(input: { deckId: string; stars: number }) {
-  if (!isV43FeaturesLive()) throw new Error("Ratings are not available yet");
+  if (!isV44FeaturesLive()) throw new Error("Ratings are not available yet");
   const session = await requireSession();
   const deckId = idSchema.parse(input.deckId);
   const stars = z.number().int().min(1).max(5).parse(input.stars);

@@ -655,7 +655,11 @@
       "cloze_choice": "Texte à trous (choix)",
       "cloze_free": "Texte à trous (saisie)"
     },
-    "guestCreateAccount": "Create a free account"
+    "guestCreateAccount": "Create a free account",
+    "sourceButton": "Source",
+    "requirements": "Consignes",
+    "requirementsHint": "Facultatif. Dis ce qu’il faut viser, laisser de côté ou inclure.",
+    "librarySubtitle": "Ouvre un document, ou génères-en un autre. Les notes peuvent s’ajouter."
   },
   "chat": {
     "eyebrow": "Ask this notebook",

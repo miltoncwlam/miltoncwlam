@@ -1,6 +1,6 @@
 import { generateObject } from "ai";
 
-import { studioIntentRules, studioLanguageRules, studioSourceSlice, type StudioDepth, type StudioPurpose } from "@/lib/i18n/locales";
+import { studioIntentRules, studioLanguageRules, studioRequirementsLine, studioSourceSlice, type StudioDepth, type StudioPurpose } from "@/lib/i18n/locales";
 import { examProfileRules, type ExamSubjectBrain, type ExamSystem } from "@/lib/llm/exam-profiles";
 import {
   getOpenRouterClient,
@@ -71,6 +71,7 @@ export async function generateExam(input: {
   provider?: LLMProvider;
   examSystem?: ExamSystem;
   examSubject?: ExamSubjectBrain;
+  requirements?: string;
 }): Promise<{ exam: ExamPayload; usage: StudioUsage }> {
   const types = input.types.length
     ? input.types
@@ -105,7 +106,7 @@ Type rules — choices and pairs are required JSON fields for those types:
 - cloze_free: prompt has one ____ blank; answer is the missing word/phrase; no choices.
 Keep each item short enough that a student can finish all ${count} questions in ${duration} minutes.
 Questions must be answerable from the source. No invented facts.
-
+${studioRequirementsLine(input.requirements)}
 Source:
 ${studioSourceSlice(input.source, depth)}`;
   const result =
@@ -140,6 +141,7 @@ ${examProfileRules({
 })}
 Continue ids after q${exam.questions.length}. Mix: ${mix}.
 Same type rules as a ${duration}-minute paper (choices/pairs required for mcq/tf/matching/cloze_choice). tf choices ${JSON.stringify(tf)}.
+${studioRequirementsLine(input.requirements)}
 Source:
 ${studioSourceSlice(input.source, depth)}`;
     try {

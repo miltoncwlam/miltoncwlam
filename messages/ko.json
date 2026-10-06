@@ -655,7 +655,11 @@
       "cloze_choice": "빈칸(선택지)",
       "cloze_free": "빈칸(직접 입력)"
     },
-    "guestCreateAccount": "Create a free account"
+    "guestCreateAccount": "Create a free account",
+    "sourceButton": "원문",
+    "requirements": "요구 사항",
+    "requirementsHint": "선택. 집중하거나 빼거나 넣을 내용을 적으세요.",
+    "librarySubtitle": "문서를 열거나 새로 만드세요. 학습 노트는 여러 개 만들 수 있습니다."
   },
   "chat": {
     "eyebrow": "Ask this notebook",

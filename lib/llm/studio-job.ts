@@ -23,9 +23,10 @@ import {
 } from "@/lib/data/credits";
 import { completeDeckGeneration, setCardsJob } from "@/lib/data/decks";
 import {
+  beginArtifactRow,
+  completeArtifactRow,
+  failArtifactRow,
   markArtifactFailed,
-  markArtifactProcessing,
-  upsertDeckArtifact,
 } from "@/lib/data/artifacts";
 import { generateExam } from "@/lib/llm/generate-exam";
 import { generateMindmap } from "@/lib/llm/generate-mindmap";
@@ -58,6 +59,8 @@ async function runArtifactJob(input: {
   unlimited: boolean;
   estimateTokens: { inputTokens: number; outputTokens: number };
   cardCount: number;
+  requirements?: string;
+  artifactId?: string;
 }) {
   const { deck, kind, userId } = input;
   try {
@@ -81,6 +84,7 @@ async function runArtifactJob(input: {
         provider: deck.generationProvider ?? undefined,
         examSystem,
         examSubject,
+        requirements: input.requirements,
       };
       const studyText = studioSourceSlice(source.text, input.depth);
       const generated =
@@ -102,6 +106,7 @@ async function runArtifactJob(input: {
           provider: deck.generationProvider ?? undefined,
           examSystem,
           examSubject,
+          requirements: input.requirements,
         });
         payload = generated.notes;
         usage = generated.usage;
@@ -115,6 +120,7 @@ async function runArtifactJob(input: {
           provider: deck.generationProvider ?? undefined,
           examSystem,
           examSubject,
+          requirements: input.requirements,
         });
         payload = generated.mindmap;
         usage = generated.usage;
@@ -130,17 +136,19 @@ async function runArtifactJob(input: {
           provider: deck.generationProvider ?? undefined,
           examSystem,
           examSubject,
+          requirements: input.requirements,
         });
         payload = generated.exam;
         usage = generated.usage;
       }
 
-      await upsertDeckArtifact({
-        deckId: deck.id,
-        kind,
-        payload,
-        model: input.model,
-      });
+      if (input.artifactId) {
+        await completeArtifactRow({
+          id: input.artifactId,
+          payload,
+          model: input.model,
+        });
+      }
     }
 
     const rates = resolveBillingRates({
@@ -179,6 +187,8 @@ async function runArtifactJob(input: {
     const message = error instanceof Error ? error.message : "Generation failed";
     if (kind === "cards") {
       await setCardsJob(deck.id, { status: "failed", error: message });
+    } else if (input.artifactId) {
+      await failArtifactRow({ id: input.artifactId, message });
     } else {
       await markArtifactFailed({ deckId: deck.id, kind, message });
     }
@@ -206,6 +216,7 @@ export async function beginStudioArtifact(input: {
   purpose?: StudioPurpose;
   durationMinutes?: number;
   examTypes?: (typeof EXAM_QUESTION_TYPES)[number][];
+  requirements?: string;
   userId: string;
   isGuest: boolean;
 }): Promise<{ kind: StudioKind; status: "processing" }> {
@@ -255,11 +266,12 @@ export async function beginStudioArtifact(input: {
   });
   const spentTextAmount = spent.isUnlimited ? 0 : estimate.textCredits;
 
+  let artifactId: string | undefined;
   try {
     if (input.kind === "cards") {
       await setCardsJob(input.deck.id, { status: "processing" });
     } else {
-      await markArtifactProcessing({
+      artifactId = await beginArtifactRow({
         deckId: input.deck.id,
         kind: input.kind,
         model,
@@ -291,6 +303,8 @@ export async function beginStudioArtifact(input: {
     spentTextAmount,
     unlimited: spent.isUnlimited,
     cardCount,
+    requirements: input.requirements,
+    artifactId,
     estimateTokens: {
       inputTokens: estimate.inputTokens,
       outputTokens: estimate.outputTokens,

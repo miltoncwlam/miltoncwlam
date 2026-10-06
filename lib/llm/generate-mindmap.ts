@@ -5,6 +5,7 @@ import {
   mindmapLabelRules,
   studioIntentRules,
   studioLanguageRules,
+  studioRequirementsLine,
   studioSourceSections,
   type StudioDepth,
   type StudioPurpose,
@@ -55,6 +56,7 @@ async function generateMindmapSlice(input: {
   examSystem?: ExamSystem;
   examSubject?: ExamSubjectBrain;
   sectionNote?: string;
+  requirements?: string;
   timeoutMs: number;
 }): Promise<{ mindmap: MindmapPayload; usage: StudioUsage }> {
   const prompt = `Build a study mind map as a flat node list from this source.
@@ -71,6 +73,7 @@ Rules:
 - Main branches (parentId = root id) are the source’s topics, not synonyms of the title and not full sentences.
 - Each branch has 2–4 children. A child is one short fact, name, or date. No invented facts.
 - Labels stay short enough for one bubble. Do not write a paragraph in a node.
+${studioRequirementsLine(input.requirements)}
 ${input.sectionNote ?? ""}
 
 Source:
@@ -115,6 +118,7 @@ export async function generateMindmap(input: {
   provider?: LLMProvider;
   examSystem?: ExamSystem;
   examSubject?: ExamSubjectBrain;
+  requirements?: string;
 }): Promise<{ mindmap: MindmapPayload; usage: StudioUsage }> {
   const depth = input.depth ?? "basic";
   const purpose = input.purpose ?? "starter";

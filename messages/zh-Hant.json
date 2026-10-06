@@ -728,7 +728,11 @@
       "cloze_choice": "填充（有選項）",
       "cloze_free": "填充（自填）"
     },
-    "guestCreateAccount": "Create a free account"
+    "guestCreateAccount": "Create a free account",
+    "sourceButton": "原文",
+    "requirements": "要求",
+    "requirementsHint": "可選。寫下要聚焦、略過或包含的內容。",
+    "librarySubtitle": "打開一份文件，或再生成一份。溫習筆記可以有多份。"
   },
   "chat": {
     "eyebrow": "問這本筆記",

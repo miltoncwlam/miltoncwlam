@@ -10,7 +10,7 @@ import { StudyPlayer } from "@/components/study-player";
 import { Button } from "@/components/ui/button";
 import { adminAttachCommunityImagesAction } from "@/lib/actions/admin";
 import { isAdminUser, requireSession } from "@/lib/auth-server";
-import { isV43FeaturesLive } from "@/lib/campaign";
+import { isV44FeaturesLive } from "@/lib/campaign";
 import { displayNamesForUsers } from "@/lib/clerk";
 import { communityCreatorName } from "@/lib/community/copies";
 import {
@@ -56,20 +56,18 @@ export default async function CommunityDeckPage({
     ...comments.map((comment) => comment.user_id),
   ]);
   const creatorName = communityCreatorName(deck.userId, names);
-  const notes = artifacts.find(
-    (item) => item.kind === "notes" && item.generationStatus === "complete",
-  );
-  const mindmap = artifacts.find(
-    (item) => item.kind === "mindmap" && item.generationStatus === "complete",
-  );
-  const exam = artifacts.find(
-    (item) => item.kind === "exam" && item.generationStatus === "complete",
-  );
+  const latestComplete = (kind: "notes" | "mindmap" | "exam") =>
+    [...artifacts]
+      .reverse()
+      .find((item) => item.kind === kind && item.generationStatus === "complete");
+  const notes = latestComplete("notes");
+  const mindmap = latestComplete("mindmap");
+  const exam = latestComplete("exam");
 
   const ratingAvg = Number(meta.rows[0]?.rating_avg ?? 0);
   const ratingCount = Number(meta.rows[0]?.rating_count ?? 0);
   const copyCount = Number(meta.rows[0]?.copy_count ?? 0);
-  const v43 = isV43FeaturesLive();
+  const v43 = isV44FeaturesLive();
   const subjectLabel = formatTagLabel(deck.subjectTag);
   const gradeLabel = formatGradeLabel(deck.gradeTag);
   const metaBits = [

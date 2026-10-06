@@ -1,9 +1,11 @@
 import {
   isV41Released,
   isV411Released,
+  isV412Released,
   isV42Released,
   isV43Released,
   isV44Released,
+  isV45Released,
   isV4GenerallyAvailable,
 } from "@/lib/campaign";
 
@@ -12,9 +14,11 @@ export const BETA_VERSION = "4.0.0 beta";
 export const GA_VERSION = "4.0.0";
 export const V41_VERSION = "4.1.0";
 export const V411_VERSION = "4.1.1";
+export const V412_VERSION = "4.1.2";
 export const V42_VERSION = "4.2.0";
 export const V43_VERSION = "4.3.0";
 export const V44_VERSION = "4.4.0";
+export const V45_VERSION = "4.5.0";
 export const BETA_COOKIE = "hkstudya-beta";
 export const BETA_SESSION_KEY = "hkstudya-beta-session";
 export const BETA_EVENT = "hkstudya-beta";
@@ -47,9 +51,11 @@ export function hasV4BetaAccess(
 }
 
 export function displayAppVersion(hasBeta: boolean, now = Date.now()) {
+  if (isV45Released(now)) return V45_VERSION;
   if (isV44Released(now)) return V44_VERSION;
   if (isV43Released(now)) return V43_VERSION;
   if (isV42Released(now)) return V42_VERSION;
+  if (isV412Released(now)) return V412_VERSION;
   if (isV411Released(now)) return V411_VERSION;
   if (isV41Released(now)) return V41_VERSION;
   if (isV4GenerallyAvailable(now)) return GA_VERSION;

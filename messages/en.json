@@ -652,7 +652,11 @@
       "cloze_choice": "Cloze with choices",
       "cloze_free": "Cloze without choices"
     },
-    "guestCreateAccount": "Create a free account"
+    "guestCreateAccount": "Create a free account",
+    "sourceButton": "Source",
+    "requirements": "Requirements",
+    "requirementsHint": "Optional. Say what to focus on, skip, or include.",
+    "librarySubtitle": "Open a document, or generate another. Study notes can stack."
   },
   "chat": {
     "eyebrow": "Ask this notebook",
