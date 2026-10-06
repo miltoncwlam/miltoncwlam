@@ -3482,12 +3482,7 @@ html[data-theme="dark"] .play-lantern-text {
   font-weight: 800;
   line-height: 1.35;
   text-align: center;
-  overflow-wrap: break-word;
-  word-break: keep-all;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
+  overflow-wrap: anywhere;
   box-shadow: 0 4px 0 rgb(20 32 27 / 8%);
 }
 
@@ -3826,5 +3821,22 @@ html:has(dialog.v4-beta-popup-card[open]) .app-header {
   body[data-print="notes"] .mindmap-tree,
   body[data-print="mindmap"] .study-notes-paper {
     display: none !important;
+  }
+
+  body[data-print="mindmap"] .notebook-workspace {
+    display: block !important;
+  }
+
+  body[data-print="mindmap"] .notebook-source,
+  body[data-print="mindmap"] .notebook-chat,
+  body[data-print="mindmap"] .studio-panel > :not(.mindmap-tree),
+  body[data-print="mindmap"] .print-pack-section,
+  body[data-print="mindmap"] .print-pack > header {
+    display: none !important;
+  }
+
+  body[data-print="mindmap"] .mindmap-tree {
+    border: 0;
+    background: white;
   }
 }

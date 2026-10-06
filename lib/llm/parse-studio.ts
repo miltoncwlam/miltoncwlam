@@ -198,7 +198,7 @@ export function parseMindmapPayload(payload: unknown): MindmapPayload {
 
     for (const node of nodes) {
       if (node.id === rootId) continue;
-      if (depthOf(node.id) > 3) node.parentId = rootId;
+      if (depthOf(node.id) > 5) node.parentId = rootId;
     }
   }
 

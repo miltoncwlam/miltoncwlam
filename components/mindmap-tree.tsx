@@ -29,12 +29,35 @@ type LaidOut = {
   label: string;
   x: number;
   y: number;
+  w: number;
+  h: number;
   color: string;
   ink: string;
   parentId: string | null;
   hasKids: boolean;
   isRoot: boolean;
 };
+
+function textUnits(label: string) {
+  let units = 0;
+  for (const char of label) {
+    if (char === " ") units += 4;
+    else if (/[\u2e80-\u9fff\uac00-\ud7af\u3040-\u30ff]/.test(char)) units += 15;
+    else units += 7.4;
+  }
+  return units;
+}
+
+function measureLabel(label: string, isRoot: boolean) {
+  const maxInner = isRoot ? 156 : 136;
+  const units = Math.max(24, textUnits(label));
+  const lines = Math.min(4, Math.max(1, Math.ceil(units / maxInner)));
+  const inner = Math.min(maxInner, units);
+  return {
+    w: Math.max(isRoot ? 132 : 108, Math.ceil(inner + 28)),
+    h: lines * (isRoot ? 22 : 18) + (isRoot ? 28 : 22),
+  };
+}
 
 function visibleChildren(
   nodes: MindmapNode[],
@@ -58,20 +81,40 @@ export function defaultCollapsedBranches(nodes: MindmapNode[]): Set<string> {
   return collapsed;
 }
 
-function columnHeight(
+type Prepared = {
+  node: MindmapNode;
+  w: number;
+  h: number;
+  kids: Prepared[];
+  subtreeH: number;
+  hasKids: boolean;
+};
+
+const SIBLING_GAP = 16;
+const BRANCH_GAP = 28;
+
+function prepareNode(
   nodes: MindmapNode[],
-  branch: MindmapNode,
+  node: MindmapNode,
   collapsed: Set<string>,
   expandAll: boolean,
-) {
-  const kids = visibleChildren(nodes, branch.id, collapsed, expandAll);
-  if (!kids.length) return 72;
-  let height = 72;
-  for (const kid of kids) {
-    const grand = visibleChildren(nodes, kid.id, collapsed, expandAll);
-    height += Math.max(56, grand.length * 48);
-  }
-  return height;
+  isRoot: boolean,
+): Prepared {
+  const size = measureLabel(node.label, isRoot);
+  const kids = visibleChildren(nodes, node.id, collapsed, expandAll).map((child) =>
+    prepareNode(nodes, child, collapsed, expandAll, false),
+  );
+  const stack =
+    kids.reduce((sum, kid) => sum + kid.subtreeH, 0) +
+    SIBLING_GAP * Math.max(0, kids.length - 1);
+  return {
+    node,
+    w: size.w,
+    h: size.h,
+    kids,
+    subtreeH: Math.max(size.h, stack),
+    hasKids: childrenOf(nodes, node.id).length > 0,
+  };
 }
 
 export function layoutMindmap(
@@ -88,108 +131,110 @@ export function layoutMindmap(
   const branches = visibleChildren(nodes, root.id, collapsed, expandAll);
   const left = branches.filter((_, index) => index % 2 === 1);
   const right = branches.filter((_, index) => index % 2 === 0);
-  const BRANCH_GAP = 28;
-  const CHILD_H = 56;
-  const ROOT_X = 230;
-  const CHILD_X = 190;
-  const GRAND_X = 170;
-
-  function sideSpan(list: MindmapNode[]) {
-    return list.reduce(
-      (sum, branch) => sum + columnHeight(nodes, branch, collapsed, expandAll) + BRANCH_GAP,
-      0,
-    );
-  }
-
-  const height = Math.max(520, Math.max(sideSpan(left), sideSpan(right), 180) + 140);
-  const width = Math.max(960, 1080);
-  const cx = width / 2;
-  const cy = height / 2;
+  const rootSize = measureLabel(root.label, true);
   const items: LaidOut[] = [];
-  const hasRootKids = childrenOf(nodes, root.id).length > 0;
+
+  function place(box: Prepared, x: number, top: number, dir: -1 | 1, color: string, ink: string) {
+    const y = top + box.subtreeH / 2;
+    items.push({
+      id: box.node.id,
+      label: box.node.label,
+      x,
+      y,
+      w: box.w,
+      h: box.h,
+      color,
+      ink,
+      parentId: box.node.parentId,
+      hasKids: box.hasKids,
+      isRoot: false,
+    });
+    if (!box.kids.length) return;
+    const stack =
+      box.kids.reduce((sum, kid) => sum + kid.subtreeH, 0) +
+      SIBLING_GAP * Math.max(0, box.kids.length - 1);
+    const columnWidth = Math.max(...box.kids.map((kid) => kid.w));
+    const childX = x + dir * (box.w / 2 + 40 + columnWidth / 2);
+    let cursor = y - stack / 2;
+    for (const kid of box.kids) {
+      place(kid, childX, cursor, dir, color, ink);
+      cursor += kid.subtreeH + SIBLING_GAP;
+    }
+  }
 
   items.push({
     id: root.id,
     label: root.label,
-    x: cx,
-    y: cy,
+    x: 0,
+    y: 0,
+    w: rootSize.w,
+    h: rootSize.h,
     color: "#c4b5e8",
     ink: "#2d2150",
     parentId: null,
-    hasKids: hasRootKids,
+    hasKids: childrenOf(nodes, root.id).length > 0,
     isRoot: true,
   });
 
   function placeSide(list: MindmapNode[], dir: -1 | 1) {
-    let y = cy - sideSpan(list) / 2;
-    list.forEach((branch) => {
+    const prepared = list.map((branch) =>
+      prepareNode(nodes, branch, collapsed, expandAll, false),
+    );
+    const total = prepared.reduce(
+      (sum, box, index) => sum + box.subtreeH + (index ? BRANCH_GAP : 0),
+      0,
+    );
+    const columnWidth = prepared.reduce((max, box) => Math.max(max, box.w), 0);
+    const x = dir * (rootSize.w / 2 + 48 + columnWidth / 2);
+    let cursor = -total / 2;
+    prepared.forEach((box) => {
       const palette =
         BRANCH_PASTELS[
-          branches.findIndex((item) => item.id === branch.id) % BRANCH_PASTELS.length
+          branches.findIndex((item) => item.id === box.node.id) % BRANCH_PASTELS.length
         ]!;
-      const block = columnHeight(nodes, branch, collapsed, expandAll);
-      const by = y + block / 2;
-      const bx = cx + dir * ROOT_X;
-      const kids = visibleChildren(nodes, branch.id, collapsed, expandAll);
-      items.push({
-        id: branch.id,
-        label: branch.label,
-        x: bx,
-        y: by,
-        color: palette.fill,
-        ink: palette.ink ?? "#14201b",
-        parentId: root.id,
-        hasKids: childrenOf(nodes, branch.id).length > 0,
-        isRoot: false,
-      });
-
-      let kidY = by - ((kids.length - 1) * CHILD_H) / 2;
-      kids.forEach((kid) => {
-        const kx = bx + dir * CHILD_X;
-        const grand = visibleChildren(nodes, kid.id, collapsed, expandAll);
-        const ky = kidY;
-        items.push({
-          id: kid.id,
-          label: kid.label,
-          x: kx,
-          y: ky,
-          color: palette.fill,
-          ink: palette.ink ?? "#14201b",
-          parentId: branch.id,
-          hasKids: childrenOf(nodes, kid.id).length > 0,
-          isRoot: false,
-        });
-        grand.forEach((leaf, leafIndex) => {
-          items.push({
-            id: leaf.id,
-            label: leaf.label,
-            x: kx + dir * GRAND_X,
-            y: ky + (leafIndex - (grand.length - 1) / 2) * 48,
-            color: palette.fill,
-            ink: palette.ink ?? "#14201b",
-            parentId: kid.id,
-            hasKids: false,
-            isRoot: false,
-          });
-        });
-        kidY += CHILD_H;
-      });
-      y += block + BRANCH_GAP;
+      place(box, x, cursor, dir, palette.fill, palette.ink ?? "#14201b");
+      cursor += box.subtreeH + BRANCH_GAP;
     });
   }
 
   placeSide(left, -1);
   placeSide(right, 1);
 
-  return { width, height, cx, cy, items };
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (const item of items) {
+    minX = Math.min(minX, item.x - item.w / 2);
+    maxX = Math.max(maxX, item.x + item.w / 2);
+    minY = Math.min(minY, item.y - item.h / 2);
+    maxY = Math.max(maxY, item.y + item.h / 2);
+  }
+  const pad = 36;
+  for (const item of items) {
+    item.x += -minX + pad;
+    item.y += -minY + pad;
+  }
+  const width = Math.max(640, maxX - minX + pad * 2);
+  const height = Math.max(420, maxY - minY + pad * 2);
+  const rootItem = items.find((item) => item.isRoot);
+  return {
+    width,
+    height,
+    cx: rootItem?.x ?? width / 2,
+    cy: rootItem?.y ?? height / 2,
+    items,
+  };
 }
 
 function curve(x1: number, y1: number, x2: number, y2: number) {
-  const mx = (x1 + x2) / 2;
-  const my = (y1 + y2) / 2;
-  const qx = mx + (y1 - y2) * 0.12;
-  const qy = my + (x2 - x1) * 0.08;
-  return `M ${x1} ${y1} Q ${qx} ${qy} ${x2} ${y2}`;
+  const mid = (x1 + x2) / 2;
+  return `M ${x1} ${y1} C ${mid} ${y1}, ${mid} ${y2}, ${x2} ${y2}`;
+}
+
+function anchor(item: LaidOut, towardX: number) {
+  const dir = towardX >= item.x ? 1 : -1;
+  return { x: item.x + dir * (item.w / 2), y: item.y };
 }
 
 export function MindmapTree({
@@ -215,6 +260,7 @@ export function MindmapTree({
   const [pending, startTransition] = useTransition();
   const saveTimer = useRef<number | null>(null);
   const dragId = useRef<string | null>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   if (mapKey !== nodeKey) {
     setMapKey(nodeKey);
@@ -247,6 +293,13 @@ export function MindmapTree({
   }
 
   useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.scrollLeft = Math.max(0, layout.cx - canvas.clientWidth / 2);
+    canvas.scrollTop = Math.max(0, layout.cy - canvas.clientHeight / 2);
+  }, [layout.cx, layout.cy, layout.width, layout.height]);
+
+  useEffect(() => {
     return () => {
       if (saveTimer.current) window.clearTimeout(saveTimer.current);
     };
@@ -270,13 +323,12 @@ export function MindmapTree({
   function printMap() {
     setExpandAll(true);
     document.body.dataset.print = "mindmap";
-    window.setTimeout(() => {
-      window.print();
-      window.setTimeout(() => {
-        delete document.body.dataset.print;
-        setExpandAll(true);
-      }, 400);
-    }, 50);
+    const done = () => {
+      delete document.body.dataset.print;
+      window.removeEventListener("afterprint", done);
+    };
+    window.addEventListener("afterprint", done);
+    window.setTimeout(() => window.print(), 50);
   }
 
   const selected = working.find((node) => node.id === selectedId) ?? null;
@@ -364,7 +416,7 @@ export function MindmapTree({
         {editable ? t("canvasHint") : t("expandHint")}
       </p>
       {error ? <p className="mindmap-hint no-print text-rose-700">{error}</p> : null}
-      <div className="mindmap-canvas mt-3">
+      <div className="mindmap-canvas mt-3" ref={canvasRef}>
         <div
           className="mindmap-stage"
           style={{ width: layout.width, height: layout.height }}
@@ -375,33 +427,21 @@ export function MindmapTree({
             height={layout.height}
             width={layout.width}
           >
-            <defs>
-              <marker
-                id="mindmap-arrow"
-                markerHeight="7"
-                markerWidth="7"
-                orient="auto"
-                refX="6"
-                refY="3.5"
-                viewBox="0 0 8 7"
-              >
-                <path d="M0 0 L8 3.5 L0 7 Z" fill="#2d3a36" />
-              </marker>
-            </defs>
             {layout.items
               .filter((item) => item.parentId && byId.get(item.parentId))
               .map((item) => {
                 const parent = byId.get(item.parentId!);
                 if (!parent) return null;
+                const from = anchor(parent, item.x);
+                const to = anchor(item, parent.x);
                 return (
                   <path
-                    d={curve(parent.x, parent.y, item.x, item.y)}
+                    d={curve(from.x, from.y, to.x, to.y)}
                     fill="none"
                     key={`${parent.id}-${item.id}`}
-                    markerEnd="url(#mindmap-arrow)"
-                    stroke="#2d3a36"
+                    stroke={item.ink}
                     strokeLinecap="round"
-                    strokeWidth={item.parentId === layout.items[0]?.id ? 3 : 2}
+                    strokeWidth={item.parentId === layout.items[0]?.id ? 3.5 : 2.25}
                   />
                 );
               })}
@@ -410,6 +450,9 @@ export function MindmapTree({
             const style = {
               left: item.x,
               top: item.y,
+              width: item.w,
+              maxWidth: item.w,
+              minHeight: item.h,
               borderColor: "transparent",
               background: item.color,
               color: item.ink,

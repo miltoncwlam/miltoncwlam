@@ -21,6 +21,19 @@ git checkout archive/milton-2026-09-06
 
 ---
 
+## Version 4.4.10 — 2026-10-06
+
+**Miniscule.** Mind maps sit in a real tree, and a stalled generate still leaves a map.
+
+### Changed
+- **Mind map**: The topic sits in the center. Branches and facts are columns beside it, with the full label visible. Lines meet the bubble instead of running through it. The map opens centered on the topic. Deeper nodes stay on the map.
+- **Print map**: Print map prints the map. The print style stays until the dialog closes.
+
+### Fixed
+- **Mind map generate**: A long source is read in smaller slices. If the model times out or returns nothing, the map is built from the source’s headings and bullets instead of failing.
+
+---
+
 ## Version 4.4.9 — 2026-10-05
 
 **Miniscule.** PDF uploads keep every page, and earlier notebooks get the text that was cut off.

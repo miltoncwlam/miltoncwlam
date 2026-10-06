@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { defaultCollapsedBranches, layoutMindmap } from "@/components/mindmap-tree";
+import { mindmapFromSource } from "@/lib/mindmap/from-source";
 import { copyableNotebookSource, notebookIsPublishable } from "@/lib/community/hk-curriculum";
 import { estimateArtifactOutputTokens } from "@/lib/credits/estimate-generation";
 import {
@@ -472,6 +473,64 @@ Farming and polished tools spread from about 7000 years ago. Settlements became 
     const laid = layoutMindmap(nodes, collapsed);
     expect(laid.items).toHaveLength(3);
     expect(laid.items.some((item) => item.id === "n4")).toBe(false);
+  });
+
+  it("keeps branch subtrees from overlapping", () => {
+    const nodes = [
+      { id: "n1", parentId: null, label: "Topic" },
+      { id: "n2", parentId: "n1", label: "Stone Age" },
+      { id: "n3", parentId: "n1", label: "Civilisations" },
+      { id: "n4", parentId: "n2", label: "Old Stone Age began around a very early date" },
+      { id: "n5", parentId: "n2", label: "New Stone Age and farming" },
+      { id: "n6", parentId: "n4", label: "Nomadism" },
+      { id: "n7", parentId: "n3", label: "Egypt" },
+      { id: "n8", parentId: "n3", label: "Indus Valley" },
+    ];
+    const laid = layoutMindmap(nodes, new Set(), true);
+    expect(laid.items).toHaveLength(nodes.length);
+    expect(laid.items.some((item) => item.id === "n6")).toBe(true);
+    const boxes = laid.items.map((item) => ({
+      id: item.id,
+      left: item.x - item.w / 2,
+      right: item.x + item.w / 2,
+      top: item.y - item.h / 2,
+      bottom: item.y + item.h / 2,
+    }));
+    for (let i = 0; i < boxes.length; i += 1) {
+      for (let j = i + 1; j < boxes.length; j += 1) {
+        const a = boxes[i]!;
+        const b = boxes[j]!;
+        const overlaps =
+          a.left < b.right - 1 &&
+          a.right > b.left + 1 &&
+          a.top < b.bottom - 1 &&
+          a.bottom > b.top + 1;
+        expect(overlaps, `${a.id} overlaps ${b.id}`).toBe(false);
+      }
+    }
+  });
+
+  it("builds a map from headings when generation does not finish", () => {
+    const map = mindmapFromSource(`Human needs: past and present
+Learning Outcomes
+Knowledge
+Stone Age
+• Old Stone Age began
+• New Stone Age and farming
+Civilisations
+• Egypt was unified
+• Indus Valley began
+People
+• Hammurabi wrote a law code
+• Menes unified Egypt`);
+    expect(map.nodes[0]?.label).toMatch(/Human needs/);
+    const branches = map.nodes.filter((node) => node.parentId === map.nodes[0]?.id);
+    expect(branches.map((node) => node.label)).toEqual(
+      expect.arrayContaining(["Stone Age", "Civilisations", "People"]),
+    );
+    expect(branches.map((node) => node.label)).not.toContain("Knowledge");
+    const stone = branches.find((node) => node.label === "Stone Age");
+    expect(map.nodes.filter((node) => node.parentId === stone?.id)).toHaveLength(2);
   });
 });
 

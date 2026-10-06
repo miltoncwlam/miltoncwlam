@@ -15,6 +15,7 @@ import {
 } from "@/lib/llm/config";
 import { generateObjectWithRetry } from "@/lib/llm/generate-object-retry";
 import { examProfileRules, type ExamSubjectBrain, type ExamSystem } from "@/lib/llm/exam-profiles";
+import { mindmapFromSource } from "@/lib/mindmap/from-source";
 import { mergeMindmapPayloads } from "@/lib/llm/merge-studio";
 import { ollamaGenerateJson } from "@/lib/llm/ollama";
 import { mindmapSchema, parseMindmapPayload } from "@/lib/llm/parse-studio";
@@ -67,8 +68,9 @@ ${examProfileRules({
 })}
 Rules:
 - Exactly one root node with parentId null (the topic). ids n1, n2, n3… with no repeats.
-- Main branches (parentId = root id) cover different parts of the source, not synonyms of the title.
-- Leaves are facts or examples from the source. One idea per node. No invented facts.
+- Main branches (parentId = root id) are the source’s topics, not synonyms of the title and not full sentences.
+- Each branch has 2–4 children. A child is one short fact, name, or date. No invented facts.
+- Labels stay short enough for one bubble. Do not write a paragraph in a node.
 ${input.sectionNote ?? ""}
 
 Source:
@@ -79,18 +81,29 @@ ${input.source}`;
       usage: { inputTokens: 0, outputTokens: 0 },
     };
   }
-  const result = await generateObjectWithRetry(() =>
-    generateObject({
-      model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
-      schema: mindmapSchema,
-      abortSignal: AbortSignal.timeout(input.timeoutMs),
-      prompt,
-    }),
-  );
-  return {
-    mindmap: parseMindmapPayload(result.object),
-    usage: readUsage(result),
-  };
+  try {
+    const result = await generateObjectWithRetry(() =>
+      generateObject({
+        model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
+        schema: mindmapSchema,
+        abortSignal: AbortSignal.timeout(input.timeoutMs),
+        prompt,
+      }),
+    );
+    return {
+      mindmap: parseMindmapPayload(result.object),
+      usage: readUsage(result),
+    };
+  } catch (error) {
+    const name = error instanceof Error ? error.name : "";
+    const message = error instanceof Error ? error.message : String(error);
+    if (!/timeout|aborted|timed out|TimeoutError|AbortError|No object generated|NoObjectGenerated/i.test(`${name} ${message}`)) {
+      throw error;
+    }
+    const mindmap = mindmapFromSource(input.source);
+    if (mindmap.nodes.length < 4) throw error;
+    return { mindmap, usage: { inputTokens: 0, outputTokens: 0 } };
+  }
 }
 
 export async function generateMindmap(input: {
@@ -105,8 +118,8 @@ export async function generateMindmap(input: {
 }): Promise<{ mindmap: MindmapPayload; usage: StudioUsage }> {
   const depth = input.depth ?? "basic";
   const purpose = input.purpose ?? "starter";
-  const sections = studioSourceSections(input.source, depth);
-  const timeoutMs = sections.length > 1 ? 50_000 : 150_000;
+  const sections = studioSourceSections(input.source, depth, depth === "detailed" ? 6_000 : 4_000);
+  const timeoutMs = 45_000;
   const parts: MindmapPayload[] = [];
   let usage: StudioUsage = { inputTokens: 0, outputTokens: 0 };
   for (const [index, section] of sections.entries()) {
