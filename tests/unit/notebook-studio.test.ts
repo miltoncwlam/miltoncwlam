@@ -23,7 +23,7 @@ import {
   parseNotesPayload,
   planExamQuestions,
 } from "@/lib/llm/parse-studio";
-import { parseStudyNotes, sanitizeStudyMarkdown, splitNoteTerm, notesAreStudyReady, notesContainPromptLeak, forceStudyNotesShape, pointFormSummary, isGlossarySheet } from "@/lib/study/notes-markdown";
+import { parseStudyNotes, sanitizeStudyMarkdown, splitNoteTerm, notesAreStudyReady, notesContainPromptLeak, forceStudyNotesShape, pointFormSummary, isGlossarySheet, cleanStudyNotes } from "@/lib/study/notes-markdown";
 import { mergeMindmapPayloads, mergeNotesPayloads } from "@/lib/llm/merge-studio";
 import type { ExamQuestion } from "@/lib/types/notebook";
 
@@ -390,6 +390,49 @@ Farming and polished tools spread from about 7000 years ago. Settlements became 
     expect(notesAreStudyReady(shaped)).toBe(true);
     expect(shaped).toMatch(/^- /m);
     expect(isGlossarySheet(shaped)).toBe(false);
+  });
+
+  it("drops worksheet scraps and groups huge years", () => {
+    const cleaned = cleanStudyNotes(`## What is History?
+- History means past events.
+- Human beings were born around 7000000 BC.
+- The Old Stone Age began around 3300000 BC.
+
+## Learning Outcomes for Topic 1
+- **Knowledge** the division of the Stone Age periods.
+- Attitudes and values: tracing the origins of ancient culture.
+
+## Summary
+- AD 2024 was the ____ century AD, ____ decade of AD.
+
+## Enquiry
+- When did the Stone Age start?
+
+## Summary
+- fe in the Middle Stone Age
+
+## Summary
+- Living in huts built of wood, stones and animal skins
+
+## Activity
+- One day in the New Stone Age Are students to use.
+
+## 4 Living in villages
+- In the New Stone Age, people started building huts along rivers and lakes.
+- They then began to exchange products.`);
+    expect(cleaned).toMatch(/## What is History/);
+    expect(cleaned).toMatch(/7,000,000 BC/);
+    expect(cleaned).toMatch(/3,300,000 BC/);
+    expect(cleaned).toMatch(/Living in huts built of wood/);
+    expect(cleaned).toMatch(/## 4 Living in villages/);
+    expect(cleaned).not.toMatch(/Summary/);
+    expect(cleaned).not.toMatch(/Learning Outcomes/);
+    expect(cleaned).not.toMatch(/Knowledge/);
+    expect(cleaned).not.toMatch(/Enquiry/);
+    expect(cleaned).not.toMatch(/____/);
+    expect(cleaned).not.toMatch(/fe in the Middle/);
+    expect(cleaned).not.toMatch(/students to use/);
+    expect(cleaned).not.toMatch(/When did the Stone Age start/);
   });
 
   it("turns numbered source sections into a point-form summary", () => {

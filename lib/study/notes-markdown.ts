@@ -91,13 +91,124 @@ export function pointFormSummary(source: string) {
     const title = titled ? head : "";
     const points = summaryPoints(titled ? lines.slice(1).join(" ") : lines.join(" ")).slice(0, 6);
     if (points.length < 1) continue;
-    const heading = title || "Summary";
+    const heading = title || "Notes";
     sections.push([`## ${heading}`, ...points.map((point) => `- ${point}`)].join("\n"));
   }
   if (sections.length) return sections.join("\n\n");
   const points = summaryPoints(source).slice(0, 8);
   if (points.length < 3) return "";
-  return ["## Summary", ...points.map((point) => `- ${point}`)].join("\n");
+  return ["## Notes", ...points.map((point) => `- ${point}`)].join("\n");
+}
+
+const NOISE_HEADING =
+  /^(?:\d+\s*)?(?:summary|enquiry|enquiries|brainstorm|activity|activities|learning outcomes\b.*|knowledge|attitudes and values|historical skills)$/i;
+
+function isNoiseHeading(heading: string) {
+  const text = heading.replace(/^\d+[.)]\s*/, "").replace(/\*\*/g, "").trim();
+  if (NOISE_HEADING.test(text)) return true;
+  return /^learning outcomes\b/i.test(text);
+}
+
+function groupLargeYears(text: string) {
+  return text.replace(/\b(\d{5,})\b/g, (digits) =>
+    digits.replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+  );
+}
+
+function splitPackedBullet(text: string) {
+  const dotted = text
+    .split(/\s+[•●]\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (dotted.length > 1) return dotted;
+  const markers = text.match(/Ape-man|Homo\b|Neanderthal|Lucy\b/gi) || [];
+  if (markers.length < 2) return [text];
+  const parts = text
+    .split(/(?=Ape-man\b|Homo\b|Neanderthal|Lucy\b)/i)
+    .map((part) => part.trim())
+    .filter((part) => part.length >= 12);
+  return parts.length > 1 ? parts : [text];
+}
+
+function isJunkBullet(text: string) {
+  const line = text
+    .replace(/\*\*/g, "")
+    .replace(/^[-*•●]\s+/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!line) return true;
+  if (/_{2,}/.test(line)) return true;
+  if (/[?？]\s*$/.test(line)) return true;
+  if (/students to use|find in the illustration|write down the|according to the timeline/i.test(line)) {
+    return true;
+  }
+  if (/^(knowledge|attitudes and values|historical skills)\b/i.test(line)) return true;
+  if (/division of periods/i.test(line) && !/[.。]/.test(line)) return true;
+  if (/^i what is\b/i.test(line)) return true;
+  if (/^fe in the\b/i.test(line)) return true;
+  if (line.length < 32 && !/[.!?。！？]/.test(line) && !/\d{4}/.test(line)) return true;
+  return false;
+}
+
+type NoteSection = { heading: string; bullets: string[] };
+
+function noteSections(markdown: string): NoteSection[] {
+  const sections: NoteSection[] = [];
+  let current: NoteSection | null = null;
+  for (const raw of sanitizeStudyMarkdown(markdown).split("\n")) {
+    const trimmed = raw.trim();
+    if (!trimmed) continue;
+    const heading = trimmed.match(/^#{1,3}\s+(.+)$/);
+    if (heading) {
+      current = { heading: heading[1].trim(), bullets: [] };
+      sections.push(current);
+      continue;
+    }
+    const bullet = trimmed.replace(/^[-*]\s+/, "").trim();
+    if (!current) {
+      current = { heading: "", bullets: [] };
+      sections.push(current);
+    }
+    current.bullets.push(bullet);
+  }
+  return sections;
+}
+
+/** Drop worksheet lines, invented Summary headings, and ungrouped huge years. */
+export function cleanStudyNotes(markdown: string) {
+  const pending: string[] = [];
+  const kept: NoteSection[] = [];
+  const seen = new Set<string>();
+
+  function take(text: string) {
+    const next = groupLargeYears(text.replace(/^[-*•●]\s+/, "").trim());
+    if (isJunkBullet(next)) return;
+    const key = next.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    pending.push(next);
+  }
+
+  for (const section of noteSections(markdown)) {
+    const bullets = section.bullets.flatMap(splitPackedBullet);
+    if (isNoiseHeading(section.heading) || !section.heading) {
+      if (/^summary$/i.test(section.heading) || !section.heading) {
+        for (const bullet of bullets) take(bullet);
+      }
+      continue;
+    }
+    for (const bullet of bullets) take(bullet);
+    if (!pending.length) continue;
+    kept.push({ heading: groupLargeYears(section.heading), bullets: pending.splice(0) });
+  }
+  if (pending.length && kept.length) kept[kept.length - 1]!.bullets.push(...pending.splice(0));
+
+  return kept
+    .filter((section) => section.bullets.length > 0)
+    .map((section) =>
+      [`## ${section.heading}`, ...section.bullets.map((bullet) => `- ${bullet}`)].join("\n"),
+    )
+    .join("\n\n");
 }
 
 /** If the model skipped headings/bullets, rebuild a point-form summary. */

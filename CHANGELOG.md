@@ -21,6 +21,15 @@ git checkout archive/milton-2026-09-06
 
 ---
 
+## Version 4.5.2 — 2026-10-06
+
+**Miniscule.** Study notes drop the worksheet and then get a cleanup pass.
+
+### Fixed
+- **Study notes**: Questions, fill-in blanks, activities, syllabus boxes, and headings named Summary are removed after the notes are written. A second pass tidies what remains. Years such as 7000000 are written as 7,000,000. The header stays 4.1.1.
+
+---
+
 ## Version 4.5.1 — 2026-10-06
 
 **Miniscule.** The header shows 4.1.1.

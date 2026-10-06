@@ -22,6 +22,7 @@ import { mergeNotesPayloads } from "@/lib/llm/merge-studio";
 import { ollamaGenerateJson } from "@/lib/llm/ollama";
 import { notesSchema, parseNotesPayload } from "@/lib/llm/parse-studio";
 import {
+  cleanStudyNotes,
   forceStudyNotesShape,
   isGlossarySheet,
   notesAreStudyReady,
@@ -58,8 +59,11 @@ function notesOutputRules() {
   return `Put the title only in the title JSON field. Do not repeat it as a # heading in markdown.
 Do not discuss these instructions. Do not explain the language. Markdown is the notes only — no planning sentences.
 Write a point-form summary. Not a glossary. Not a term list.
-Use ## headings taken from the source (its own topics, periods, or processes).
+Use ## headings taken from the source’s teaching topics (what the topic is, how time is measured, the timeline, people).
+Skip learning outcomes, enquiry questions, brainstorms, activities, fill-in blanks, and instructions such as “find in the illustration” or “are students to use.”
+Do not add a heading named Summary, Enquiry, Brainstorm, Activity, or Learning Outcomes.
 Under each heading write only "- " bullets. Each bullet is one complete summary point (a short sentence).
+One event or person per bullet. Write years of 10000 or more with thousands separators, such as 7,000,000 BC.
 3–6 bullets per heading. No paragraphs. No "**Term** definition" lines.
 Do NOT use headings like Key terms, Facts, How to remember, 重點詞彙, 史實與脈絡, or 記誦提示.
 Real newline characters. No invented facts. No Punycode (xn--).`;
@@ -83,6 +87,73 @@ function assertNotesQuality(notes: NotesPayload) {
       ? "Notes leaked instructions"
       : "Notes were not study-ready",
   );
+}
+
+function programmedNotes(notes: NotesPayload): NotesPayload {
+  const markdown = cleanStudyNotes(notes.markdown);
+  if (!notesAreStudyReady(markdown)) return notes;
+  return { title: notes.title, markdown };
+}
+
+async function polishNotes(input: {
+  notes: NotesPayload;
+  language: string;
+  model?: string;
+  provider?: LLMProvider;
+  timeoutMs: number;
+}): Promise<{ notes: NotesPayload; usage: StudioUsage }> {
+  const programmed = programmedNotes(input.notes);
+  if (!notesAreStudyReady(programmed.markdown)) {
+    return { notes: programmed, usage: { inputTokens: 0, outputTokens: 0 } };
+  }
+  const prompt = `Clean these revision notes. Keep the same language and only facts already written here.
+Remove worksheet questions, fill-in blanks, activity instructions, syllabus outcomes, and headings named Summary, Enquiry, Brainstorm, Activity, or Learning Outcomes.
+Put each kept fact under the teaching topic it belongs to. One event or person per bullet.
+Write years of 10000 or more with thousands separators. Do not invent a new date range.
+${studioLanguageRules(input.language)}
+${notesOutputRules()}
+
+Title: ${programmed.title}
+
+Notes:
+${programmed.markdown}`;
+
+  try {
+    const run = async () => {
+      if (input.provider === "ollama") {
+        const object = await ollamaGenerateJson(prompt);
+        return {
+          notes: programmedNotes(parseNotesPayload(object)),
+          usage: { inputTokens: 0, outputTokens: 0 },
+        };
+      }
+      const result = await generateObject({
+        model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
+        schema: notesSchema,
+        abortSignal: AbortSignal.timeout(input.timeoutMs),
+        prompt,
+      });
+      return {
+        notes: programmedNotes(parseNotesPayload(result.object)),
+        usage: readUsage(result),
+      };
+    };
+    const polished = await generateObjectWithRetry(run);
+    const next = cleanStudyNotes(polished.notes.markdown);
+    if (
+      !notesAreStudyReady(next) ||
+      notesContainPromptLeak(next) ||
+      next.length < programmed.markdown.length * 0.45
+    ) {
+      return { notes: programmed, usage: polished.usage };
+    }
+    return {
+      notes: { title: polished.notes.title.trim() || programmed.title, markdown: next },
+      usage: polished.usage,
+    };
+  } catch {
+    return { notes: programmed, usage: { inputTokens: 0, outputTokens: 0 } };
+  }
 }
 
 async function generateNotesSlice(input: {
@@ -178,7 +249,7 @@ export async function generateNotes(input: {
       timeoutMs,
       sectionNote:
         sections.length > 1
-          ? `This is section ${index + 1} of ${sections.length} of a longer source. Cover only this section. Headings from this section’s topics.`
+          ? `This is section ${index + 1} of ${sections.length} of a longer source. Cover only the teaching facts in this section. Skip exercises, syllabus outcomes, and captions.`
           : undefined,
     });
     parts.push(generated.notes);
@@ -187,5 +258,19 @@ export async function generateNotes(input: {
       outputTokens: usage.outputTokens + generated.usage.outputTokens,
     };
   }
-  return { notes: mergeNotesPayloads(parts, language), usage };
+  const merged = programmedNotes(mergeNotesPayloads(parts, language));
+  const polished = await polishNotes({
+    notes: merged,
+    language,
+    model: input.model,
+    provider: input.provider,
+    timeoutMs: 30_000,
+  });
+  return {
+    notes: polished.notes,
+    usage: {
+      inputTokens: usage.inputTokens + polished.usage.inputTokens,
+      outputTokens: usage.outputTokens + polished.usage.outputTokens,
+    },
+  };
 }
