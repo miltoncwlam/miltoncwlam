@@ -18,7 +18,12 @@ import {
   type ExamSubjectBrain,
   type ExamSystem,
 } from "@/lib/llm/exam-profiles";
-import { generateObjectWithRetry } from "@/lib/llm/generate-object-retry";
+import {
+  generateObjectWithRetry,
+  isGenerateTimeout,
+  shorterStudySource,
+  studyPoints,
+} from "@/lib/llm/generate-object-retry";
 import { mergeNotesPayloads } from "@/lib/llm/merge-studio";
 import { ollamaGenerateJson } from "@/lib/llm/ollama";
 import { notesSchema, parseNotesPayload } from "@/lib/llm/parse-studio";
@@ -81,6 +86,19 @@ function shapeNotes(notes: NotesPayload, _language: string, fallbackSource: stri
   return { title, markdown: cleaned || fromSource };
 }
 
+function notesDespiteTimeout(source: string): NotesPayload {
+  const shaped = shapeNotes({ title: "Study notes", markdown: "" }, "en", source);
+  if (notesAreStudyReady(shaped.markdown) && !notesContainPromptLeak(shaped.markdown)) {
+    return shaped;
+  }
+  const points = studyPoints(source, 6);
+  const markdown = ["## Notes", ...points.map((point) => `- ${point}`)].join("\n");
+  if (!notesAreStudyReady(markdown) || notesContainPromptLeak(markdown)) {
+    throw new Error("Not enough usable study content. Add more notes or try a longer source.");
+  }
+  return { title: shaped.title || "Study notes", markdown };
+}
+
 function assertNotesQuality(notes: NotesPayload) {
   if (notesAreStudyReady(notes.markdown)) return;
   throw new Error(
@@ -134,6 +152,7 @@ ${programmed.markdown}`;
         model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
         schema: notesSchema,
         abortSignal: AbortSignal.timeout(input.timeoutMs),
+        maxRetries: 0,
         prompt,
       });
       return {
@@ -171,6 +190,8 @@ async function generateNotesSlice(input: {
   sectionNote?: string;
   requirements?: string;
   timeoutMs: number;
+  allowShorter?: boolean;
+  deadlineMs?: number;
 }): Promise<{ notes: NotesPayload; usage: StudioUsage }> {
   const prompt = `Write revision-sheet study notes from this source.
 ${studioLanguageRules(input.language)}
@@ -187,6 +208,11 @@ ${input.sectionNote ?? ""}
 Source:
 ${input.source}`;
 
+  const deadline = input.deadlineMs ?? Number.POSITIVE_INFINITY;
+  if (Date.now() + 12_000 >= deadline) {
+    return { notes: notesDespiteTimeout(input.source), usage: { inputTokens: 0, outputTokens: 0 } };
+  }
+
   async function run() {
     if (input.provider === "ollama") {
       const object = await ollamaGenerateJson(prompt);
@@ -198,6 +224,7 @@ ${input.source}`;
       model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
       schema: notesSchema,
       abortSignal: AbortSignal.timeout(input.timeoutMs),
+      maxRetries: 0,
       prompt,
     });
     const notes = shapeNotes(parseNotesPayload(result.object), input.language, input.source);
@@ -208,18 +235,24 @@ ${input.source}`;
   try {
     return await generateObjectWithRetry(run);
   } catch (error) {
-    const name = error instanceof Error ? error.name : "";
-    const message = error instanceof Error ? error.message : String(error);
-    if (!/timeout|aborted|timed out|TimeoutError|AbortError/i.test(`${name} ${message}`)) {
-      throw error;
+    if (!isGenerateTimeout(error)) throw error;
+    if (
+      input.allowShorter !== false &&
+      input.source.trim().length > 2_500 &&
+      Date.now() + 22_000 < deadline
+    ) {
+      return generateNotesSlice({
+        ...input,
+        source: shorterStudySource(input.source),
+        allowShorter: false,
+        timeoutMs: 20_000,
+        sectionNote: `${input.sectionNote ?? ""} The previous attempt ran long. Cover only this shorter cut.`.trim(),
+      });
     }
-    const notes = shapeNotes(
-      { title: "Study notes", markdown: "" },
-      input.language,
-      input.source,
-    );
-    if (!notesAreStudyReady(notes.markdown)) throw error;
-    return { notes, usage: { inputTokens: 0, outputTokens: 0 } };
+    return {
+      notes: notesDespiteTimeout(input.source),
+      usage: { inputTokens: 0, outputTokens: 0 },
+    };
   }
 }
 
@@ -243,6 +276,7 @@ export async function generateNotes(input: {
     studioNotesChunkChars(depth),
   );
   const timeoutMs = 40_000;
+  const deadlineMs = Date.now() + 110_000;
   const parts: NotesPayload[] = [];
   let usage: StudioUsage = { inputTokens: 0, outputTokens: 0 };
   for (const [index, section] of sections.entries()) {
@@ -253,6 +287,7 @@ export async function generateNotes(input: {
       depth,
       purpose,
       timeoutMs,
+      deadlineMs,
       sectionNote:
         sections.length > 1
           ? `This is section ${index + 1} of ${sections.length} of a longer source. Cover only the teaching facts in this section. Skip exercises, syllabus outcomes, and captions.`

@@ -4,6 +4,8 @@ export const CAMPAIGN_ENDS_AT = Date.UTC(2026, 8, 23, 0, 0, 0);
 export const V41_RELEASES_AT = Date.UTC(2026, 8, 25, 10, 0, 0);
 /** Version 4.2.0: document library. 6 Oct 2026 21:30 HKT. */
 export const V42_RELEASES_AT = Date.UTC(2026, 9, 6, 13, 30, 0);
+/** Version 4.2.1: each document opens on its own page. 6 Oct 2026 21:45 HKT. */
+export const V421_RELEASES_AT = Date.UTC(2026, 9, 6, 13, 45, 0);
 /** Version 4.3.0: Today queue and exam history. 24 Oct 2026 10:00 UTC. */
 export const V43_RELEASES_AT = Date.UTC(2026, 9, 24, 10, 0, 0);
 /** Version 4.4.0: community. 11 Nov 2026 10:00 UTC. */
@@ -31,6 +33,10 @@ export function isV41Released(now = Date.now()) {
 
 export function isV42Released(now = Date.now()) {
   return now >= V42_RELEASES_AT;
+}
+
+export function isV421Released(now = Date.now()) {
+  return now >= V421_RELEASES_AT;
 }
 
 export function isV43Released(now = Date.now()) {

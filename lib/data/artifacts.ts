@@ -86,6 +86,35 @@ export async function getDeckArtifact(
   return result.rows[0] ? mapArtifact(result.rows[0]) : null;
 }
 
+export async function getDeckArtifactById(
+  deckId: string,
+  artifactId: string,
+): Promise<DeckArtifact | null> {
+  const result = await pool.query<ArtifactRow>(
+    `select * from deck_artifacts
+     where deck_id = $1 and id = $2`,
+    [deckId, artifactId],
+  );
+  return result.rows[0] ? mapArtifact(result.rows[0]) : null;
+}
+
+export async function deleteDeckArtifact(input: {
+  deckId: string;
+  artifactId: string;
+  userId: string;
+}): Promise<boolean> {
+  const result = await pool.query(
+    `delete from deck_artifacts a
+     using decks d
+     where a.id = $1
+       and a.deck_id = $2
+       and d.id = a.deck_id
+       and d.user_id = $3`,
+    [input.artifactId, input.deckId, input.userId],
+  );
+  return (result.rowCount ?? 0) > 0;
+}
+
 export async function upsertDeckArtifact(input: {
   deckId: string;
   kind: ArtifactKind;

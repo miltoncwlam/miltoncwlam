@@ -659,7 +659,9 @@
     "sourceButton": "Source",
     "requirements": "Consignes",
     "requirementsHint": "Facultatif. Dis ce qu’il faut viser, laisser de côté ou inclure.",
-    "librarySubtitle": "Ouvre un document, ou génères-en un autre. Les notes peuvent s’ajouter."
+    "librarySubtitle": "Ouvre un document, ou génères-en un autre. Les notes peuvent s’ajouter.",
+    "backToNotebook": "Retour au cahier",
+    "deleteDocument": "Supprimer le document"
   },
   "chat": {
     "eyebrow": "Ask this notebook",

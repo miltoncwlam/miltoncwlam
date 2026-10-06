@@ -14,7 +14,12 @@ import {
   notesSectionHeadings,
   mindmapLabelRules,
 } from "@/lib/i18n/locales";
-import { isRetryableGenerateError } from "@/lib/llm/generate-object-retry";
+import {
+  isGenerateTimeout,
+  isRetryableGenerateError,
+  shorterStudySource,
+  studyPoints,
+} from "@/lib/llm/generate-object-retry";
 import {
   examCouldNotMarkResult,
   gradeExamExact,
@@ -586,6 +591,18 @@ describe("generate retry", () => {
     expect(isRetryableGenerateError(new Error("This operation was aborted"))).toBe(
       false,
     );
+    expect(shorterStudySource("x".repeat(8_000)).length).toBeLessThan(4_000);
+    expect(shorterStudySource("short note")).toBe("short note");
+    expect(
+      isGenerateTimeout(
+        new Error("Failed after 2 attempts", { cause: new Error("The operation was aborted due to timeout") }),
+      ),
+    ).toBe(true);
+    expect(
+      studyPoints(
+        "Photosynthesis converts light into chemical energy. Chlorophyll absorbs sunlight. Oxygen is released as a byproduct.",
+      ).length,
+    ).toBe(3);
     expect(isRetryableGenerateError(new Error("Notes leaked instructions"))).toBe(true);
     expect(isRetryableGenerateError(new Error("Notes were not study-ready"))).toBe(true);
     expect(isRetryableGenerateError(new Error("Unauthorized"))).toBe(false);

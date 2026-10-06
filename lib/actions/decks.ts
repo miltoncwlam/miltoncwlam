@@ -5,8 +5,10 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { requireSession } from "@/lib/auth-server";
+import { deleteDeckArtifact } from "@/lib/data/artifacts";
 import {
   deleteDeck,
+  deleteDeckCards,
   duplicateDeck,
   renameDeck,
   setDeckArchived,
@@ -32,6 +34,25 @@ export async function createSampleDeckAction() {
   const session = await requireSession();
   const deckId = await createSampleDeck(session.user.id);
   revalidatePath("/decks");
+  redirect(`/decks/${deckId}`);
+}
+
+export async function deleteDocumentAction(formData: FormData) {
+  const session = await requireSession();
+  const deckId = idSchema.parse(formData.get("deckId"));
+  if (formData.get("kind") === "cards") {
+    const ok = await deleteDeckCards(deckId, session.user.id);
+    if (!ok) throw new Error("Notebook not found");
+  } else {
+    const artifactId = idSchema.parse(formData.get("artifactId"));
+    const ok = await deleteDeckArtifact({
+      deckId,
+      artifactId,
+      userId: session.user.id,
+    });
+    if (!ok) throw new Error("Document not found");
+  }
+  revalidatePath(`/decks/${deckId}`);
   redirect(`/decks/${deckId}`);
 }
 

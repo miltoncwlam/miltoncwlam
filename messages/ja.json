@@ -659,7 +659,9 @@
     "sourceButton": "原文",
     "requirements": "要望",
     "requirementsHint": "任意。重点、省略、含めたいことを書いてください。",
-    "librarySubtitle": "文書を開くか、新しく作ります。学習ノートは何枚でも作れます。"
+    "librarySubtitle": "文書を開くか、新しく作ります。学習ノートは何枚でも作れます。",
+    "backToNotebook": "ノートに戻る",
+    "deleteDocument": "文書を削除"
   },
   "chat": {
     "eyebrow": "Ask this notebook",

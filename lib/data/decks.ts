@@ -667,6 +667,16 @@ export async function updateCard(
   return Boolean(result.rowCount);
 }
 
+export async function deleteDeckCards(deckId: string, userId: string): Promise<boolean> {
+  const owned = await pool.query(
+    "select id from decks where id = $1 and user_id = $2",
+    [deckId, userId],
+  );
+  if (!owned.rowCount) return false;
+  await pool.query("delete from cards where deck_id = $1", [deckId]);
+  return true;
+}
+
 export async function getDeckById(deckId: string): Promise<Deck | null> {
   const result = await pool.query<DeckRow>(
     "select * from decks where id = $1",

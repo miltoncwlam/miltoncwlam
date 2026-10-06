@@ -21,6 +21,24 @@ git checkout archive/milton-2026-09-06
 
 ---
 
+## Version 4.7.0 — 2026-10-06
+
+**Minor.** Each document is its own page, and a slow model finishes a shorter cut instead of stopping.
+
+### Added
+- **Document page**: Source, study notes, the mind map, the exam, and flashcards each open on their own page. Back returns to the notebook.
+- **Delete document**: Notes, the mind map, the exam, and flashcards can be deleted from that page. The source stays.
+
+### Changed
+- **Header**: Version 4.2.1 from 6 Oct 2026, 9:45 PM HKT. Today, community, and the editable mind map stay on their later clocks.
+
+### Fixed
+- **Slow model**: If a generate runs long, it tries once on a shorter cut of the source, then writes notes, a map, an exam, or cards from that cut. The notebook no longer stops on “The model took too long.”
+
+Existing notes, mind maps, and exam papers were removed. Cards and sources stay.
+
+---
+
 ## Version 4.6.0 — 2026-10-06
 
 **Minor.** A notebook opens as documents.

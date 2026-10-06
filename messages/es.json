@@ -659,7 +659,9 @@
     "sourceButton": "Fuente",
     "requirements": "Requisitos",
     "requirementsHint": "Opcional. Di en qué centrarte, qué omitir o qué incluir.",
-    "librarySubtitle": "Abre un documento o genera otro. Puedes tener varias notas."
+    "librarySubtitle": "Abre un documento o genera otro. Puedes tener varias notas.",
+    "backToNotebook": "Volver al cuaderno",
+    "deleteDocument": "Eliminar documento"
   },
   "chat": {
     "eyebrow": "Ask this notebook",

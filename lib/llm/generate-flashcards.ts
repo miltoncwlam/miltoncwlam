@@ -12,10 +12,16 @@ import {
   studioIntentRules,
   studioLanguageRules,
   studioRequirementsLine,
+  studioSourceSlice,
   type StudioDepth,
   type StudioPurpose,
 } from "@/lib/i18n/locales";
 import { mergeGeneratedDecks } from "@/lib/llm/merge-decks";
+import {
+  isGenerateTimeout,
+  shorterStudySource,
+  studyPoints,
+} from "@/lib/llm/generate-object-retry";
 import { ollamaGenerateJson, ollamaModelId } from "@/lib/llm/ollama";
 import {
   flashcardSchemaForCount,
@@ -27,6 +33,7 @@ import {
 } from "@/lib/llm/parse-deck-json";
 import type {
   GeneratedDeck,
+  GeneratedFlashcard,
   LLMProvider,
   QuestionStyle,
 } from "@/lib/types/flashcard";
@@ -286,7 +293,7 @@ async function generateWithOllama(
   const instructions =
     prompt.kind === "topic"
       ? `${topicGenerationInstructions(options)}\n\nTopic:\n${prompt.topic.trim().slice(0, 200)}`
-      : `${generationInstructions(options)}\n\nStudy material:\n${prompt.content.slice(0, 80_000)}`;
+      : `${generationInstructions(options)}\n\nStudy material:\n${studioSourceSlice(prompt.content, options.depth ?? "basic")}`;
   let deck = parseGeneratedDeck(await ollamaChat(instructions), {
     expectedCardCount: cardCount,
     softCount: true,
@@ -321,6 +328,7 @@ async function refillWithCloud(
             model: getModel(options.model),
             schema,
             abortSignal: AbortSignal.timeout(45_000),
+            maxRetries: 0,
             messages: [
               {
                 role: "user",
@@ -339,6 +347,7 @@ async function refillWithCloud(
             model: getModel(options.model),
             schema,
             abortSignal: AbortSignal.timeout(45_000),
+            maxRetries: 0,
             prompt: extraPrompt,
           });
     const extra = parseGeneratedDeck(result.object, {
@@ -372,6 +381,24 @@ async function generateWithPreferred(
   return generateWithCloud(prompt, options);
 }
 
+function cardsDespiteTimeout(source: string): GeneratedFlashcard[] {
+  return studyPoints(source, 12).map((point) => {
+    const words = point.replace(/[.!?。！？]$/, "").split(/\s+/).filter(Boolean);
+    if (words.length >= 6) {
+      return {
+        front: `${words.slice(0, -3).join(" ")} ____`.slice(0, 160),
+        back: words.slice(-3).join(" "),
+        type: "cloze" as const,
+      };
+    }
+    return {
+      front: "What does the source say about this?",
+      back: point.slice(0, 220),
+      type: "qa" as const,
+    };
+  });
+}
+
 async function generateWithCloud(
   prompt:
     | { kind: "text"; content: string }
@@ -382,6 +409,10 @@ async function generateWithCloud(
   let lastError: unknown;
   const cardCount = requestedCount(options);
   const schema = flashcardSchemaForCount(cardCount);
+  let studyText =
+    prompt.kind === "text"
+      ? studioSourceSlice(prompt.content, options.depth ?? "basic")
+      : "";
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
@@ -390,20 +421,23 @@ async function generateWithCloud(
           ? await generateObject({
               model: getModel(options.model),
               schema,
-              abortSignal: AbortSignal.timeout(45_000),
-              prompt: `${generationInstructions(options)}\n\nStudy material:\n${prompt.content.slice(0, 80_000)}`,
+              abortSignal: AbortSignal.timeout(attempt === 0 ? 50_000 : 25_000),
+              maxRetries: 0,
+              prompt: `${generationInstructions(options)}\n\nStudy material:\n${studyText}`,
             })
           : prompt.kind === "topic"
             ? await generateObject({
                 model: getModel(options.model),
                 schema,
                 abortSignal: AbortSignal.timeout(45_000),
+                maxRetries: 0,
                 prompt: `${topicGenerationInstructions(options)}\n\nTopic:\n${prompt.topic.trim().slice(0, 200)}`,
               })
             : await generateObject({
                 model: getModel(options.model),
                 schema,
                 abortSignal: AbortSignal.timeout(60_000),
+                maxRetries: 0,
                 messages: [
                   {
                     role: "user",
@@ -432,6 +466,30 @@ async function generateWithCloud(
     } catch (error) {
       if (error instanceof UnrelatedSourceError) throw error;
       lastError = error;
+      if (
+        prompt.kind === "text" &&
+        isGenerateTimeout(error) &&
+        studyText.length > 2_500
+      ) {
+        const next = shorterStudySource(studyText);
+        if (next.length < studyText.length) {
+          studyText = next;
+          continue;
+        }
+        break;
+      }
+    }
+  }
+
+  if (prompt.kind === "text" && isGenerateTimeout(lastError)) {
+    const cards = cardsDespiteTimeout(studyText);
+    if (cards.length >= 3) {
+      return {
+        title: "Flashcards",
+        cards,
+        usage: { inputTokens: 0, outputTokens: 0 },
+        requestedCardCount: cardCount,
+      };
     }
   }
 

@@ -6,7 +6,12 @@ import {
   getOpenRouterClient,
   resolveOpenRouterModel,
 } from "@/lib/llm/config";
-import { generateObjectWithRetry } from "@/lib/llm/generate-object-retry";
+import {
+  generateObjectWithRetry,
+  isGenerateTimeout,
+  shorterStudySource,
+  studyPoints,
+} from "@/lib/llm/generate-object-retry";
 import { ollamaGenerateJson } from "@/lib/llm/ollama";
 import {
   clampExamDurationMinutes,
@@ -40,6 +45,35 @@ function readUsage(result: {
     inputTokens: Number.isFinite(inputTokens) ? inputTokens : 0,
     outputTokens: Number.isFinite(outputTokens) ? outputTokens : 0,
   };
+}
+
+function examDespiteTimeout(source: string, duration: number): ExamPayload {
+  const points = studyPoints(source, 8);
+  const questions = points.slice(0, 8).map((point, index) => {
+    const words = point.replace(/[.!?。！？]$/, "").split(/\s+/).filter(Boolean);
+    const cloze = words.length >= 6;
+    const answer = cloze ? words.slice(-3).join(" ") : point;
+    const prompt = cloze
+      ? `${words.slice(0, -3).join(" ")} ____`
+      : `Write one sentence about: ${words.slice(0, 8).join(" ")}`;
+    return {
+      id: `q${index + 1}`,
+      type: cloze ? ("cloze_free" as const) : ("short" as const),
+      prompt: prompt.slice(0, 1_000),
+      marks: 2,
+      answer: answer.slice(0, 500),
+      markScheme: point.slice(0, 400),
+    };
+  });
+  if (questions.length < 1) {
+    throw new Error("Not enough usable study content. Add more notes or try a longer source.");
+  }
+  return parseExamPayload({
+    title: "Exam paper",
+    instructions: "This paper uses a shorter cut of the source because the full draft ran long.",
+    durationMinutes: duration,
+    questions,
+  });
 }
 
 function addUsage(a: StudioUsage, b: StudioUsage): StudioUsage {
@@ -86,6 +120,7 @@ export async function generateExam(input: {
     (purpose === "exam" ? "advanced" : depth === "detailed" ? "intermediate" : "beginner");
   const mix = typeCounts(sequence);
   const tf = trueFalseChoices(input.language);
+  const sourceText = studioSourceSlice(input.source, depth);
   const examPrompt = `Write a ${difficulty} exam paper from this source.
 ${studioLanguageRules(input.language ?? "en")}
 ${studioIntentRules(depth, purpose, "exam")}
@@ -108,21 +143,39 @@ Keep each item short enough that a student can finish all ${count} questions in 
 Questions must be answerable from the source. No invented facts.
 ${studioRequirementsLine(input.requirements)}
 Source:
-${studioSourceSlice(input.source, depth)}`;
-  const result =
-    input.provider === "ollama"
-      ? {
-          object: examSchema.parse(await ollamaGenerateJson(examPrompt)),
-          usage: { inputTokens: 0, outputTokens: 0 },
-        }
-      : await generateObjectWithRetry(() =>
-          generateObject({
-            model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
-            schema: examSchema,
-            abortSignal: AbortSignal.timeout(50_000),
-            prompt: examPrompt,
-          }),
-        );
+${sourceText}`;
+  const askExam = async (prompt: string, timeoutMs: number) => {
+    if (input.provider === "ollama") {
+      return {
+        object: examSchema.parse(await ollamaGenerateJson(prompt)),
+        usage: { inputTokens: 0, outputTokens: 0 },
+      };
+    }
+    return generateObjectWithRetry(() =>
+      generateObject({
+        model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
+        schema: examSchema,
+        abortSignal: AbortSignal.timeout(timeoutMs),
+        maxRetries: 0,
+        prompt,
+      }),
+    );
+  };
+  let result;
+  try {
+    try {
+      result = await askExam(examPrompt, 55_000);
+    } catch (error) {
+      if (!isGenerateTimeout(error) || sourceText.length <= 2_500) throw error;
+      const shorter = shorterStudySource(sourceText);
+      const shorterPrompt = examPrompt.replace(sourceText, shorter);
+      result = await askExam(shorterPrompt, 20_000);
+    }
+  } catch (error) {
+    if (!isGenerateTimeout(error)) throw error;
+    const exam = examDespiteTimeout(shorterStudySource(sourceText), duration);
+    return { exam, usage: { inputTokens: 0, outputTokens: 0 } };
+  }
   let usage = readUsage(result);
   let exam = parseExamPayload({
     ...result.object,
@@ -156,6 +209,7 @@ ${studioSourceSlice(input.source, depth)}`;
                 model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
                 schema: examFillSchema,
                 abortSignal: AbortSignal.timeout(20_000),
+              maxRetries: 0,
                 prompt: fillPrompt,
               }),
             );

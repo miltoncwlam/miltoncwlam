@@ -8,7 +8,6 @@ import { useGenerationJobs } from "@/components/generation-jobs";
 import { ExamLaneChips } from "@/components/exam-lane-chips";
 import { MindmapTree } from "@/components/mindmap-tree";
 import { StudyNotesView } from "@/components/study-notes-view";
-import { updateCardAction } from "@/lib/actions/decks";
 import { friendlyGenerateError } from "@/lib/friendly-generate-error";
 import { isV45FeaturesLive } from "@/lib/campaign";
 import type { ExamSystem } from "@/lib/llm/exam-profiles";
@@ -75,7 +74,6 @@ export function NotebookStudio({
   const [purpose, setPurpose] = useState<StudioPurpose>("starter");
   const [requirements, setRequirements] = useState("");
   const [examOpen, setExamOpen] = useState(false);
-  const [openId, setOpenId] = useState<string | null>(null);
 
   const tiles = useMemo(
     () =>
@@ -166,11 +164,6 @@ export function NotebookStudio({
       };
     });
   }, [library, t]);
-  const openDoc = documentButtons.find((doc) => doc.id === openId) ?? null;
-
-  function toggleOpen(id: string) {
-    setOpenId((current) => (current === id ? null : id));
-  }
 
   return (
     <section className="studio-panel space-y-6">
@@ -191,34 +184,22 @@ export function NotebookStudio({
       </div>
       {library ? (
         <div className="no-print flex flex-wrap gap-2">
-          <button
-            aria-pressed={openId === "source"}
-            className="secondary-button"
-            onClick={() => toggleOpen("source")}
-            type="button"
-          >
+          <Link className="secondary-button" href={`/decks/${deckId}/doc/source`}>
             {t("sourceButton")}
-          </button>
+          </Link>
           {documentButtons.map((doc) => (
-            <button
-              aria-pressed={openId === doc.id}
+            <Link
               className="secondary-button"
+              href={`/decks/${deckId}/doc/${doc.id}`}
               key={doc.id}
-              onClick={() => toggleOpen(doc.id)}
-              type="button"
             >
               {doc.label}
-            </button>
+            </Link>
           ))}
           {library.cards.length ? (
-            <button
-              aria-pressed={openId === "cards"}
-              className="secondary-button"
-              onClick={() => toggleOpen("cards")}
-              type="button"
-            >
+            <Link className="secondary-button" href={`/decks/${deckId}/doc/cards`}>
               {t("cards")}
-            </button>
+            </Link>
           ) : null}
         </div>
       ) : null}
@@ -346,86 +327,23 @@ export function NotebookStudio({
         )}
       </div>
 
-      {library && openId === "source" ? (
-        <section>
-          <p className="eyebrow">{t("sourceButton")}</p>
-          <h2 className="mt-2 text-2xl font-black">{library.sourceHeading}</h2>
-          {library.sourcePreview ? (
-            <pre className="notebook-source-body">{library.sourcePreview}</pre>
-          ) : (
-            <p className="mt-3 text-sm text-slate-600">{t("noSource")}</p>
-          )}
-        </section>
-      ) : null}
-      {library && openDoc?.status === "failed" ? (
-        <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-900">
-          {openDoc.error || t("generating")}
-        </p>
-      ) : null}
-      {library && openDoc?.status === "processing" ? (
-        <p className="rounded-xl bg-indigo-50 px-3 py-2 text-sm text-indigo-950">{t("generating")}</p>
-      ) : null}
-      {library && openId === "cards" ? (
-        <section className="space-y-4">
-          <h2 className="text-xl font-black">{t("cards")}</h2>
-          {library.cards.map((card, index) => (
-            <form
-              action={updateCardAction}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-              key={card.id}
-            >
-              <input name="cardId" type="hidden" value={card.id} />
-              <input name="deckId" type="hidden" value={deckId} />
-              <p className="mb-4 text-xs font-black uppercase tracking-widest text-indigo-600">
-                {t("cards")} {index + 1}
-                {card.cardType && card.cardType !== "qa" ? ` · ${card.cardType}` : ""}
-              </p>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="space-y-2">
-                  <span className="text-sm font-bold">Front</span>
-                  <textarea className="field min-h-28" defaultValue={card.front} name="front" required />
-                </label>
-                <label className="space-y-2">
-                  <span className="text-sm font-bold">Back</span>
-                  <textarea className="field min-h-28" defaultValue={card.back} name="back" required />
-                </label>
-                <label className="space-y-2">
-                  <span className="text-sm font-bold">Hint</span>
-                  <input className="field" defaultValue={card.hint ?? ""} name="hint" />
-                </label>
-                <label className="space-y-2">
-                  <span className="text-sm font-bold">Category</span>
-                  <input className="field" defaultValue={card.category ?? ""} name="category" />
-                </label>
-              </div>
-              <button className="secondary-button mt-4" type="submit">
-                Save card
-              </button>
-            </form>
-          ))}
-        </section>
-      ) : null}
-
-      {(library ? openDoc?.mindmap?.nodes?.length : mindmap?.nodes?.length) ? (
+      {!library && mindmap?.nodes?.length ? (
         <MindmapTree
           deckId={deckId}
           editable={isV45FeaturesLive()}
-          key={(library ? openDoc?.mindmap : mindmap)?.nodes.map((node) => node.id).join("-")}
-          nodes={(library ? openDoc?.mindmap : mindmap)!.nodes}
-          title={(library ? openDoc?.mindmap : mindmap)!.title}
+          key={mindmap.nodes.map((node) => node.id).join("-")}
+          nodes={mindmap.nodes}
+          title={mindmap.title}
         />
       ) : null}
-      {(library ? openDoc?.notes?.markdown : notes?.markdown) ? (
-        <StudyNotesView
-          markdown={(library ? openDoc?.notes : notes)!.markdown}
-          title={(library ? openDoc?.notes : notes)!.title ?? ""}
-        />
+      {!library && notes?.markdown ? (
+        <StudyNotesView markdown={notes.markdown} title={notes.title ?? ""} />
       ) : null}
-      {(library ? openDoc?.exam?.questions?.length : exam?.questions?.length) ? (
+      {!library && exam?.questions?.length ? (
         <section className="no-print rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="text-xl font-black">{(library ? openDoc?.exam : exam)!.title}</h2>
+          <h2 className="text-xl font-black">{exam.title}</h2>
           <p className="mt-2 text-sm text-slate-600">
-            {(library ? openDoc?.exam : exam)!.questions.length} {t("questions")}
+            {exam.questions.length} {t("questions")}
           </p>
           <a className="primary-button mt-4 inline-flex" href={`/decks/${deckId}/exam`}>
             {t("takeExam")}

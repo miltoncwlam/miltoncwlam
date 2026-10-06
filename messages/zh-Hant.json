@@ -732,7 +732,9 @@
     "sourceButton": "原文",
     "requirements": "要求",
     "requirementsHint": "可選。寫下要聚焦、略過或包含的內容。",
-    "librarySubtitle": "打開一份文件，或再生成一份。溫習筆記可以有多份。"
+    "librarySubtitle": "打開一份文件，或再生成一份。溫習筆記可以有多份。",
+    "backToNotebook": "返回筆記簿",
+    "deleteDocument": "刪除文件"
   },
   "chat": {
     "eyebrow": "問這本筆記",

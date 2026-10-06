@@ -14,7 +14,12 @@ import {
   getOpenRouterClient,
   resolveOpenRouterModel,
 } from "@/lib/llm/config";
-import { generateObjectWithRetry } from "@/lib/llm/generate-object-retry";
+import {
+  generateObjectWithRetry,
+  isGenerateTimeout,
+  shorterStudySource,
+  studyPoints,
+} from "@/lib/llm/generate-object-retry";
 import { examProfileRules, type ExamSubjectBrain, type ExamSystem } from "@/lib/llm/exam-profiles";
 import { mindmapFromSource } from "@/lib/mindmap/from-source";
 import { mergeMindmapPayloads } from "@/lib/llm/merge-studio";
@@ -46,6 +51,24 @@ function readUsage(result: {
   };
 }
 
+function mindmapDespiteTimeout(source: string): MindmapPayload {
+  const mindmap = mindmapFromSource(source);
+  if (mindmap.nodes.length >= 4) return mindmap;
+  const nodes = [...mindmap.nodes];
+  if (!nodes.length) nodes.push({ id: "n1", parentId: null, label: mindmap.title || "Study map" });
+  const rootId = nodes[0]!.id;
+  let next = nodes.length + 1;
+  for (const point of studyPoints(source, 8)) {
+    if (nodes.length >= 6) break;
+    nodes.push({ id: `n${next}`, parentId: rootId, label: point.slice(0, 72) });
+    next += 1;
+  }
+  if (nodes.length < 4) {
+    throw new Error("Not enough usable study content. Add more notes or try a longer source.");
+  }
+  return parseMindmapPayload({ title: mindmap.title || "Study map", nodes });
+}
+
 async function generateMindmapSlice(input: {
   source: string;
   language?: string;
@@ -58,6 +81,8 @@ async function generateMindmapSlice(input: {
   sectionNote?: string;
   requirements?: string;
   timeoutMs: number;
+  allowShorter?: boolean;
+  deadlineMs?: number;
 }): Promise<{ mindmap: MindmapPayload; usage: StudioUsage }> {
   const prompt = `Build a study mind map as a flat node list from this source.
 ${studioLanguageRules(input.language ?? "en")}
@@ -78,6 +103,10 @@ ${input.sectionNote ?? ""}
 
 Source:
 ${input.source}`;
+  const deadline = input.deadlineMs ?? Number.POSITIVE_INFINITY;
+  if (Date.now() + 12_000 >= deadline) {
+    return { mindmap: mindmapDespiteTimeout(input.source), usage: { inputTokens: 0, outputTokens: 0 } };
+  }
   if (input.provider === "ollama") {
     return {
       mindmap: parseMindmapPayload(await ollamaGenerateJson(prompt)),
@@ -90,6 +119,7 @@ ${input.source}`;
         model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
         schema: mindmapSchema,
         abortSignal: AbortSignal.timeout(input.timeoutMs),
+        maxRetries: 0,
         prompt,
       }),
     );
@@ -100,12 +130,27 @@ ${input.source}`;
   } catch (error) {
     const name = error instanceof Error ? error.name : "";
     const message = error instanceof Error ? error.message : String(error);
-    if (!/timeout|aborted|timed out|TimeoutError|AbortError|No object generated|NoObjectGenerated/i.test(`${name} ${message}`)) {
+    if (
+      isGenerateTimeout(error) &&
+      input.allowShorter !== false &&
+      input.source.trim().length > 2_500 &&
+      Date.now() + 22_000 < deadline
+    ) {
+      return generateMindmapSlice({
+        ...input,
+        source: shorterStudySource(input.source),
+        allowShorter: false,
+        timeoutMs: 20_000,
+        sectionNote: `${input.sectionNote ?? ""} The previous attempt ran long. Cover only this shorter cut.`.trim(),
+      });
+    }
+    if (
+      !isGenerateTimeout(error) &&
+      !/No object generated|NoObjectGenerated/i.test(`${name} ${message}`)
+    ) {
       throw error;
     }
-    const mindmap = mindmapFromSource(input.source);
-    if (mindmap.nodes.length < 4) throw error;
-    return { mindmap, usage: { inputTokens: 0, outputTokens: 0 } };
+    return { mindmap: mindmapDespiteTimeout(input.source), usage: { inputTokens: 0, outputTokens: 0 } };
   }
 }
 
@@ -124,6 +169,7 @@ export async function generateMindmap(input: {
   const purpose = input.purpose ?? "starter";
   const sections = studioSourceSections(input.source, depth, depth === "detailed" ? 6_000 : 4_000);
   const timeoutMs = 45_000;
+  const deadlineMs = Date.now() + 110_000;
   const parts: MindmapPayload[] = [];
   let usage: StudioUsage = { inputTokens: 0, outputTokens: 0 };
   for (const [index, section] of sections.entries()) {
@@ -133,6 +179,7 @@ export async function generateMindmap(input: {
       depth,
       purpose,
       timeoutMs,
+      deadlineMs,
       sectionNote:
         sections.length > 1
           ? `This is section ${index + 1} of ${sections.length}. Cover only this section. Root is still the overall topic.`
@@ -192,6 +239,7 @@ ${snippet}`;
       model: getOpenRouterClient()(resolveOpenRouterModel(input.model)),
       schema: childrenSchema,
       abortSignal: AbortSignal.timeout(40_000),
+      maxRetries: 0,
       prompt,
     }),
   );

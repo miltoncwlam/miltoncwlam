@@ -9,6 +9,7 @@ import {
   V411_VERSION,
   V412_VERSION,
   V42_VERSION,
+  V421_VERSION,
   V43_VERSION,
   V44_VERSION,
   V45_VERSION,
@@ -22,6 +23,7 @@ import {
   FREE_MODEL_CAMPAIGN_RATE,
   V41_RELEASES_AT,
   V42_RELEASES_AT,
+  V421_RELEASES_AT,
   V43_RELEASES_AT,
   V44_RELEASES_AT,
   V411_RELEASES_AT,
@@ -31,6 +33,7 @@ import {
   isV4GenerallyAvailable,
   isV41Released,
   isV42Released,
+  isV421Released,
   isV43Released,
   isV44Released,
   isV45Released,
@@ -47,6 +50,7 @@ describe("v4 beta gate", () => {
     expect(V411_VERSION).toBe("4.1.1");
     expect(V412_VERSION).toBe("4.1.2");
     expect(V42_VERSION).toBe("4.2.0");
+    expect(V421_VERSION).toBe("4.2.1");
     expect(V43_VERSION).toBe("4.3.0");
     expect(V44_VERSION).toBe("4.4.0");
     expect(V45_VERSION).toBe("4.5.0");
@@ -112,12 +116,21 @@ describe("v4 beta gate", () => {
     expect(displayAppVersion(true, V42_RELEASES_AT)).toBe("4.2.0");
   });
 
+  it("flips the header to 4.2.1 on 6 Oct 2026 21:45 HKT", () => {
+    expect(V421_RELEASES_AT).toBe(Date.UTC(2026, 9, 6, 13, 45, 0));
+    expect(isV421Released(Date.UTC(2026, 9, 6, 13, 44, 59))).toBe(false);
+    expect(isV421Released(V421_RELEASES_AT)).toBe(true);
+    expect(displayAppVersion(false, Date.UTC(2026, 9, 6, 13, 44, 59))).toBe("4.2.0");
+    expect(displayAppVersion(false, V421_RELEASES_AT)).toBe("4.2.1");
+    expect(displayAppVersion(true, V421_RELEASES_AT)).toBe("4.2.1");
+  });
+
   it("flips the header to 4.3.0 on 24 Oct 2026 10:00 UTC", () => {
     expect(V43_RELEASES_AT).toBe(Date.UTC(2026, 9, 24, 10, 0, 0));
     expect(isV43Released(Date.UTC(2026, 9, 24, 9, 59, 59))).toBe(false);
     expect(isV43Released(V43_RELEASES_AT)).toBe(true);
     expect(displayAppVersion(false, Date.UTC(2026, 9, 24, 9, 59, 59))).toBe(
-      "4.2.0",
+      "4.2.1",
     );
     expect(displayAppVersion(false, V43_RELEASES_AT)).toBe("4.3.0");
     expect(displayAppVersion(true, V43_RELEASES_AT)).toBe("4.3.0");

@@ -656,7 +656,9 @@
     "sourceButton": "Source",
     "requirements": "Requirements",
     "requirementsHint": "Optional. Say what to focus on, skip, or include.",
-    "librarySubtitle": "Open a document, or generate another. Study notes can stack."
+    "librarySubtitle": "Open a document, or generate another. Study notes can stack.",
+    "backToNotebook": "Back to notebook",
+    "deleteDocument": "Delete document"
   },
   "chat": {
     "eyebrow": "Ask this notebook",
