@@ -6,10 +6,10 @@ import {
   GA_VERSION,
   STABLE_VERSION,
   V41_VERSION,
+  V411_VERSION,
   V42_VERSION,
   V43_VERSION,
   V44_VERSION,
-  V45_VERSION,
   displayAppVersion,
   hasV4BetaAccess,
   isVercelPreviewEnv,
@@ -22,7 +22,7 @@ import {
   V42_RELEASES_AT,
   V43_RELEASES_AT,
   V44_RELEASES_AT,
-  V45_RELEASES_AT,
+  V411_RELEASES_AT,
   isFreeModelCampaignActive,
   isV4GenerallyAvailable,
   isV41Released,
@@ -39,10 +39,10 @@ describe("v4 beta gate", () => {
     expect(BETA_VERSION).toBe("4.0.0 beta");
     expect(GA_VERSION).toBe("4.0.0");
     expect(V41_VERSION).toBe("4.1.0");
+    expect(V411_VERSION).toBe("4.1.1");
     expect(V42_VERSION).toBe("4.2.0");
     expect(V43_VERSION).toBe("4.3.0");
     expect(V44_VERSION).toBe("4.4.0");
-    expect(V45_VERSION).toBe("4.5.0");
     expect(BETA_COOKIE).toBe("hkstudya-beta");
     expect(displayAppVersion(false, DURING_CAMPAIGN)).toBe("3.9.3");
     expect(displayAppVersion(true, DURING_CAMPAIGN)).toBe("4.0.0 beta");
@@ -94,46 +94,47 @@ describe("v4 beta gate", () => {
     expect(displayAppVersion(true, V41_RELEASES_AT)).toBe("4.1.0");
   });
 
-  it("opens 4.2 on 13 Oct 2026 while the header stays 4.5.0", () => {
+  it("flips the header to 4.2.0 on 13 Oct 2026 10:00 UTC", () => {
     expect(V42_RELEASES_AT).toBe(Date.UTC(2026, 9, 13, 10, 0, 0));
     expect(isV42Released(Date.UTC(2026, 9, 13, 9, 59, 59))).toBe(false);
     expect(isV42Released(V42_RELEASES_AT)).toBe(true);
-    expect(displayAppVersion(false, Date.UTC(2026, 9, 5, 23, 59, 59))).toBe(
-      "4.1.0",
+    expect(displayAppVersion(false, Date.UTC(2026, 9, 13, 9, 59, 59))).toBe(
+      "4.1.1",
     );
-    expect(displayAppVersion(false, V42_RELEASES_AT)).toBe("4.5.0");
-    expect(displayAppVersion(true, V42_RELEASES_AT)).toBe("4.5.0");
+    expect(displayAppVersion(false, V42_RELEASES_AT)).toBe("4.2.0");
+    expect(displayAppVersion(true, V42_RELEASES_AT)).toBe("4.2.0");
   });
 
-  it("opens 4.3 on 31 Oct 2026 while the header stays 4.5.0", () => {
+  it("flips the header to 4.3.0 on 31 Oct 2026 10:00 UTC", () => {
     expect(V43_RELEASES_AT).toBe(Date.UTC(2026, 9, 31, 10, 0, 0));
     expect(isV43Released(Date.UTC(2026, 9, 31, 9, 59, 59))).toBe(false);
     expect(isV43Released(V43_RELEASES_AT)).toBe(true);
     expect(displayAppVersion(false, Date.UTC(2026, 9, 31, 9, 59, 59))).toBe(
-      "4.5.0",
+      "4.2.0",
     );
-    expect(displayAppVersion(false, V43_RELEASES_AT)).toBe("4.5.0");
-    expect(displayAppVersion(true, V43_RELEASES_AT)).toBe("4.5.0");
+    expect(displayAppVersion(false, V43_RELEASES_AT)).toBe("4.3.0");
+    expect(displayAppVersion(true, V43_RELEASES_AT)).toBe("4.3.0");
   });
 
-  it("opens 4.4 on 18 Nov 2026 while the header stays 4.5.0", () => {
+  it("flips the header to 4.4.0 on 18 Nov 2026 10:00 UTC", () => {
     expect(V44_RELEASES_AT).toBe(Date.UTC(2026, 10, 18, 10, 0, 0));
     expect(isV44Released(Date.UTC(2026, 10, 18, 9, 59, 59))).toBe(false);
     expect(isV44Released(V44_RELEASES_AT)).toBe(true);
     expect(displayAppVersion(false, Date.UTC(2026, 10, 18, 9, 59, 59))).toBe(
-      "4.5.0",
+      "4.3.0",
     );
-    expect(displayAppVersion(false, V44_RELEASES_AT)).toBe("4.5.0");
-    expect(displayAppVersion(true, V44_RELEASES_AT)).toBe("4.5.0");
+    expect(displayAppVersion(false, V44_RELEASES_AT)).toBe("4.4.0");
+    expect(displayAppVersion(true, V44_RELEASES_AT)).toBe("4.4.0");
   });
 
-  it("shows 4.5.0 immediately without opening the queued features", () => {
-    expect(V45_RELEASES_AT).toBe(Date.UTC(2026, 9, 6, 0, 0, 0));
-    expect(displayAppVersion(false, V45_RELEASES_AT)).toBe("4.5.0");
-    expect(displayAppVersion(true, V45_RELEASES_AT)).toBe("4.5.0");
-    expect(isV42Released(V45_RELEASES_AT)).toBe(false);
-    expect(isV43Released(V45_RELEASES_AT)).toBe(false);
-    expect(isV44Released(V45_RELEASES_AT)).toBe(false);
+  it("shows 4.1.1 in the header now, before the 4.2 clock", () => {
+    expect(V411_RELEASES_AT).toBe(Date.UTC(2026, 9, 6, 0, 0, 0));
+    expect(displayAppVersion(false, Date.UTC(2026, 9, 5, 23, 59, 59))).toBe(
+      "4.1.0",
+    );
+    expect(displayAppVersion(false, V411_RELEASES_AT)).toBe("4.1.1");
+    expect(displayAppVersion(true, V411_RELEASES_AT)).toBe("4.1.1");
+    expect(isV42Released(V411_RELEASES_AT)).toBe(false);
   });
 
   it("keeps 4.2+ features off until each header clock", async () => {

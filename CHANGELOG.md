@@ -21,6 +21,15 @@ git checkout archive/milton-2026-09-06
 
 ---
 
+## Version 4.5.1 — 2026-10-06
+
+**Miniscule.** The header shows 4.1.1.
+
+### Changed
+- **Header**: The header and footer say Version 4.1.1. Version 4.2.0 still waits until 13 Oct.
+
+---
+
 ## Version 4.5.0 — 2026-10-06
 
 **Minor.** The header shows Version 4.5.0 now. Queued features stay on their dates.
