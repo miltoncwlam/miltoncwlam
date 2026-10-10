@@ -5,6 +5,8 @@ export type IngestProgress = {
   needsOcr?: boolean;
   ocrNext?: number;
   ocrTotal?: number;
+  /** PDF page numbers still waiting for a figure read. Absent means read every page in order. */
+  ocrPages?: number[];
   ocrBusy?: boolean;
   inputTokens?: number;
   outputTokens?: number;
@@ -28,6 +30,9 @@ export function parseIngestProgress(value: unknown): IngestProgress | null {
     needsOcr: Boolean(row.needsOcr),
     ocrNext: Number(row.ocrNext) || undefined,
     ocrTotal: Number(row.ocrTotal) || undefined,
+    ocrPages: Array.isArray(row.ocrPages)
+      ? row.ocrPages.map(Number).filter((page) => Number.isInteger(page) && page > 0)
+      : undefined,
     ocrBusy: Boolean(row.ocrBusy),
     inputTokens: Number(row.inputTokens) || 0,
     outputTokens: Number(row.outputTokens) || 0,

@@ -71,6 +71,7 @@ async function transcribePage(
           {
             type: "text",
             text: `Transcribe ALL readable study text from scanned PDF page ${page.pageNumber}.
+Include the title of every box, map label, diagram label, table cell, timeline, and caption, not only the paragraphs.
 Keep the original language (Traditional/Simplified Chinese, English, or mixed).
 Preserve headings, lists, and formulas as plain text. Do not summarize, translate, or invent words.
 If a page is blank, output nothing.`,

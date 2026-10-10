@@ -30,7 +30,12 @@ import {
   failDeckGeneration,
   purgeExpiredSources,
 } from "@/lib/data/decks";
-import { extractStudyText, isSparsePdfText, readPdfTextLayer } from "@/lib/ingest/extract-text";
+import {
+  extractStudyText,
+  isSparsePdfText,
+  listPdfFigurePages,
+  readPdfTextLayer,
+} from "@/lib/ingest/extract-text";
 import { enqueueNotebookProcess } from "@/lib/ingest/notebook-job";
 import { fetchStudyTextFromUrl } from "@/lib/ingest/fetch-url";
 import {
@@ -123,7 +128,7 @@ async function readNotebookSource(
   sourceMimeType?: string;
   sourceSizeBytes?: number;
   storagePath?: string;
-  ocr?: { data: Uint8Array; pageCount: number };
+  ocr?: { data: Uint8Array; pageCount: number; pages?: number[] };
 }> {
   if (input.sourceType === "text") {
     return requireSourceText({ sourceContent: input.content });
@@ -156,22 +161,34 @@ async function readNotebookSource(
   const data = await downloadSourceMedia(input.storagePath);
   validateFileSignature(data, input.file.type);
   if (input.file.type === "application/pdf") {
-    const layer = await readPdfTextLayer(data);
-    if (!isSparsePdfText(layer.text)) {
-      return requireSourceText({
-        sourceContent: layer.text,
-        storagePath: input.storagePath,
-        sourceFilename: upload.name,
-        sourceMimeType: upload.type,
-        sourceSizeBytes: upload.size,
-      });
-    }
-    return {
-      sourceContent: "",
+    const layer = await readPdfTextLayer(data.slice());
+    const file = {
       storagePath: input.storagePath,
       sourceFilename: upload.name,
       sourceMimeType: upload.type,
       sourceSizeBytes: upload.size,
+    };
+    if (!isSparsePdfText(layer.text)) {
+      const figures = await listPdfFigurePages(data.slice());
+      if (!figures.length) {
+        return requireSourceText({
+          sourceContent: layer.text,
+          ...file,
+        });
+      }
+      return {
+        sourceContent: layer.text,
+        ...file,
+        ocr: {
+          data,
+          pageCount: Math.max(1, layer.totalPages),
+          pages: figures,
+        },
+      };
+    }
+    return {
+      sourceContent: "",
+      ...file,
       ocr: {
         data,
         pageCount: Math.max(1, layer.totalPages),
@@ -313,11 +330,12 @@ export async function POST(request: Request) {
       language: input.language,
     });
 
+    const figurePages = extracted.ocr?.pages?.filter((page) => page > 0) ?? [];
     deckId = await createPendingDeck({
       userId,
       title: fallbackTitle,
       sourceType: input.sourceType === "topic" ? "text" : input.sourceType,
-      sourceContent: extracted.ocr ? "" : sourceContent,
+      sourceContent: figurePages.length ? sourceContent : extracted.ocr ? "" : sourceContent,
       storagePath,
       sourceFilename,
       sourceMimeType,
@@ -330,8 +348,9 @@ export async function POST(request: Request) {
       ingestProgress: {
         language: input.language,
         needsOcr: Boolean(extracted.ocr),
-        ocrNext: 1,
+        ocrNext: figurePages[0] ?? 1,
         ocrTotal: extracted.ocr?.pageCount,
+        ocrPages: figurePages.length ? figurePages : undefined,
         ocrBusy: false,
         spentTextAmount,
         preferredTitle: input.title,

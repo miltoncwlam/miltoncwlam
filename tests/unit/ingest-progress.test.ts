@@ -12,6 +12,9 @@ describe("ingest progress", () => {
     });
     expect(progress?.ocrNext).toBe(2);
     expect(ingestPhaseLabel(progress)).toBe("ocr:2/10");
+    expect(
+      parseIngestProgress({ language: "en", ocrPages: [3, 6, 8] })?.ocrPages,
+    ).toEqual([3, 6, 8]);
   });
 
   it("keeps a cards studio job on ingest_progress", () => {

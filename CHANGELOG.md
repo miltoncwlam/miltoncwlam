@@ -21,6 +21,15 @@ git checkout archive/milton-2026-09-06
 
 ---
 
+## Version 4.7.1 — 2026-10-10
+
+**Miniscule.** A PDF with maps and diagrams now finishes reading those pictures.
+
+### Fixed
+- **Figure pages**: After the selectable text is read, pages with a large map, diagram, or timeline are read too. Their labels are added to the source. History Topic 1 now includes the civilisation names from the map.
+
+---
+
 ## Version 4.7.0 — 2026-10-06
 
 **Minor.** Each document is its own page, and a slow model finishes a shorter cut instead of stopping.

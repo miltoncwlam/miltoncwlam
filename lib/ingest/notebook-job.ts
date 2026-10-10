@@ -3,6 +3,7 @@ import "server-only";
 import { after } from "next/server";
 
 import { env } from "@/lib/env";
+import { appendNovelStudyText } from "@/lib/ingest/extract-text";
 import { ingestJobToken } from "@/lib/ingest/job-token";
 import { isTransientOcrError, ocrPdfPage } from "@/lib/ingest/ocr-pdf";
 import type { IngestProgress } from "@/lib/ingest/progress";
@@ -166,9 +167,14 @@ export async function processNotebookTick(deckId: string): Promise<ProcessTickRe
     language: "en" as const,
     needsOcr: false,
   };
-  const nextPage = progress.ocrNext ?? 1;
+  const queue = progress.ocrPages ?? [];
+  const nextPage = queue.length ? queue[0]! : (progress.ocrNext ?? 1);
   const total = progress.ocrTotal ?? 0;
-  const needsOcr = Boolean(progress.needsOcr && nextPage <= total && deck.storagePath);
+  const needsOcr = Boolean(
+    progress.needsOcr &&
+      deck.storagePath &&
+      (queue.length ? true : nextPage <= total),
+  );
 
   if (!needsOcr) {
     return finishTitle(deckId);
@@ -182,11 +188,15 @@ export async function processNotebookTick(deckId: string): Promise<ProcessTickRe
   try {
     const data = await downloadSourceMedia(deck.storagePath!);
     const page = await ocrPdfPage(data, nextPage, DEFAULT_OCR_MODEL);
-    const combined = [deck.sourceContent, page.text].filter(Boolean).join("\n\n").trim();
+    const combined = appendNovelStudyText(deck.sourceContent ?? "", page.text);
+    const rest = queue.length ? queue.slice(1) : [];
+    const following = queue.length ? (rest[0] ?? nextPage) : nextPage + 1;
+    const more = queue.length ? rest.length > 0 : following <= total;
     const nextProgress: IngestProgress = {
       ...progress,
-      needsOcr: nextPage + 1 <= total,
-      ocrNext: nextPage + 1,
+      needsOcr: more,
+      ocrNext: following,
+      ocrPages: queue.length ? rest : undefined,
       ocrBusy: false,
       inputTokens: (progress.inputTokens ?? 0) + page.usage.inputTokens,
       outputTokens: (progress.outputTokens ?? 0) + page.usage.outputTokens,
@@ -221,13 +231,19 @@ export async function processNotebookTick(deckId: string): Promise<ProcessTickRe
     const skippable = isTransientOcrError(error);
     const hasText = Boolean(deck.sourceContent?.trim());
     if (skippable && hasText) {
+      const rest = queue.slice(1);
       const nextProgress: IngestProgress = {
         ...progress,
-        needsOcr: false,
+        needsOcr: rest.length > 0,
         ocrBusy: false,
-        ocrNext: nextPage + 1,
+        ocrNext: rest[0] ?? nextPage + 1,
+        ocrPages: rest.length ? rest : undefined,
       };
       await saveIngestProgress(deckId, nextProgress, { generationStatus: "processing" });
+      if (rest.length) {
+        enqueueNotebookProcess(deckId);
+        return { done: false, continue: true, deckId, status: "processing" };
+      }
       return finishTitle(deckId);
     }
     await failAndRefund(deck.userId, deckId, progress, message);

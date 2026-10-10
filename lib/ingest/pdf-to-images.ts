@@ -1,5 +1,18 @@
 import "server-only";
 
+const pdfMath = Math as Math & { sumPrecise?: (values: Iterable<number>) => number };
+if (typeof pdfMath.sumPrecise !== "function") {
+  pdfMath.sumPrecise = (values) => {
+    let sum = 0;
+    for (const value of values) {
+      const n = +value;
+      if (Number.isNaN(n)) return Number.NaN;
+      sum += n;
+    }
+    return sum;
+  };
+}
+
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 

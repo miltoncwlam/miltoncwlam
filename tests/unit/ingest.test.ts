@@ -4,7 +4,13 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { extractStudyText, isSparsePdfText, readPdfTextLayer } from "@/lib/ingest/extract-text";
+import {
+  appendNovelStudyText,
+  extractStudyText,
+  isPdfFigureImage,
+  isSparsePdfText,
+  readPdfTextLayer,
+} from "@/lib/ingest/extract-text";
 import {
   assertOwnedStoragePath,
   validateUpload,
@@ -61,6 +67,21 @@ describe("source ingestion", () => {
     await expect(extractStudyText(data, "text/plain")).resolves.toBe(
       "Useful notes",
     );
+  });
+
+  it("keeps map labels that the text layer skipped", () => {
+    expect(isPdfFigureImage({ width: 1258, height: 864 })).toBe(true);
+    expect(isPdfFigureImage({ width: 200, height: 400 })).toBe(false);
+    const existing = "The four major ancient civilisations were all located in river valleys.";
+    const extra = [
+      "The four major ancient civilisations were all located in river valleys.",
+      "Fertile Crescent civilisation Beginning around 3500 BC",
+      "Nile Valley civilisation Located in present-day Egypt",
+    ].join("\n");
+    const merged = appendNovelStudyText(existing, extra);
+    expect(merged).toMatch(/Fertile Crescent/);
+    expect(merged).toMatch(/Nile Valley/);
+    expect(merged.match(/river valleys/g)).toHaveLength(1);
   });
 
   it("treats very short PDF layers as scans", () => {
